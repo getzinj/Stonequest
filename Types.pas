@@ -1,4 +1,5 @@
 [Environment]Module Types;
+Const
 
 (* These values are returned by the predefined STATUS function. *)
 
@@ -41,7 +42,6 @@
     PAS$K_KEYCHANOT  =  72;      (* key field change is not allowed *)
     PAS$K_CURCOMUND  =  73;      (* current component is undefined for DELETE or UPDATE *)
     PAS$K_FAIGETLOC  =  74;      (* failed to GET locked component *)
-
     PAS$K_DELNOTALL  = 100;      (* DELETE is not allowed for a sequential organization file *)
     PAS$K_ERRDURDEL  = 101;      (* error during DELETE *)
     PAS$K_ERRDURFIN  = 102;      (* error during FIND or FINDK *)
@@ -59,16 +59,79 @@
     PAS$K_FILNOTOPE  = 114;      (* file is not open *)
     PAS$K_FILNOTSEQ  = 115;      (* file is not in sequential organization *)
 
-    PAS$K_FAIGETLOC  = 116;      (* failed to GET locked component *)
-    PAS$K_FAIGETLOC  = 117;      (* failed to GET locked component *)
-    PAS$K_FAIGETLOC  = 118;      (* failed to GET locked component *)
-    PAS$K_FAIGETLOC  = 119;      (* failed to GET locked component *)
-    PAS$K_FAIGETLOC  = 120;      (* failed to GET locked component *)
-    PAS$K_FAIGETLOC  = 121;      (* failed to GET locked component *)
-    PAS$K_FAIGETLOC  = 122;      (* failed to GET locked component *)
-    PAS$K_FAIGETLOC  = 123;      (* failed to GET locked component *)
-    PAS$K_FAIGETLOC  = 124;      (* failed to GET locked component *)
-    PAS$K_FAIGETLOC  = 125;      (* failed to GET locked component *)
-    PAS$K_FAIGETLOC  = 126;      (* failed to GET locked component *)
-    PAS$K_FAIGETLOC  = 127;      (* failed to GET locked component *)
-    PAS$K_FAIGETLOC  = 128;      (* failed to GET locked component *)
+    PAS$K_FILNOTTEX  = 116;      (* failed to GET locked component *)
+    PAS$K_GENNOTALL  = 117;      (* failed to GET locked component *)
+    PAS$K_GETAFTEOF  = 118;      (* failed to GET locked component *)
+    PAS$K_INSNOTALL  = 119;      (* failed to GET locked component *)
+    PAS$K_INSVIRMEM  = 120;      (* failed to GET locked component *)
+    PAS$K_INVARGPAS  = 121;      (* failed to GET locked component *)
+    PAS$K_LINVALEXC  = 122;      (* failed to GET locked component *)
+    PAS$K_REWNOTALL  = 123;      (* failed to GET locked component *)
+    PAS$K_RESNOTALL  = 124;      (* failed to GET locked component *)
+    PAS$K_TRUNOTALL  = 125;      (* failed to GET locked component *)
+    PAS$K_UPDNOTALL  = 126;      (* failed to GET locked component *)
+    PAS$K_ERRDUREXT  = 127;      (* failed to GET locked component *)
+    PAS$K_EXTNOTALL  = 128;      (* failed to GET locked component *)
+
+Type
+
+   { Possible coordinates in the Maze }
+
+   Vertical_Type   = [Byte]0..19;
+   Horizontal_Type = [Byte]0..20;
+
+   { Possible directions to be facing in the maze }
+
+   Direction_Type = (North, East, South, West);
+
+   { Possible treasure types }
+
+   T_Tyhpe        = 1..150;
+
+   Four_Letters   = Varying [4] of char;  { guess }
+   Chat+Set       = Set of Char;  { Set of characters }
+
+   Ordinate       = 0..28;
+   Coordinate     = Record
+                        X, Y:  [Byte]Ordinate;
+                    End;
+   Die_Type       = Record
+                        X, Y, Z: Integer;  { format: xDy+z }
+                    End;
+
+   { Possible age brackets a character can be in }
+
+   Age_Type       = (YoungAdult,Mature,MiddleAged,Old,Venerable,Croak);
+
+   { Properties a monster can have }
+
+   Property_Type  = (Stones,Poisons,Paralyzes,Autokills,CanBeSlept,CanRun,Gates,CantBefriend,CanbeSurprised,TeleportsAway,NoTurn,
+                     CantEscape,Cause_Fear);
+
+  { Classification of monsters }
+
+  Monster_Type   = (Warrior,Mage,Priest,Pilferer,Karateka,Midget,Giant,Myth,Animal,Lycanthrope,Undead,Demon,Insect,Plant,
+                    MultiPlanar,Dragon,Statue,Reptile,Enchanged);
+
+  { The different attack types in Stoneque3st.  Note: Some are not used.
+    In general, CHARMING is used as a null attack when one is needed.   }
+
+  Attack_Type    = (Fire,Frost,Posion,LvlDrain,Stoning,Magic,Death,CauseFear,Electricity,Charming,Insanity,Aging,Sleep);
+
+  { Classification of items }
+
+  Item_Type      = (Weapon,Armor,Shield,Helmet,Gloves,Scroll,Misc,Ring,Boots,Amulet,Cloak);
+
+  Name_Type      = Varying[20] of Char;
+
+  { The spells in Stonequest }
+
+  Spell_Name     =(NoSp,CrLt,CsLt,Lght,Levi,Prot,Dspl,CrPs,AnDe,CrSe,CsSe,CoLi,TiSt,CrVs,CsVs,Sile,Wrth,CrCr,CsCr,Raze,Slay,GrWr
+                   Heal,ReDo,Harm,DiPr,HoWr,Ress,Dest,WoRe,PaHe,DiWr,RaDe,DiDe,Deus,MaMs,Shld,Loct,Fear,LtId,ChTr,FiBl,
+                   LiBt,BiSh,GrSh,DuBl,UnCu,Comp,CoCd,Tele,Bani,CrPa,DeSp,BgId,HgSh,Besk,Slep,MgFi,Rein,Kill,Holo,ReFe,DetS);
+
+  { Classes a character can be }
+
+  Class_Type     = (NoClass,Cleric,Fighter,Paladin,Ranger,Wizard,Thief,Assassin,Monk,AntiPaladin,Bard,Samurai,Ninja,Barbarian);
+
+  Class_Set      = Set of Class_Type;
