@@ -297,4 +297,122 @@ Type
                   End;
 
   { The information concerning a character }
-  
+
+  { Types of treasures }
+
+  Treasure_Kind = (Cash_Given,Item_Given);
+
+  { A record of each particular item in a treasure }
+
+  Treasure_record= Record
+                     Case Kind: Treasure_Kind of
+                        Cash_given: (Initial_Random: Die_Type;
+                                     Initial_Base:   Integer;
+                                     Multiplier:     Die_Type);
+                        Item_Given: (Item_Number:        Die_Type;
+                                     Range:              [Byte]0..250;
+                                     Appear_Probability: [Byte]0..100);
+                 End;
+
+  { A list of items in the treasure }
+
+  List_of_TreasureType=Array [1..9] of Treasure_record;
+
+  { A treasure... }
+
+  Treasure_Table = Record
+                      Treasure_No: [Byte]0..255;
+                      In_Chest: Boolean;
+                      Possible_Traps: Set of Trap_Type;
+                      Max_No_of_Treasures: [Byte]1..9;
+                      Treasure: List_of_treasureType;
+                  End;
+
+  { a list of possible picture... }
+
+  Pic_Type      = [Byte]0..150;
+  Monster_Name_Type = Varying[60] of char;
+  Monster_Record    = Record
+                          Monster_Number:          [Word]0..65535;
+                          Picture_Number:          Pic_Type;
+                          Name,Plural:             Monster_Name_Type;
+                          Real_Name,Real_Plural:   Monster_Name_Type;
+                          Alignment:               Align_Type;
+                          Number_Appearing:        Die_Type;
+                          Hit_Points:              Die_Type;
+                          Kind:                    Monster_Type;
+                          Armor_Class:             [Byte]-127..127;
+                          Treasure:                Record
+                                                      In_Lair: Set of T_Type;
+                                                      Wandering: Set of T_Type;
+                                                   End;
+                          Levels_Drained:          [Word]-32767..32767;
+                          Regenerates:             [Word]-32767..32767;
+                          Highest:                 Record
+                                                       Cleric_Spell: [Byte]0..9;
+                                                       Wizard_Spell: [Byte]0..9;
+                                                   End;
+                          Magic_Resistance:        [Byte]0..200;
+                          Gate_Success_Percentage: [Byte]0..100;
+                          Monster_Called:          [Word]0..65535;
+                          Breath_Weapon:           Attack_Type;
+                          Gaze_Weapon:             Attack_Type;
+                          Years_Ages:              Integer;
+                          Weapon_Plus_Needed:      Integer;
+                          No_of_attacks:           [Byte]0..20;
+                          Damage:                  Array [1..200] of Die_Type;
+                          Extra_Damage:            Set of Class_Type;
+                          Resists:                 Set of Attack_Type;
+                          Properties:              Set of Property_Type;
+                      End;
+
+  Spell_Set         = Set of Spell_Name;
+  Line              = Varying [80] of char;
+
+  { Ways surrounding a room }
+
+  Exit_Type        = (Passage,Wall,Door,Secret,Transparent,Walk_Through);
+
+  { Area type for encounter purposes }
+
+  Area_Type       = (Room,Corridor);
+
+  { Basic special kind }
+
+  Special_Kind    = (Nothing,Stairs,Pit,Chute,Rotate,Darkness,Teleport,Damage,Elevator,Rock,Antimagic,SPFeature,An_Encounter,
+                     Cliff);
+
+  { Special special types... See the difference? }
+
+  SPKind          = (NothingSpecial,Msg,Msg_Item_Given,Msg_Pool,
+                     Msg_Hidden_Item,Msg_Need_Item,Msg_Lower_AC,
+                     Msg_Raise_AC,Msg_Goto_Castle,Msg_Encounter,Riddle,
+                     Fee,Msg_Trade_Item,Msg_Picture,Unknown);
+
+  { Entry on the special table }
+
+  Special_Type    = Record
+                       Pointer1,Pointer2,Pointer3: Integer;
+                       Case Special: Special_Kind of
+                           SpFeature: (Feature: SpKing)
+                    End;
+
+  { Table of specials for each level }
+
+  Special_Table_Type = Array [0..15] of Special_Type;
+
+  { A record for each room }
+
+  Room_Record    = Record
+                          North,South,East,West: Exit_Type;
+                          Contents: [Byte]0..15; {index of Special_Table}
+                          Kind: Area_Type;
+                   End;
+
+  { Random encounter }
+
+  Encounter      = Record
+                      Base_Monster_Number: [Byte]0..250;
+                      Addition: Die_Type;
+                      Probability: [byte]0..200;
+                   End;
