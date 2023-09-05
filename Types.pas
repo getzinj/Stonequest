@@ -416,3 +416,37 @@ Type
                       Addition: Die_Type;
                       Probability: [byte]0..200;
                    End;
+
+  { Table of encounters for each level }
+
+  Encounter_Table = Array [1..3] of Encounter;
+                     { 1 = wandering in corridor }
+                     { 2 = wandering in room }
+                     { 3 = ???? }
+
+  { Combined level. }
+
+  Level           = Record
+                       Level_Number: [Byte]1..255;
+                       Room: Array [1..20, 1..20] of Room_Record;
+                       Monsters: Encounter_Table;
+                       Special_Table: Special_Table_Type;
+                    End;
+
+  { Group of messages. }
+
+  Message_group   = Array [1..999] of line;
+
+  { A 27 x 9 text picture. }
+
+  Image_Type      = Packed Array [1..27, 1..9] of Char;
+
+  { Total information for each picture }
+
+  Picture         = Record
+                        Image: Image_Type;
+                        Left_Eye,Right_Eye: Coordinate;
+                        Eye_Type: Char;
+                    End;
+
+                    
