@@ -6,7 +6,7 @@ Const
     PAS$K_EOF        =  -1;      (* file is at end-of-file *)
     PAS$K_SUCCESS    =   0;      (* last operation successful *)
 
-    PAS$K_FILAROPE   =   1;      (* file is already open *)
+    PAS$K_FILALROPE  =   1;      (* file is already open *)
     PAS$K_ERRDUROPE  =   2;      (* error during OPEN *)
     PAS$K_FILNOTFOU  =   3;      (* file not found *)
     PAS$K_INVFILSYN  =   4;      (* invalid filename syntax *)
@@ -19,7 +19,7 @@ Const
     PAS$K_KEYNOTDEF  =  11;      (* KEY(<n>) definition is not defined in this file. *)
     PAS$K_INVRECLEN  =  12;      (* invalid record length of <n> *)
     PAS$K_TEXREGSEG  =  13;      (* textfiles require sequential organization and access *)
-    PAS$K_FILENAMREG =  14;      (* FILE_NAME required for this HISTORY or DISPOSITION *)
+    PAS$K_FILNAMREG  =  14;      (* FILE_NAME required for this HISTORY or DISPOSITION *)
     PAS$K_FILALRCLO  =  15;      (* file is already closed *)
     PAS$K_ERRDURCLO  =  16;      (* error during CLOSE *)
     PAS$K_AMBVALENU  =  30;      (* "<string>" is an ambiguous value for enumerated type "<type>" *)
@@ -86,10 +86,10 @@ Type
 
    { Possible treasure types }
 
-   T_Tyhpe        = 1..150;
+   T_Type         = 1..150;
 
    Four_Letters   = Varying [4] of char;  { guess }
-   Chat+Set       = Set of Char;  { Set of characters }
+   Char_Set       = Set of Char;  { Set of characters }
 
    Ordinate       = 0..28;
    Coordinate     = Record
@@ -394,7 +394,7 @@ Type
   Special_Type    = Record
                        Pointer1,Pointer2,Pointer3: Integer;
                        Case Special: Special_Kind of
-                           SpFeature: (Feature: SpKing)
+                           SpFeature: (Feature: SpKind)
                     End;
 
   { Table of specials for each level }
@@ -435,18 +435,178 @@ Type
 
   { Group of messages. }
 
-  Message_group   = Array [1..999] of line;
+  Message_group    = Array [1..999] of line;
 
   { A 27 x 9 text picture. }
 
-  Image_Type      = Packed Array [1..27, 1..9] of Char;
+  Image_Type        = Packed Array [1..27, 1..9] of Char;
 
   { Total information for each picture }
 
-  Picture         = Record
-                        Image: Image_Type;
-                        Left_Eye,Right_Eye: Coordinate;
-                        Eye_Type: Char;
-                    End;
+  Picture           = Record
+                          Image: Image_Type;
+                          Left_Eye,Right_Eye: Coordinate;
+                          Eye_Type: Char;
+                      End;
 
-                    
+  Pic_List          = Array [0..150]  of Picture;
+  Roster_Type       = Array [1..20]  of Character_Type;
+  Party_Type        = Array [1..6]   of Character_Type;
+  Character_list    = Array [1..6]   of Character_Type;
+  List_of_monsters  = Array [1..450] of Monster_record;
+  List_of_items     = Array [0..449] of Item_record;
+  List_of_Amounts   = Array [0..449] of Integer;
+  List_of_Treasures = Array [1..150] of Treasure_Table;
+
+  Picture_File_Type = Packed File of Picture;
+  Number_File       = Packed File of Integer;
+  Character_File    = File of Character_Type;
+  Equip_File        = File of Item_Record;
+  Monst_File        = File of Monster_Record;
+  Treas_File        = File of Treasure_Table;
+
+  Spell_Duration_List  = Array [Spell_Name] of Unsigned;
+  Party_Size_Type = 0..6;
+  Save_Record     = Record
+                       PosX,PosY:  [Byte]1..20; { Party's location }
+                       PosZ:       [Byte]1..19;
+                       Direction:  [Byte]Direction_Type;
+                       Spells_Casted:  Spell_Duration_List;  { Spells Casted }
+                       Party_Size: [Byte]1..6;
+                       Current_Size: [Byte]Party_Size_Type;
+                       Characters: Character_List;
+                       Current_Level:  Level;
+                       Time_Delay: Integer;
+                    End;
+  Save_File_Type    = Packed File of Save_Record;
+
+  $uquadword        = Quadruple;
+  Score             = Record
+                          Name,User_Name: Name_Type;
+                          Lvl1,Lvl2: Integer;
+                          Class1,Class2: Class_Type;
+                          Experience: $uquadword;
+                          Defeated_Barrat: Boolean;
+                      End;
+
+        High_Score_List   = Array [1..20] of Score;
+        Score_File        = Packed File of High_Score_List;
+        Combined_List     = Array [1..40] of Score;
+
+{ Here are the combat data structures }
+
+  Amount_Type       = (None,One,Many);
+  Chest_Status_Type = (Opened,Closed);
+  Trap_set          = Set of trap_Type;
+  Option_Type       = (Run,Gate,Breathe,CastSpell,Attack,UseItem,TurnUndead,
+                       Parry,Berserker_Rage,SwitchItems);
+
+  Group_Choice    = [Byte]1..5;
+  Group_Type      = 0..4;
+  Individual_Type = 0..6;
+  Attacker_Type = Record
+                     Priority: Integer;                           { order of attacks }
+                     Attacker_Position: [Word]1..999;             { Which monsters }
+                     Caster_Level: Integer;                       { For spell casting }
+                     Case Group: Group_Choice of                  { Which monster group }
+                          5: (Action: Option_Type;                { What action }
+                             Target_Group: Group_Type;            { Who is being attacked }
+                             Target_Individual: Individual_Type;  {  "  "   "      "      }
+                             WhatSpell: Spell_Name;
+                             Old_Item,New_Item: Integer)
+                  End;
+  Party_Commands_Type = Array [1..6] of Attacker_Type;
+  PriorityQueue = Record
+                     Contents: Array [1..4008] of Attacker_Type;
+                     Last:  Integer;
+                  End;
+
+  Surprise_Type = (PartySurprised,MonsterSurprised,NoSurprise);
+  Reaction_Type = (Friendly,Hostile);
+
+  Flag            = [Bit]Boolean;
+  Monster_Group   = Record
+                       Monster: Monster_Record;
+                       Origin_Group_Size,Curr_Group_Size: [Word]0..999;
+                       Max_HP,Curr_HP: Array [1..999] of Integer;
+                       Status: Array [1..999] of Status_Type;
+                       Silenced: Array [1..999] of Flag;
+                       Identified: Flag;
+                    End;
+  Encounter_Group = Array [1..4] of Monster_Group;
+  Party_Flag      = Array [1..6] of Flag;
+  Attack_String   = Varying [10] of Char;
+
+Var
+   Pas_Errors: [Global]Array [-1..128] of Line;
+
+Value
+    Pas_Errors[PAS$K_EOF        ]:='End of file encountered';
+    Pas_Errors[PAS$K_SUCCESS    ]:='';
+    Pas_Errors[PAS$K_SUCCESS    ]:='';
+    Pas_Errors[PAS$K_FILALROPE  ]:='File is already opened';
+    Pas_Errors[PAS$K_ERRDUROPE  ]:='Error occured while opening';
+    Pas_Errors[PAS$K_FILNOTFOU  ]:='File not found';
+    Pas_Errors[PAS$K_INVFILSYN  ]:='Invalid file syntax';
+    Pas_Errors[PAS$K_ACCMETINC  ]:='';
+    Pas_Errors[PAS$K_RECLENINC  ]:='';
+    Pas_Errors[PAS$K_RECTYPINC  ]:='';
+    Pas_Errors[PAS$K_ORGSPEINC  ]:='';
+    Pas_Errors[PAS$K_INVKEYDEF  ]:='';
+    Pas_Errors[PAS$K_KEYDEFINC  ]:='';
+    Pas_Errors[PAS$K_KEYNOTDEF  ]:='';
+    Pas_Errors[PAS$K_INVRECLEN  ]:='Invalid record length';
+    Pas_Errors[PAS$K_TEXREGSEG  ]:='';
+    Pas_Errors[PAS$K_FILNAMREG  ]:='';
+    Pas_Errors[PAS$K_FILALRCLO  ]:='File already closed';
+    Pas_Errors[PAS$K_ERRDURCLO  ]:='Error during close';
+    Pas_Errors[PAS$K_AMBVALENU  ]:='';
+    Pas_Errors[PAS$K_INVSYNENU  ]:='';
+    Pas_Errors[PAS$K_INVSYNINT  ]:='';
+    Pas_Errors[PAS$K_INVSYNREA  ]:='';
+    Pas_Errors[PAS$K_INVSYNUNS  ]:='';
+    Pas_Errors[PAS$K_NOTVALTYP  ]:='';
+    Pas_Errors[PAS$K_ERRDURPRO  ]:='';
+    Pas_Errors[PAS$K_INVSYNBIN  ]:='';
+    Pas_Errors[PAS$K_INVSYNHEX  ]:='';
+    Pas_Errors[PAS$K_INVSYNOCT  ]:='';
+    Pas_Errors[PAS$K_ERRDURWRI  ]:='';
+    Pas_Errors[PAS$K_INVFIESPE  ]:='';
+    Pas_Errors[PAS$K_LINTOOLON  ]:='';
+    Pas_Errors[PAS$K_NEGWIDDIG  ]:='';
+    Pas_Errors[PAS$K_WRIINVENU  ]:='';
+    Pas_Errors[PAS$K_KEYVALINC  ]:='';
+    Pas_Errors[PAS$K_KEYDUPNOT  ]:='';
+    Pas_Errors[PAS$K_KEYCHANOT  ]:='';
+    Pas_Errors[PAS$K_CURCOMUND  ]:='';
+    Pas_Errors[PAS$K_FAIGETLOC  ]:='';
+    Pas_Errors[PAS$K_DELNOTALL  ]:='';
+    Pas_Errors[PAS$K_ERRDURDEL  ]:='Error during delete';
+    Pas_Errors[PAS$K_ERRDURFIN  ]:='Error during find';
+    Pas_Errors[PAS$K_ERRDURGET  ]:='Error during get';
+    Pas_Errors[PAS$K_ERRDURPUT  ]:='Error during put';
+    Pas_Errors[PAS$K_ERRDURRES  ]:='Error during reset';
+    Pas_Errors[PAS$K_ERRDURREW  ]:='Error during rewrite';
+    Pas_Errors[PAS$K_ERRDURTRU  ]:='';
+    Pas_Errors[PAS$K_ERRDURUNL  ]:='Error during unlock';
+    Pas_Errors[PAS$K_ERRDURUPD  ]:='Error during update';
+    Pas_Errors[PAS$K_FILNOTDIR  ]:='File not opened for direct access';
+    Pas_Errors[PAS$K_FILNOTGEN  ]:='File is not in generation mode';
+    Pas_Errors[PAS$K_FILNOTINS  ]:='';
+    Pas_Errors[PAS$K_FILNOTKEY  ]:='';
+    Pas_Errors[PAS$K_FILNOTOPE  ]:='File not open';
+    Pas_Errors[PAS$K_FILNOTSEQ  ]:='File not sequential';
+    Pas_Errors[PAS$K_FILNOTTEX  ]:='';
+    Pas_Errors[PAS$K_GENNOTALL  ]:='';
+    Pas_Errors[PAS$K_GETAFTEOF  ]:='';
+    Pas_Errors[PAS$K_INSNOTALL  ]:='';
+    Pas_Errors[PAS$K_INSVIRMEM  ]:='';
+    Pas_Errors[PAS$K_INVARGPAS  ]:='';
+    Pas_Errors[PAS$K_LINVALEXC  ]:='';
+    Pas_Errors[PAS$K_REWNOTALL  ]:='';
+    Pas_Errors[PAS$K_RESNOTALL  ]:='';
+    Pas_Errors[PAS$K_TRUNOTALL  ]:='';
+    Pas_Errors[PAS$K_UPDNOTALL  ]:='';
+    Pas_Errors[PAS$K_ERRDUREXT  ]:='Error during extend';
+    Pas_Errors[PAS$K_EXTNOTALL  ]:='';
+End.
