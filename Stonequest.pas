@@ -68,5 +68,17 @@ Var
    Item_List:                  [Global]List_of_Items;       { All items }
    Pics:                       [Global]Pic_List;            { Graphic Images }
 {*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Text~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*}
+   TrapName:                   [Global]Array [Trap_Type]            of Varying[20] of Char;
+   Item_Name:                  [Global]Array [Item_Type]            of Varying[7] of char;
+   Spell:                      [Global]Array [Spell_Name]           of Varying[4] of Char;
+   Long_Spell:                 [Global]Array [Spell_Name]           of Varying [25] of Char;
+   StatusName:                 [Global]Array [Status_Type]          of Varying [14] of char;
+   ClassName:                  [Global]Array [Class_Type]           of Varying [13] of char;
+   AlignName:                  [Global]Array [Align_Type]           of Packed Array  [1..7] of char;
+   RaceName:                   [Global]Array [Race_Type]            of Packed Array [1..12] of char;
+   SexName:                    [Global]Array [Sex_Type]             of Packed Array [1..11] of char;
+   AbilName:                   [Global]Array [1..7]                 of Packed Array [1..12] of char;
+   WizSpells,ClerSpells:       [Global]Spell_List;
+{*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Virtual Devices for SMG$~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*}
 
 
