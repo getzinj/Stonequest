@@ -242,8 +242,13 @@ Value { We got a lot of 'em! }
 
               { Types of items that can be found }
 
+  Item_Name[Weapon]:='Weapon';              Item_Name[Armor]:='Armor';           Item_Name[Gloves]:='Gloves';
+  Item_Name[Shield]:='Shield';              Item_Name[Helmet]:='Helmet';         Item_Name[Scroll]:='Scroll';
+  Item_Name[Misc]:='Misc';                  Item_Name[Ring]:='Ring';             Item_Name[Boots]:='Boots';
+  Item_Name[Amulet]:='Amulet';              Item_Name[Cloak]:='Cloak';
 
-Item_Name[Weapon]:='Weapon';              Item_Name[Armor]:='Armor';           Item_Name[Gloves]:='Gloves';
-Item_Name[Shield]:='Shield';              Item_Name[Helmet]:='Helmet';         Item_Name[Scroll]:='Scroll';
-Item_Name[Misc]:='Misc';                  Item_Name[Ring]:='Ring';             Item_Name[Boots]:='Boots';
-Item_Name[Amulet]:='Amulet';              Item_Name[Cloak]:='Cloak';
+                       { Alignments }
+
+  AlignName[NoAlign]:='None';   AlignName[Good]:='Good';      AlignName[Neutral]:='Neutral';    AlignName[Evil]:='Evil';
+
+  
