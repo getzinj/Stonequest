@@ -233,5 +233,17 @@ Value { We got a lot of 'em! }
 
               { The names of the chest traps }
 
+  TrapName[Trapless]:='Trapless Chest';     TrapName[PoisonNeedle]:='Poisoned Need';    TrapName[Alarm]:='Alarm';
+  TrapName[Teleporter]:='Teleporter';       TrapName[CrossbowBolt]:='Crossbow bolt';    TrapName[Blades]:='Blades';
+  TrapName[SnoozeAlarm]:='Snooze Alarm';    TrapName[GasCloud]:='Gas Cloud';            TrapName[Acid]:='Acid';
+  TrapName[Paralyzer]:='Paralyzer';         TrapName[BoobyTrap]:='Booby-Trap';          TrapName[Sleeper]:='Sleeper';
+  TrapName[AntiWizard]:='Anti-Wizard';      TrapName[AntiCleric]:='Anti-Cleric';        TrapName[Darts]:='Darts';
+  TrapName[ExplodingBox]:='Exploding box';  TrapName[Splinters]:='Splinters';           TrapName[Stunner]:='Stunner';
+
+              { Types of items that can be found }
 
 
+Item_Name[Weapon]:='Weapon';              Item_Name[Armor]:='Armor';           Item_Name[Gloves]:='Gloves';
+Item_Name[Shield]:='Shield';              Item_Name[Helmet]:='Helmet';         Item_Name[Scroll]:='Scroll';
+Item_Name[Misc]:='Misc';                  Item_Name[Ring]:='Ring';             Item_Name[Boots]:='Boots';
+Item_Name[Amulet]:='Amulet';              Item_Name[Cloak]:='Cloak';
