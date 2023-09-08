@@ -249,6 +249,45 @@ Value { We got a lot of 'em! }
 
                        { Alignments }
 
-  AlignName[NoAlign]:='None';   AlignName[Good]:='Good';      AlignName[Neutral]:='Neutral';    AlignName[Evil]:='Evil';
+  AlignName[NoAlign]:='None';   AlignName[Good]:='Good';        AlignName[Neutral]:='Neutral';   AlignName[Evil]:='Evil';
 
-  
+
+                   { Character Classes }
+
+  ClassName[NoClass]:='';       ClassName[Cleric]:='Cleric';    ClassName[Fighter]:='Fighter';   ClassName[Paladin]:='Paladin';
+  ClassName[Ranger]:='Ranger';  ClassName[Wizard]:='Wizard';    ClassName[Thief]:='Thief';       ClassName[Assassin]:='Assassin';
+  ClassName[Monk]:='Monk';      ClassName[Ninja]:='Ninja';      ClassName[Bard]:='Bard';         ClassName[Samurai]:='Samurai';
+  ClassName[Barbarian]:='Barbarian';                            ClassName[AntiPaladin]:='AntiPaladin';
+
+                   { Character Sexes }
+
+  SexName[NoSex]:=''; SexName[Male]:='Male';  SexName[Female]:='Female';      SexName[Androgynous]:='Androgynous';
+
+                { Character Status Types }
+
+  StatusName[NoStatus]    :='';       StatusName[Healthy]      :='Healthy'; StatusName[Dead]          :='Dead';
+  StatusName[Deleted]     :='Lost';   StatusName[Afraid]       :='Afraid';  StatusName[Paralyzed]     :='Paralyzed';
+  StatusName[Ashes]       :='Ashes';  StatusName[Asleep]       :='Asleep';  StatusName[Petrified]     :='Petrified';
+  StatusName[Insane]      :='Insane'; StatusName[Zombie]       :='Zombie';  StatusName[Poisoned]      :='Poisoned';
+
+               { Character Races }
+
+  RaceName[NoRace]:='';
+  RaceName[Human]:='Human';           RaceName[HfOrc]:='Half-Orc';
+  RaceName[Dwarven]:='Dwarf';         RaceName[Elven]:='High Elf';
+  RaceName[HfOgre]:='Half-Ogre';      RaceName[Gnome]:='Gnome';
+  RaceName[Hobbit]:='Hobbit';         RaceName[HfElf]:='Half-Elf';
+  RaceName[LizardMan]:='Lizard Man';  RaceName[Centaur]:='Centaur';
+  RaceName[Quickling]:='Quickling';   RaceName[Drow]:='Drow';
+  RaceName[Numenorean]:='Númenórean';
+
+               { Character Abilities }
+
+  AbilName[1]:='Strength;         AbilName[2]:='Intelligence';        AbilName[3]:='Wisdom';       AlbilName[4]:='Dexterity';
+  AbilName[5]:='Contitution';     AbilName[6]:='Charisma';            AbilName[7]:='Luck';
+
+{*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~External DEClarations~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*}
+[Asynchronous,External]Function Oh_No (Var SA: Array [$u1..$u2:Integer] of Integer;  Var MA: Array [$u3..$u4:Integer] of [Unsafe]Integer;
+[External]Procedure No_Controly;External;
+[External]Procedure Controly;External;
+[External]Function String(Num: Integer; Len: Integer:=0):Line;external;
