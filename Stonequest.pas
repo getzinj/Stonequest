@@ -1,5 +1,5 @@
 [Inherit('TYPES', 'SYS$LIBRARY:STARLET','SYS$LIBRARY:LIBRTL','SMGRTL','SYS$:LIBRARY:STRRTL')]
-Program Stonquest (Input,Output,Char_File,Item_File,Monster_File,Message_File,TreasFile,MazeFile,SaveFile,PickFile,AmountFile,
+Program Stonequest (Input,Output,Char_File,Item_File,Monster_File,Message_File,TreasFile,MazeFile,SaveFile,PickFile,AmountFile,
                    ScoresFile,LogFile,HoursFile,PrintMazeFile);
 
 { This is Stonequest, a game.  But it's not just any game - far from it!  This
@@ -472,4 +472,15 @@ End;  { Pick Character Number }
 
 {**********************************************************************************************************************}
 
+[Global]Procedure Wait_Key (Time_Out: Integer:=-1);
+
+{ This procedure simply waits for a key to be typed before it exits}
+
+Begin { Wait Key }
+  Get_Response (Time_Out);
+End;
+
+{**********************************************************************************************************************}
+
+[Glo
 

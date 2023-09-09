@@ -8,7 +8,7 @@ Var
 [External]Function String(Num: Integer; Len: Integer:=0):Line;external;
 [External]Function Can_Play: [Volatile]Boolean;External;
 [External]Function Make_Choice (Choices: Char_Set; Time_Out: Integer:=-1; Time_Out_Char: Char:=' '): Char;External;
-[External]Function Zero_Through_Six (Var Number: Integer; Time_Out: Integer:=-1, Time_Out_Char: Char:='0');External;
+[External]Function Zero_Through_Six (Var Number: Integer; Time_Out: Integer:=-1; Time_Out_Char: Char:='0'): Char;External;
 [External]Function Pick_Character_Number (Party_Size: Integer; Current_Party_Size: Integer:=0;
                                           Time_Out: Integer:=-1; Time_Out_Char: Char:='0'): [Volatile]Integer;External;
 Procedure Play_Slots (Var Character: Character_Type);external;
