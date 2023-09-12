@@ -412,26 +412,23 @@ FUNCTION smg$get_display_attr
 
         EXTERNAL;
 
-[ASYNCHRONOUS, UNBOUND]FUNCTION smg$get_keyboard_attributes
-  (          keyboard_id: UNSIGNED;
-   VAR       keyboard_info_table: unspecified;
-             keyboard_info_table_size: UNSIGNED )
-      : UNSIGNED;
+[ASYNCHRONOUS, UNBOUND]FUNCTION SMG$GET_KEYBOARD_ATTRIBUTES (
+%Ref Keyboard_ID,P_Kit,P_Kit_Size: Unsigned):Unsigned;External;
 
-        EXTERNAL;
-
-[ASYNCHRONOUS, UNBOUND]FUNCTION smg$get_key_def
+[ASYNCHRONOUS, UNBOUND]
+FUNCTION smg$get_key_def
   (          key_table_id: UNSIGNED;
-             key_name: character string;
-             if_state: character string;
-   VAR       attributes: UNSIGNED;
-   VAR       equivalence_string: character string;
-   VAR       state_string: character string )
+             key_name: VARYING [$len2] OF CHAR;
+             if_state: VARYING [$len3] OF CHAR := %immed 0;
+   VAR       attributes: UNSIGNED := %immed 0;
+   VAR       equivalence_string: VARYING [$len5] OF CHAR := %immed 0;
+   VAR       state_string: VARYING [$len6] OF CHAR := %immed 0)
       : UNSIGNED;
 
         EXTERNAL;
 
-[ASYNCHRONOUS, UNBOUND]FUNCTION smg$get_numeric_data
+[ASYNCHRONOUS, UNBOUND]
+FUNCTION smg$get_numeric_data
   (          termtable_address: UNSIGNED;
              request_code: UNSIGNED;
    VAR       buffer_address: UNSIGNED )
@@ -439,192 +436,162 @@ FUNCTION smg$get_display_attr
 
         EXTERNAL;
 
-[ASYNCHRONOUS, UNBOUND]FUNCTION smg$get_pasteboard_attributes
+[ASYNCHRONOUS, UNBOUND]
+FUNCTION smg$get_pasteboard_attributes
   (          pasteboard_id: UNSIGNED;
-   VAR       pasteboard_info_table: unspecified;
+   VAR       pasteboard_info_table: ARRAY [$l2..$h2: INTEGER] of $ubyte;
              pasteboard_info_table_size: UNSIGNED )
       : UNSIGNED;
 
         EXTERNAL;
 
-[ASYNCHRONOUS, UNBOUND]FUNCTION smg$get_pasting_info
-  (          display_id: UNSIGNED;
-             pasteboard_id: UNSIGNED;
-   VAR       flags: UNSIGNED;
-   VAR       pasteboard_row: INTEGER;
-   VAR       pasteboard_column: INTEGER )
-      : UNSIGNED;
+[ASYNCHRONOUS, UNBOUND]FUNCTION SMG$GET_PASTING_INFO (
+%Ref Display_ID,Pasteboard,Flags: Unsigned;
+%Ref Pasteboard_Row,Pasteboard_Column: Integer := %immed 0 ):Unsigned;External;
 
-        EXTERNAL;
-
-[ASYNCHRONOUS, UNBOUND]FUNCTION smg$get_term_data
+[ASYNCHRONOUS, UNBOUND]
+FUNCTION smg$get_term_data
   (          termtable_address: UNSIGNED;
              request_code: INTEGER;
              maximum_buffer_length: INTEGER;
    VAR       return_length: INTEGER;
-             <by reference, array reference> capability_data: unspecified;
-             input_argument_vector: UNSIGNED )
+             buffer_address: UNSIGNED )
       : UNSIGNED;
 
         EXTERNAL;
 
-[ASYNCHRONOUS, UNBOUND]FUNCTION smg$get_viewport_char
+[ASYNCHRONOUS, UNBOUND]FUNCTION SMG$GET_VIEWPORT_CHAR(
+%Ref Display_ID: Unsigned;
+%Ref Viewport_Row_Start,Viewport_Column_Start: Integer := %immed 0;
+%Ref Viewport_Number_Rows,Viewport_Number_Columns: Integer := %immed 0 ):
+Unsigned;External;
+
+[ASYNCHRONOUS, UNBOUND]
+FUNCTION smg$home_cursor
   (          display_id: UNSIGNED;
-   VAR       viewport_row_start: INTEGER;
-   VAR       viewport_column_start: INTEGER;
-   VAR       viewport_number_rows: INTEGER;
-   VAR       viewport_number_columns: INTEGER )
+             position_code: UNSIGNED := %immed 0 )
       : UNSIGNED;
 
         EXTERNAL;
 
-[ASYNCHRONOUS, UNBOUND]FUNCTION smg$home_cursor
-  (          display_id: UNSIGNED;
-             position_code: UNSIGNED )
-      : UNSIGNED;
-
-        EXTERNAL;
-
-[ASYNCHRONOUS, UNBOUND]FUNCTION smg$init_term_table
-  (          terminal_name: character string;
+[ASYNCHRONOUS, UNBOUND]
+FUNCTION smg$init_term_table
+  (          terminal_name: VARYING [$len1] OF CHAR;
    VAR       termtable_address: UNSIGNED )
       : UNSIGNED;
 
         EXTERNAL;
 
-[ASYNCHRONOUS, UNBOUND]FUNCTION smg$init_term_table_by_type
+[ASYNCHRONOUS, UNBOUND]
+FUNCTION smg$init_term_table_by_type
   (          terminal_type: $byte;
    VAR       termtable_address: UNSIGNED;
-   VAR       terminal_name: character string )
+   VAR       terminal_name: VARYING [$len3] OF CHAR := %immed 0 )
       : UNSIGNED;
 
         EXTERNAL;
 
-[ASYNCHRONOUS, UNBOUND]FUNCTION smg$insert_chars
+[ASYNCHRONOUS, UNBOUND]
+FUNCTION smg$insert_chars
   (          display_id: UNSIGNED;
-             character_string: character string;
-             start_row: INTEGER;
-             start_column: INTEGER;
-             rendition_set: UNSIGNED;
-             rendition_complement: UNSIGNED;
-             character_set: UNSIGNED )
+             string: VARYING [$len2] OF CHAR;
+             row: INTEGER;
+             column: INTEGER;
+             rendition_set: UNSIGNED := %immed 0;
+             rendition_complement: UNSIGNED := %immed 0;
+             character_set: UNSIGNED := %immed 0 )
       : UNSIGNED;
 
         EXTERNAL;
 
-[ASYNCHRONOUS, UNBOUND]FUNCTION smg$insert_line
+[ASYNCHRONOUS, UNBOUND]
+FUNCTION smg$insert_line
   (          display_id: UNSIGNED;
              start_row: INTEGER;
-             character_string: character string;
-             direction: UNSIGNED;
-             rendition_set: UNSIGNED;
-             rendition_complement: UNSIGNED;
-             flags: UNSIGNED;
-             character_set: UNSIGNED )
+             character_string: VARYING [$len3] OF CHAR := %immed 0;
+             direction: UNSIGNED := %immed 0;
+             rendition_set: UNSIGNED := %immed 0;
+             rendition_complement: UNSIGNED := %immed 0;
+             flags: UNSIGNED := %immed 0;
+             character_set: UNSIGNED := %immed 0 )
       : UNSIGNED;
 
         EXTERNAL;
 
-[ASYNCHRONOUS, UNBOUND]FUNCTION smg$invalidate_display
+[ASYNCHRONOUS, UNBOUND]
+FUNCTION smg$invalidate_display
   (          display_id: UNSIGNED )
       : UNSIGNED;
 
         EXTERNAL;
 
-[ASYNCHRONOUS, UNBOUND]FUNCTION smg$keycode_to_name
-  (          key_code: word (unsigned);
-   VAR       key_name: character string )
-      : UNSIGNED;
+[ASYNCHRONOUS, UNBOUND]FUNCTION SMG$KEYCODE_TO_NAME
+(%Ref Key_Code: $Word;
+%Descr Key_Name: Varying [$G1] of Char):Unsigned;External;
 
-        EXTERNAL;
-
-[ASYNCHRONOUS, UNBOUND]FUNCTION smg$label_border
+[ASYNCHRONOUS, UNBOUND]
+FUNCTION smg$label_border
   (          display_id: UNSIGNED;
-             text: character string;
-             position_code: UNSIGNED;
-             units: INTEGER;
-             rendition_set: UNSIGNED;
-             rendition_complement: UNSIGNED;
-             character_set: UNSIGNED )
+             label_text: VARYING [$len2] OF CHAR := %immed 0;
+             position: UNSIGNED := %immed 0;
+             units: INTEGER := %immed 0;
+             rendition_set: UNSIGNED := %immed 0;
+             rendition_complement: UNSIGNED := %immed 0;
+             character_set: UNSIGNED := %immed 0 )
       : UNSIGNED;
 
         EXTERNAL;
 
-[ASYNCHRONOUS, UNBOUND]FUNCTION smg$list_key_defs
+[ASYNCHRONOUS, UNBOUND]
+FUNCTION smg$list_key_defs
   (          key_table_id: UNSIGNED;
-             <modify> context: UNSIGNED;
-             <modify> key_name: character string;
-   VAR       if_state: character string;
-   VAR       attributes: UNSIGNED;
-   VAR       equivalence_string: character string;
-   VAR       state_string: character string )
+   %Ref      context: INTEGER;
+   VAR       key_name: VARYING [$len3] OF CHAR := %immed 0;
+   VAR       if_state: VARYING [$len4] OF CHAR := %immed 0;
+   VAR       attributes: UNSIGNED := %immed 0;
+   VAR       equivalence_string: VARYING [$len6] OF CHAR := %immed 0;
+   VAR       state_string: VARYING [$len7] OF CHAR := %immed 0 )
       : UNSIGNED;
 
         EXTERNAL;
 
-[ASYNCHRONOUS, UNBOUND]FUNCTION smg$list_pasteboard_order
-  (          display_id: UNSIGNED;
-             <modify> context: UNSIGNED;
-   VAR       pasteboard_id: UNSIGNED;
-   VAR       pasteboard_row: INTEGER;
-   VAR       pasteboard_column: INTEGER )
-      : UNSIGNED;
+[ASYNCHRONOUS, UNBOUND]FUNCTION SMG$LIST_PASTING_ORDER (
+%Ref Pasteboard_ID,Context,Display_ID: UNSIGNED;
+%Ref Pasteboard_Row,Pasteboard_Column: INTEGER := %immed 0 ):Unsigned;External;
 
-        EXTERNAL;
-
-[ASYNCHRONOUS, UNBOUND]FUNCTION smg$list_pasting_order
-  (          pasteboard_id: UNSIGNED;
-             <modify> context: UNSIGNED;
-   VAR       display_id: UNSIGNED;
-   VAR       pasteboard_row: INTEGER;
-   VAR       pasteboard_column: INTEGER )
-      : UNSIGNED;
-
-        EXTERNAL;
-
-[ASYNCHRONOUS, UNBOUND]FUNCTION smg$load_key_defs
+[ASYNCHRONOUS, UNBOUND]
+FUNCTION smg$load_key_defs
   (          key_table_id: UNSIGNED;
-             filespec: character string;
-             default_filespec: character string;
-             flags: UNSIGNED )
+             filespec: VARYING [$len2] OF CHAR;
+             default_filespec: VARYING [$len3] OF CHAR := %immed 0;
+             lognam_flag: UNSIGNED := %immed 0 )
       : UNSIGNED;
 
         EXTERNAL;
 
-[ASYNCHRONOUS, UNBOUND]FUNCTION smg$load_virtual_display
-  (          VAR display_id: UNSIGNED;
-             filespec: character string )
-      : UNSIGNED;
+[ASYNCHRONOUS, UNBOUND]
+Function SMG$LOAD_VIRTUAL_DISPLAY
+(%Ref Display_ID: UNSIGNED;
+%Descr File_Spec: Varying [$M1] of Char:=%Immed 0):Unsigned;External;
 
-        EXTERNAL;
+[ASYNCHRONOUS, UNBOUND]Function SMG$MOVE_TEXT (
+%Ref Display_ID,Top_Left_Row,Top_Left_Column,Bottom_Right_Row,Bottom_Right_Column: UNSIGNED;
+%Ref Display_ID2: Unsigned;
+%Ref Top_Left_Row2,Top_Left_Column2,Flags: Unsigned:=%Immed 0): Unsigned;External;
 
-[ASYNCHRONOUS, UNBOUND]FUNCTION smg$move_text
-  (          display_id: UNSIGNED;
-             top_left_row: UNSIGNED;
-             top_left_column: UNSIGNED;
-             bottom_right_row: UNSIGNED;
-             bottom_right_column: UNSIGNED;
-             flags: UNSIGNED )
-      : UNSIGNED;
-
-        EXTERNAL;
-
-[ASYNCHRONOUS, UNBOUND]FUNCTION smg$move_virtual_display
+[ASYNCHRONOUS, UNBOUND]
+FUNCTION smg$move_virtual_display
   (          display_id: UNSIGNED;
              pasteboard_id: UNSIGNED;
              pasteboard_row: INTEGER;
-             pasteboard_column: INTEGER;
-             top_display_id: UNSIGNED )
+             pasteboard_column: INTEGER)
       : UNSIGNED;
 
         EXTERNAL;
 
-[ASYNCHRONOUS, UNBOUND]FUNCTION smg$name_to_keycode
-  (          key_name: character string;
-   VAR       key_code: word (unsigned) )
-      : UNSIGNED;
-
-        EXTERNAL;
+[ASYNCHRONOUS, UNBOUND]Function SMG$NAME_TO_KEYCODE (
+%Descr Key_Name: Varying [$k1] of Char;
+%Ref Key_Code: $Word): Unsigned;External;
 
 [ASYNCHRONOUS, UNBOUND]FUNCTION smg$paste_virtual_display
   (          display_id: UNSIGNED;
@@ -782,14 +749,14 @@ FUNCTION smg$get_display_attr
              key_table_id: UNSIGNED;
    VAR       resultant_string: character string;
              prompt_string: character string;
-   VAR       resultant_length: word (unsigned);
+   VAR       resultant_length: $Word;
              display_id: UNSIGNED;
              flags: UNSIGNED;
              initial_string: character string;
              timeout: INTEGER;
              rendition_set: UNSIGNED;
              rendition_complement: UNSIGNED;
-   VAR       word_terminator_code: word (unsigned) )
+   VAR       word_terminator_code: $Word )
       : UNSIGNED;
 
         EXTERNAL;
@@ -806,7 +773,7 @@ FUNCTION smg$get_display_attr
 
 [ASYNCHRONOUS, UNBOUND]FUNCTION smg$read_keystroke
   (          keyboard_id: UNSIGNED;
-   VAR       word_terminator_code: word (unsigned);
+   VAR       word_terminator_code: $Word;
              prompt_string: character string;
              timeout: INTEGER;
              display_id: UNSIGNED;
@@ -818,9 +785,9 @@ FUNCTION smg$get_display_attr
 
 [ASYNCHRONOUS, UNBOUND]FUNCTION smg$read_locator
   (          keyboard_id: UNSIGNED;
-             row_number: word (unsigned);
-             column_number: word (unsigned);
-   VAR       word_terminator_code: word (unsigned);
+             row_number: $Word;
+             column_number: $Word;
+   VAR       word_terminator_code: $Word;
              timeout: INTEGER;
              parse_routine: INTEGER )
       : UNSIGNED;
@@ -835,8 +802,8 @@ FUNCTION smg$get_display_attr
              modifiers: UNSIGNED;
              timeout: INTEGER;
              terminator_set: unspecified;
-   VAR       resultant_length: word (unsigned);
-   VAR       word_terminator_code: word (unsigned);
+   VAR       resultant_length: $Word;
+   VAR       word_terminator_code: $Word;
              display_id: UNSIGNED;
              initial_string: character string;
              rendition_complement: UNSIGNED;
@@ -857,13 +824,13 @@ FUNCTION smg$get_display_attr
              timeout: INTEGER;
              placeholder_arg: unspecified;
              initial_offset: INTEGER;
-   VAR       word_terminator_code: word (unsigned);
+   VAR       word_terminator_code: $Word;
              display_id: UNSIGNED;
              alternate_echo_string: character string;
              alternate_display_id: INTEGER;
              rendition_set: UNSIGNED;
              rendition_complement: UNSIGNED;
-   VAR       input_length: word (unsigned) )
+   VAR       input_length: $Word )
       : UNSIGNED;
 
         EXTERNAL;
@@ -931,7 +898,7 @@ FUNCTION smg$get_display_attr
    VAR       resultant_string: character string;
              match_string: character string;
              byte_integer_line_number: byte (unsigned);
-   VAR       resultant_length: word (unsigned) )
+   VAR       resultant_length: $Word )
       : UNSIGNED;
 
         EXTERNAL;
@@ -982,12 +949,12 @@ FUNCTION smg$get_display_attr
 [ASYNCHRONOUS, UNBOUND]FUNCTION smg$select_from_menu
   (          keyboard_id: UNSIGNED;
              display_id: UNSIGNED;
-   VAR       selected_choice_number: word (unsigned);
-             default_choice_number: word (unsigned);
+   VAR       selected_choice_number: $Word;
+             default_choice_number: $Word;
              flags: UNSIGNED;
              help_library: character string;
              timeout: INTEGER;
-   VAR       word_terminator_code: word (unsigned);
+   VAR       word_terminator_code: $Word;
    VAR       selected_choice_string: character string;
              rendition_set: UNSIGNED;
              rendition_complement: UNSIGNED )
