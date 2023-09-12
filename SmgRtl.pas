@@ -116,7 +116,7 @@ TYPE
 [ASYNCHRONOUS, UNBOUND]FUNCTION smg$control_mode
   (          pasteboard_id: UNSIGNED;
              new_mode: UNSIGNED := %immed 0;
-   VAR       old_mode: UNSIGNED := %immed 0) )
+   VAR       old_mode: UNSIGNED := %immed 0)
       : UNSIGNED;
 
         EXTERNAL;
@@ -150,7 +150,7 @@ FUNCTION smg$create_pasteboard
 
         EXTERNAL;
 
-[ASYNCHRONOUS, UNBOUND
+[ASYNCHRONOUS, UNBOUND]
 Function SMG$CREATE_SUBPROCESS
   (          %Ref display_id: UNSIGNED;
                   AST_routine,AST_argument: Integer := %immed 0 )
