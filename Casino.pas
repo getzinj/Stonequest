@@ -53,7 +53,8 @@ Begin { Character Entered }
         SMG$Put_Chars (BottomDisplay, 'Welcome, ');
         SMG$Put_Chars (BottomDisplay, Character.Name,,,,1);
         SMG$Put_Line (BottomDisplay, ', thou have');
-        SMG$Put_Line (BottomDisplay,String(Character.Gold)+' Gold Pieces.  Thou may: ',2);
+        SMG$Put_Line (BottomDisplay,String(Character.Gold)
++' Gold Pieces.  Thou may: ',2);
         SMG$Put_Line (BottomDisplay, '[S] Play Slots');
         SMG$Put_Line (BottomDisplay, '[P] Pool gold',2);
         SMG$Put_Line (BottomDisplay, 'Which? [Return exits]');
@@ -97,7 +98,8 @@ Begin
       Begin
          SMG$Erase_Display (BottomDisplay);
          Smg$Set_Cursor_ABS (BottomDisplay,2,1);
-         Smg$Put_line (BottomDisplay, 'Welcome to the Five Aces Casino!  Who will tempt the winds of fate?');
+         Smg$Put_line (BottomDisplay,
+'Welcome to the Five Aces Casino!  Who will tempt the winds of fate?');
          Person:=Get_Person (Party_Size);
          If (Person<>0) Then
             If (Party[Person].Status in [Healthy,Poisoned,Insane]) then

@@ -242,7 +242,7 @@ FUNCTION smg$delete_pasteboard
 
         EXTERNAL;
 
-[ASYNCHRONOUS, UNBOUND]FUNCTION SMG$DELETE_SUBPROCESS(%Ref display_ID: UNSIGNED):Unsigned;External
+[ASYNCHRONOUS, UNBOUND]FUNCTION SMG$DELETE_SUBPROCESS(%Ref display_ID: UNSIGNED):Unsigned;External;
 [ASYNCHRONOUS, UNBOUND]FUNCTION SMG$DELETE_VIEWPORT(%Ref display_ID: UNSIGNED):Unsigned;External;
 
 [ASYNCHRONOUS, UNBOUND]
@@ -613,19 +613,19 @@ FUNCTION smg$pop_virtual_display
 
 [ASYNCHRONOUS, UNBOUND]Function SMG$PRINT_PASTEBOARD (
 %Ref Pasteboard_ID: UNSIGNED;
-%Desc Queue_Name: Varying [$J1] of Char := %Immed 0;
+%Descr Queue_Name: Varying [$J1] of Char := %Immed 0;
 %Ref copies: Integer := %Immed 0): Unsigned;External;
 
 [ASYNCHRONOUS, UNBOUND]
 FUNCTION smg$put_chars
   (          display_id: UNSIGNED;
              text: VARYING [$len2] OF CHAR;
-             start_row: INTEGER := immed 0;
-             start_column: INTEGER := immed 0;
-             flags: UNSIGNED := immed 0;
-             rendition_set: UNSIGNED := immed 0;
-             rendition_complement: UNSIGNED := immed 0;
-             character_set: UNSIGNED := immed 0 )
+             start_row: INTEGER := %immed 0;
+             start_column: INTEGER := %immed 0;
+             flags: UNSIGNED := %immed 0;
+             rendition_set: UNSIGNED := %immed 0;
+             rendition_complement: UNSIGNED := %immed 0;
+             character_set: UNSIGNED := %immed 0 )
       : UNSIGNED;
 
         EXTERNAL;
@@ -634,11 +634,11 @@ FUNCTION smg$put_chars
 FUNCTION smg$put_chars_highwide
   (          display_id: UNSIGNED;
              text: VARYING [$len2] OF CHAR;
-             start_row: INTEGER := immed 0;
-             start_column: INTEGER := immed 0;
-             rendition_set: UNSIGNED := immed 0;
-             rendition_complement: UNSIGNED := immed 0;
-             character_set: UNSIGNED := immed 0 )
+             start_row: INTEGER := %immed 0;
+             start_column: INTEGER := %immed 0;
+             rendition_set: UNSIGNED := %immed 0;
+             rendition_complement: UNSIGNED := %immed 0;
+             character_set: UNSIGNED := %immed 0 )
       : UNSIGNED;
 
         EXTERNAL;
@@ -934,13 +934,13 @@ FUNCTION smg$scroll_display_area
 
 Function SMG$SELECT_FROM_MENU (%Ref Keyboard_ID,Display_ID: Unsigned;
                                %Ref Selected_Choice_number: $Uword;
-                               %Ref default_choice_number: $Uword:=Immed 0;
-                               %Ref flags: UNSIGNED:=Immed 0;
-                               %Descr help_library: VARYING [$Z1] OF CHAR:=Immed 0;
-                               %Ref Timeout: INTEGER:=Immed 0;
-                               %Ref word_terminator_code: $Word:=Immed 0;
-                               %Descr selected_choice_string: VARYING [$Z2] OF CHAR:=Immed 0;
-                               %Ref rendition_set,rendition_complement: UNSIGNED:=Immed 0 ):Unsigned;External;
+                               %Ref default_choice_number: $Uword:=%Immed 0;
+                               %Ref flags: UNSIGNED:=%Immed 0;
+                               %Descr help_library: VARYING [$Z1] OF CHAR:=%Immed 0;
+                               %Ref Timeout: INTEGER:=%Immed 0;
+                               %Ref word_terminator_code: $Word:=%Immed 0;
+                               %Descr selected_choice_string: VARYING [$Z2] OF CHAR:=%Immed 0;
+                               %Ref rendition_set,rendition_complement: UNSIGNED:=%Immed 0 ):Unsigned;External;
 
 [ASYNCHRONOUS, UNBOUND]
 FUNCTION smg$set_broadcast_trapping
