@@ -573,4 +573,85 @@ End;  { User Name }
 
 {**********************************************************************************************************************}
 
+Procedure Delete_All_Displays;
 
+{ This procedure deletes all (?) of the virtual displays created by the game }
+
+Begin { Delete All Displays }
+   SMG$Delete_Virtual_Display(ScreenDisplay);
+
+   SMG$Delete_Virtual_Display(HelpDisplay);
+   SMG$Delete_Virtual_Display(ShellDisplay);
+   SMG$Delete_Virtual_Display(CharacterDisplay);
+   SMG$Delete_Virtual_Display(MonsterDisplay);
+   SMG$Delete_Virtual_Display(CommandDisplay);
+   SMG$Delete_Virtual_Display(SpellsDisplay);
+   SMG$Delete_Virtual_Display(OptionsDisplay);
+   SMG$Delete_Virtual_Display(TextDisplay);
+   SMG$Delete_Virtual_Display(ViewDisplay);
+   SMG$Delete_Virtual_Display(FightDisplay);
+   SMG$Delete_Virtual_Display(MessageDisplay);
+   SMG$Delete_Virtual_Display(CampDisplay);
+   SMG$Delete_Virtual_Display(ScenarioDisplay);
+   SMG$Delete_Virtual_Display(GraveDisplay);
+   SMG$Delete_Virtual_Display(TopDisplay);
+   SMG$Delete_Virtual_Display(BottomDisplay);
+End;  { Delete All Displays }
+
+{**********************************************************************************************************************}
+
+Procedure Delete_Virtual_Devices;
+
+{ This procedure deletes all of the virtual devices created by SMG$ }
+
+Begin { Delete Virtual Devices }
+   SMG$Disable_Broadcast_Trapping (Pasteboard); { Stop trapping }
+   Cursor;  { Restore the cursor to the on position }
+
+   SMG$Delete_Virtual_Keyboard (Keyboard);  { Delete the keyboard }
+   Delete_All_Displays;  { Delete the displays created in Stonequest }
+
+   SMG$Delete_Pasteboard (Pasteboard, 1); { Delete the pasteboard }
+End;  { Delete Virtual Devices }
+
+{**********************************************************************************************************************}
+
+Procedure Extend_LogFile (Out_Message: Line);
+
+{ This procedure writes the supplied line to the logfile }
+
+Begin { Extend LogFile }
+   Repeat
+      Open (LogFile,'Stone_Data:Stone_Log.Dat',History:=Unknown,Sharing:=READONLY,Error:=CONTINUE);
+   Until (Status(LogFile)<>PAS$K_FILALROPE);
+   Extend (LogFile,Error:=Continue);
+   Write  (LogFile,Out_Message,Error:=Continue);
+   Close  (LogFile,Error:=Continue);
+End;  { Extend LogFile }
+
+{**********************************************************************************************************************}
+
+[Global]Procedure Read_Error_Window (FileType: Line; Code: Integer:=0);
+
+{ This procedure prints an error message and then exits Stonequest. }
+
+Var
+  BroadcastDisplay:  Unsigned;  { Virtual keyboard and Broadcast }
+  Msg: Line;
+
+{ THIS CODE IS MISSING IN THE PRINT OUT. IT WILL NEED TO BE RECREATED. -- JHG 2023-09-15 }
+
+Begin
+End;
+
+
+{[Global]?}Procedure Message_Trap ();
+
+{ THIS CODE IS MISSING IN THE PRINT OUT. IT WILL NEED TO BE RECREATED. -- JHG 2023-09-15 }
+
+Begin { Message Trap }
+   Msg:='* * * Error reading '+FileType+' file!';
+   If Code<>0 then msg:=msg+'  Error #'String(code);
+   Msg:=Msg+' * * *';
+
+   
