@@ -482,5 +482,95 @@ End;
 
 {**********************************************************************************************************************}
 
-[Glo
+[Global]Procedure Ring_Bell (Display_Id: Unsigned; Number_of_Times: Integer:=1);
+
+Begin { Ring Bell }
+  If Bells_On then SMG$Ring_Bell (Display_ID,Number_of_Times);
+End;  { Ring Bell }
+
+{**********************************************************************************************************************}
+
+[Global]Procedure Cursor;
+
+{ This procedure will turn the cursor on, and set CURSOR_MODE, the cursor's flag, to be true }
+
+Begin { Cursor }
+  Cursor_Mode:=True; { Set the cursor flag }
+  SMG$Set_Cursor_Mode(Pasteboard, 0) { Turn on the cursor }
+End;  { Cursor }
+
+{**********************************************************************************************************************}
+
+[Global]Procedure Get_Num (Var Number: Integer; Display: Unsigned);
+
+{ This procedure will get a number and store it in NUMBER, echoing to DISPLAY }
+
+Var
+   Response: Line;
+   Position: Integer;
+
+Begin { Get Num }
+
+   { Read the number string }
+
+   Cursor;
+   SMG$Read_String (Keyboard,Response,Display_ID:=Display);
+   No_Cursor;
+
+   If Response.Length=0 then
+      Response:='0';
+   Else
+      For Position:=1 to Response.Length do
+          If Not(Response.Body[Position] in ['0'..'9','+','-]]) then
+             Response.Body[Position]:='0';
+
+   ReadV (Response.Number,Error:=Continue);
+End;  { Get Num }
+
+{**********************************************************************************************************************}
+
+[Global]Function User_Name: Line;
+
+{ This function will return the USERNAME of the person using the game.  The
+  code was provided by Denis Haskin, a great hacker, but a poor documenter,
+  not unlike myself. ( *wink* ) }
+
+Type
+   Items=  record
+               Buffer_Length,Item_Code:  Unsigned_word;
+               Buffer_Address,Return_Length_Address: integer;
+           End;
+   Item_List_Type= Record
+                        Item: Array [0..0] of Items;
+                        Terminator: Integer;
+                   End;
+   Buffer_type = Array [0..0] of Line;
+
+Var
+   Item_list    : item_list_type;
+   Buffer       : buffer_type;
+   PID          : unsigned;
+
+Begin { User Name }
+  Buffer[0]:='';
+  With Item_List.Item[0] do
+    Begin
+      Buffer_length:=12;
+      Item_Code:=JPI$_Username; { Specify that we want the username }
+      Buffer_Address:=Iaddress(Buffer[0].Body); { Send it the string buffer }
+      Return_Length_Address:=IAddress(Buffer[0].Length) { And the length }
+    End;
+  Item_List.Terminator:=0;   { Indicate no more items }
+
+  pid:=0;       { Indicate the current process }
+
+  $getjpi(pidadr:=%ref pid,itmlst:=%rref item_list);
+
+  { Return current username in Buffer[0] }
+
+  User_Name:=Buffer[0];
+End;  { User Name }
+
+{**********************************************************************************************************************}
+
 
