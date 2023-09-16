@@ -642,8 +642,10 @@ Var
 { THIS CODE IS MISSING IN THE PRINT OUT. IT WILL NEED TO BE RECREATED. -- JHG 2023-09-15 }
 
 Begin
+{ THIS CODE IS MISSING IN THE PRINT OUT. IT WILL NEED TO BE RECREATED. -- JHG 2023-09-15 }
 End;
 
+{**********************************************************************************************************************}
 
 {[Global]?}Procedure Message_Trap ();
 
@@ -654,4 +656,77 @@ Begin { Message Trap }
    If Code<>0 then msg:=msg+'  Error #'String(code);
    Msg:=Msg+' * * *';
 
-   
+   If Logging then Extend_LogFile (Msg);
+
+   SMG$Create_Virtual_Display (5,78,BroadcastDisplay,1);
+   SMG$Erase_Display (BroadcastDisplay);
+   SMG$Label_Border (BroadcastDisplay, '> Yikes! <', SMG$K_TOP);
+
+         { Print the message to the display }
+
+   SMG$Put_Chars    (BroadcastDisplay,Msg,2,39-(Pas_Errors[Code].Length div 2));
+   If (Code>-2) and (Code<129) then
+      SMG$Put_Chars (BroadcastDisplay,Pas_Errors[Code],3,39-(Pas_Errors[Code].Length div 2));
+
+         { Paste it onto the pasteboard }
+
+   SMG$Paste_Virtual_Display (BroadcastDisplay,Pasteboard,2,2);
+
+                { Wait and then delete all created virtual devices }
+
+   LIB$WAIT (3);
+
+   SMG$Unpaste_Virtual_Display (BroadcastDisplay,Pasteboard);
+   SMG$Delete_Virtual_Display  (BroadcastDisplay);
+   Delete_Virtual_Devices;
+   Exit;  { Leve the game. (sorry! ) }
+End;  { Message Trap }
+
+{**********************************************************************************************************************}
+
+[Global]Function Load_Saved_Game: [Volatile]Save_Record;
+
+{ This function returns the saved game, if there was one.  This function is not defined if the file doesn't exist so the checking
+  must be performed before this. }
+
+Var
+   Temp: Save_Record;
+
+Begin { Load Saved Game }
+   With Temp do
+      Begin { Make a dummy save record }
+         PosX:=1;  PosY:=1;  PosZ:=0;
+         Direction:=North;
+         Party_Size:=1;
+         Current_Size:=0;
+      End;
+
+   { Open the file, and if there's data, read it }
+
+   Open (SaveFile, 'SYS$LOGIN:STONE_SAVE.DAT',History:=OLD,Error:=CONTINUE);
+   If Status(SaveFile)=PAS$K_SUCCESS then
+      Begin
+        Reset (SaveFile,Error:=Continue);
+        If Not EOF (SaveFile) then Read (SaveFile, Temp)
+        Else                       Read_Error_Window ('save',Status(SaveFile));
+        Close (SaveFile,Error:=Continue);
+      End
+   Else
+      Read_Error_Window ('save',Status(SaveFile));
+
+   { Return the data }
+
+   Load_Saved_Game:=Temp;
+End;  { Load Saved Game }
+
+{**********************************************************************************************************************}
+
+[Global]Procedure Change_Score (Var Character: Character_Type; Score_Num, Inc: Integer);
+
+{ This procesure changes an ability score of a character }
+
+Begin { Change Score }
+   If ((Character.Abilities[Score_Num]>3)  and (Inc<0)) or
+      ((Character.Abilities[Score_Num]<25) and (Inc>0)) then
+      Character.Abilities[Score_Num]:=Character.Abilities[Score_Num]+Inc;
+End;  { Change Score }
