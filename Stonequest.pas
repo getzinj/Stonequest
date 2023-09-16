@@ -723,10 +723,50 @@ End;  { Load Saved Game }
 
 [Global]Procedure Change_Score (Var Character: Character_Type; Score_Num, Inc: Integer);
 
-{ This procesure changes an ability score of a character }
+{ This procedure changes an ability score of a character }
 
 Begin { Change Score }
    If ((Character.Abilities[Score_Num]>3)  and (Inc<0)) or
       ((Character.Abilities[Score_Num]<25) and (Inc>0)) then
       Character.Abilities[Score_Num]:=Character.Abilities[Score_Num]+Inc;
 End;  { Change Score }
+
+{**********************************************************************************************************************}
+
+[Global]Procedure Special_Occurance (Var Character: Character_Type; Number: Integer);
+
+[External]Function XP_Needed (Class: Class_Type; Level: Integer): Real;external;
+[External]Function Made_Roll (Needed: Integer): [Volatile]Boolean;external;
+
+{ This procedure implements the "special occurances" (kinda like Daka's special dinners) for an item or whatever. All it does it
+  something hard-coded for each particular item }
+
+Var
+   X: Integer;
+
+Begin { Special Occurance }
+   Case Number of
+        1: If Made_Roll (65) then
+              If Not Made_Roll(Character.Level) then
+                 Begin { Raise Character's level }
+                     Character.Level:=Character.Level+1;
+                     Character.Experience:=XP_Needed (Character.Class,Character.Level);
+                 End;  { Raise Character's Level }
+        2: Begin { Lower character's level }
+              Character.Level:=Character.Level-1;
+              If Character.Level<1 then
+                 Begin
+                    Character.Level:=1;
+                    Character.Curr_HP:=0;
+                    Character.Max_HP:=0;
+                    Character.Status:=Deleted;
+                 End
+              Else
+                 Character.Experience:=XP_Needed (Character.Class,Character.Level);
+           End;  { Lower character's level }
+        3. Begin { Reduce a character's age 2-20 years }
+              Character.Age:=Character.Age-(Roll_Die(10)*2*365);
+              If Character.Age<(10*365) then Character.Age:=10*365;
+           End;  { Increase a characters age }
+
+           { Raise the ability scores }
