@@ -1,6 +1,8 @@
 ;
-;        This error handler is a modified form of the error handler used in the public domain software, Moria. It is more
-;        advanced than what I have, so I'm using this.  Those guys from Moria must be VERY smart!
+;        This error handler is a modified form of the error handler used in the
+;        public domain software, Moria. It is more
+;        advanced than what I have, so I'm using this.  Those guys from Moria
+;        must be VERY smart!
 ;
 ;
          .TITLE  HANDLER - Condition handler for STONEQUEST
@@ -15,6 +17,7 @@ PROMPT:  .LONG   STRING_LEN
 NCSP:    .LONG   10
          .ADDRESS BUF
 BUF:     .BLKB   10
+TWEN:    .LONG   1
 
          .PSECT  MISC1$CODE      RD, NOWRT, PIC, SHR, LONG, EXE
          $SSDEF                  ; Define system service values
@@ -37,10 +40,8 @@ BUF:     .BLKB   10
          CMPL    R4, #4                 ; Is it fatal?
          BLSS    10$                    ; Nope, resignal
          BICB    #7, 4(R2)              ; Modify the severity to warning
-         $UNWIND_S       DEPADR=20$     ; Unwind the caller
+         $UNWIND_S       DEPADR=TWEN    ; Unwind the caller
 10$:     MOVL    #SS$_RESIGNAL, R0      ; So to resignal
          RET
-
-20$:     .LONG   1
          .END
 
