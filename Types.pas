@@ -111,9 +111,9 @@ Type
   { Classification of monsters }
 
   Monster_Type   = (Warrior,Mage,Priest,Pilferer,Karateka,Midget,Giant,Myth,Animal,Lycanthrope,Undead,Demon,Insect,Plant,
-                    MultiPlanar,Dragon,Statue,Reptile,Enchanged);
+                    MultiPlanar,Dragon,Statue,Reptile,Enchanted);
 
-  { The different attack types in Stoneque3st.  Note: Some are not used.
+  { The different attack types in Stonequest.  Note: Some are not used.
     In general, CHARMING is used as a null attack when one is needed.   }
 
   Attack_Type    = (Fire,Frost,Posion,LvlDrain,Stoning,Magic,Death,CauseFear,Electricity,Charming,Insanity,Aging,Sleep);
