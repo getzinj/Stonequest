@@ -969,6 +969,105 @@ End;  { Get Level }
 
 { $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ }
 
+Procedure Restore_Game;
+
+{ This procedure begins restoration of a previously saved game }
+
+[External]Procedure Kryn (Var Roster: Roster_Type);external
+
+Begin { Restore Game }
+   Auto_load:=True;
+   SMG$Put_Chars (ScreenDisplay,'* * * Resuming where you left off * * *',23,20);
+
+   Set_Up_Kyrn;
+
+   Kyrn (Roster);
+
+   Exit_Kryn;  { For when the user exits Kryn after saving }
+End;  { Restore Game }
+
+{**********************************************************************************************************************}
+
+Procedure Handle_Auto_Save;
+
+{ This procedure handles the tail end of an already-started saving }
+
+Begin { Handle Auto Save }
+   SMG$Paste_Virtual_Display   (ScreenDisplay,Pasteboard,1,1);
+   SMG$Unpaste_Virtual_Display (TopDisplay,Pasteboard);
+   SMG$Unpaste_Virtual_Display (BottomDisplay,Pasteboard);
+   SMG$End_Pasteboard_Update   (Pasteboard);
+   Auto_Save:=Falsep;
+End;  { Handle Auto Save }
+
+{**********************************************************************************************************************}
+
+Procedure Print_Help_Screen;
+
+Var
+  HelpMeDisplay: unsigned;
+
+Begin
+  SMG$CREATE_VIRTUAL_DISPLAY (22,78,HelpMeDisplay,1);
+  SMG$Erase_Display (HelpMeDisplay);
+
+  SMG$Put_Line (HelpMeDisplay, 'Options:');
+  SMG$Put_Line (HelpMeDisplay, '--------');
+  SMG$Put_Line (HelpMeDisplay, '    Start Game          = Begin playing.  If you have never played before,');
+  SMG$Put_Line (HelpMeDisplay, '                          this should be one of your first options.');
+  SMG$Put_Line (HelpMeDisplay, '    Quit                = Stop playing for now.  All characters and situations:');
+  SMG$Put_Line (HelpMeDisplay, '                          will be saved for the next time you play.');
+  SMG$Put_Line (HelpMeDisplay, '    Player Utilities    = Activate the player utilities.  The player utilities');
+  SMG$Put_Line (HelpMeDisplay, '                          allow such activities as recovering accidentally lost');
+  SMG$Put_Line (HelpMeDisplay, '                          characters, the changing of default print queues, and');
+  SMG$Put_Line (HelpMeDisplay, '                          the turning on and off of message trapping and bells.');
+  SMG$Put_Line (HelpMeDisplay, '    Look at High Scores = Allows you to see how you rank against the other');
+  SMG$Put_Line (HelpMeDisplay, '                          players of Stonequest.');
+  SMG$Put_Line (HelpMeDisplay, '    View Scenario       = The option will print a couple of pages of text');
+  SMG$Put_Line (HelpMeDisplay, '                          explaining the goal of the game. ');
+  SMG$Put_Line (HelpMeDisplay, '    Restore saved game  = Allows you to resume play at the point your previous-');
+  SMG$Put_Line (HelpMeDisplay, '                          ly saved.  This option will not appear unless you');
+  SMG$Put_Line (HelpMeDisplay, '                          have saved a game');
+  SMG$Put_Line (HelpMeDisplay, '', 4);
+  SMG$Put_Line (HelpMeDisplay, 'Press any key to continue...', 0);
+  SMG$Paste_Virtual_Display (HelpMeDisplay,Pasteboard,2,2);
+  Wait_Key;
+  SMG$Unpaste_Virtual_Display (HelpMeDisplay,Pasteboard);
+  SMG$Delete_Virtual_Display (HelpMeDisplay);
+End;
+
+{**********************************************************************************************************************}
+
+Procedure Handle_Response (Var Answer: Char);
+
+{ This procedure handles the user's choice.  If the person is an authorized user, i.e., me, an extra option, 'U' for utilities is
+  allowed }
+
+Var
+   Options: Char_Set;
+
+[External]Procedure Print_Scores;external;
+
+Begin { Handle Response }
+   Options:=['V','Q','S','L','P','?'];
+   If Authorized then Options:=Options+['U']-['P'];
+   If Game_Saved then Options:=Options+['R'];
+   Answer:=Make_Choice (Options);
+   Case Answer of
+      '?': Print_Help_Screen;
+      'L': Print_Scores;                                                                  { View High scores }
+      'P': Player_Utilities (Pasteboard);                                                 { Access player utilities }
+      'R': Restore_Game;                                                                  { Restore the saved game }
+      'V': View_Scenario;                                                                 { See what the game's all about }
+      'S': Start_Game;                                                                    { Play the game }
+      'U': Utilities (Pics,MazeFile,Roster,Treasure,Item_List);                           { Go to Utilities sub-menu }
+      'Q': ;                                                                              { Quit }
+      Otherwise ;
+   End;
+End;  { Handle Response }
+
+{**********************************************************************************************************************}
+
 [Global]Procedure Save_Messages (Messages: Message_Group);
 
 { This procedure saves the messages to the disk }
