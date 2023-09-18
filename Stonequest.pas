@@ -770,3 +770,323 @@ Begin { Special Occurance }
            End;  { Increase a characters age }
 
            { Raise the ability scores }
+        4..10: Change_Score (Character,Number-3,Roll_Die(3));
+
+           { Lower the ability scores }
+
+        11..17: Change_Score (Character,Number-10,Roll_Die(3)*(-1));
+        18: Begin
+               For X:=1 to 12+Roll_Die(12) do
+                   If Character.Class=Barbarian then
+                      Character.Class:=Cleric
+                   Else
+                      Caracter.Class:=Succ(Character.Class);
+               If Character.Class=Character.PreviousClass then
+                   If Character.Class=Barbarian then
+                      Character.Class:=Cleric
+                   Else
+                      Caracter.Class:=Succ(Character.Class);
+
+            End;
+        19: Begin
+               Character.Alignment:=Evil;
+               Character.Abilities[1]:=Max(Character.Abilities[1], 17);
+            End;
+        Otherwise ;
+   End;
+End;  { Special Occurance }
+
+{**********************************************************************************************************************}
+
+[Global]Procedure Show_Image (Number: Pic_Type; Var Display: Unsigned);
+
+{ This procedure will copy the NUMBERth picture onto DISPLAY }
+
+Var
+   X,Y: Integer;
+   Pic: Picture;
+   Image: Image_Type;
+
+Begin { Show Image }
+
+   { Get the appropriate image }
+
+   Pic:=Pics[Number];
+   Image:=Pic.Image;
+
+   { Copy it onto the display }
+
+   SMG$Begin_Display_Update (Display);
+   For Y:=1 to 9 do
+      For X:=1 to 23 do
+         SMG$Put_Chars (Display,Image[X,Y],Y+0,X+0);
+   SMG$End_Display_Update (Display);
+End;  { Show Image }
+
+{**********************************************************************************************************************}
+
+Function Time_And_Date_And_Name: [Volatile]Line;
+
+{ This function returns the current time, date, and username of player }
+
+Var
+   T: Line;
+   T1: Time_type;
+
+Begin { Time and Date and Name }
+   T1:='';  Time(T1);
+   T:=User_Name+' '+T1;
+   Date(T1);
+   Time_and_Date_and_Name:=T+'     '+T1+'   '
+End;  { Time and Date and Name }
+
+{**********************************************************************************************************************}
+
+Procedure Log_Player_In;
+
+{ This procedure records the time and date the user logged into the logfile. }
+
+Begin { Log Player In }
+   If Logging and (User_Name<>'JGETZIN') then Extend_LogFile (Time_And_Date_And_name+'IN');
+End;  { Log Player In }
+
+{**********************************************************************************************************************}
+
+Procedure Log_Player_Out;
+
+{ See above? }
+
+Begin { Log Player Out }
+   If Logging and (User_Name<>'JGETZIN') then Extend_LogFile (Time_And_Date_And_name+'OUT');
+End;  { Log Player Out }
+
+{**********************************************************************************************************************}
+[Global]Procedure Write_Roster;Forward;
+{**********************************************************************************************************************}
+
+Procedure Create_Roster_File;
+
+{ Indicate the roster file will be created and make a null roster for that
+  purpose.. }
+
+Var
+   Loop: Integer;
+
+Begin { Create Roster File }
+
+  { Indicate that the file will be created }
+
+   SMG$Put_Chars (ScreenDisplay,'Creating: CHARACTER.DAT',23,1,1);
+
+  { Initialize the characters }
+
+  Roster:=Zero;
+  For Loop:=1 to 20 do  Roster[Loop].Status:=Deleted;
+  Write_Roster;
+End;  { Create Roster File }
+
+{**********************************************************************************************************************}
+
+Procedure Read_Roster;
+
+{ This procedure reads in the current roster.  If no file exists, null characters are to be saved on exiting }
+
+Var
+   Loop: Integer;
+
+Begin { Read Roster }
+   Repeat
+      Open (Char_File,'SYS$LOGIN:Character.Dat;1',History:=OLD,Error:=CONTINUE,Sharing:=READONLY)
+   Until (Status(Char_File)<>PAS$K_FILALROPE);
+
+   { If the file doesn't exist, or is in an out-dated format }
+
+   If Status(Char_File)=PAS$K_FILNOTFOU then
+      Create_Roster_file;
+   Else
+      Begin { File is there }
+         Reset (Char_File,Error:=Continue);
+         If Status(Char_File)<>PAS$K_SUCCESS then
+            Begin { Can't open it }
+               Read_Error_Window ('character',STATUS(Char_File));
+               Close (Char_File);
+               Create_Roster_file;
+            End   { Can't Open it }
+         Else
+            Begin { Read the characters and then close the file }
+               For Loop:=1 to 20 do Read (Char_File,Roster[Loop],Error:=Continue);
+               If (Status(Char_File)<>PAS$K_EOF) then Read_Error_Window ('Character',STATUS(Char_File));
+               Close (Char_File);
+             End;  { Read the characters and then close the file }
+      End;  { File is there }
+End;  { Read Roster }
+
+{**********************************************************************************************************************}
+
+[Global]Function Get_Level (Level_Number: Integer; Maze: Level; PosZ: Vertical_Type:=0): [Volatile]Level;
+
+{ This function will return a level of the dungeon.  If the level of the dungeon is the same as POSZ, i.e., the same level, the
+  current level will be returned.  If POSZ is omitted, this will ALWAYS load a new level even if it's simply loading the same level
+  as the one in memory }
+
+Var
+   Letter:  Char;
+   Temp: Level;
+
+Begin { Get Level }
+   If (Level_Number<>PosZ) and (Level_Number>0) then
+      Begin { If we need to load one ... }
+
+         { Calculate the file name's suffix }
+
+          Letter:=CHR(Level_Number+64);
+
+        { Wait until the file is available and then open it }
+
+         Repeat
+            Open (MazeFile, 'Stone_Maze:Maze'+Letter,Error:=CONTINUE,History:=UNKNOWN,Sharing:=READWRITE);
+         Until (Status(MazeFile)<>PAS$K_FILALROPE);
+
+         If Status(MazeFile)<>PAS$K_SUCCESS then Read_Error_Window ('maze',Status(MazeFile));
+         Reset (MazeFile);
+
+         { If the level is defined load it, otherwise return the current level }
+
+         If Not(Eof(MazeFile)) then
+            Read (MazeFile,Temp);
+         Else
+            Temp:=Maze;
+
+         { Close the file and return the level }
+
+         Close (MazeFile);
+         Get_Level:=Temp;
+      End;
+   Else
+      Get_Level:=Maze;  { Otherwise, return the current level }
+End;  { Get Level }
+
+
+{ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ }
+
+[Global]Procedure Save_Messages (Messages: Message_Group);
+
+{ This procedure saves the messages to the disk }
+
+Var
+   Loop: Integer;
+
+Begin { Save Messages }
+   Repeat
+      Open (Message_File,'Stone_Data:Messages.dat;1',History:=OLD,Error:=CONTINUE,Sharing:=READONLY)
+   Until (Status(Message_File))=PAS$K_SUCCESS);
+   Rewrite (Message_File);
+   For Loop:=1 to 999 do  Writeln (Message_File,Messages[Loop]);
+   Close (Message_File);
+End;  { Save Messages }
+
+{**********************************************************************************************************************}
+
+Procedure Quit;
+
+{ This procedure disables trapping of broadcast messages, returns the cursor to normal, and saves the data used in the game. }
+
+Var
+   l: Line;
+   X: Integer;
+
+Begin { Quit }
+
+   { Disable screen refreshing and stop intercepting ^C and ^Y }
+
+   Dont_Trap_Out_of_Bands;
+   No_ControlY;  { Control-Y during a save is VERY dangerous! Don't let 'em! }
+
+   X:=45;
+   SMG$Begin_Display_Update (ScreenDisplay);
+   SMG$Erase_Display (ScreenDisplay);
+   T:='Updating Files';
+   SMG$Put_Chars (ScreenDisplay, T, 10,40-(t.length div 2),1);
+   T:='Please Wait.';
+   SMG$Put_Chars (ScreenDisplay, T, 11,40-(t.length div 2),1);
+   SMG$End_Display_Update (ScreenDisplay);
+   Write_Roster;                                   Add_Dot (X);
+   No_ControlY;  { Control-Y is turned on again in Write Roster, so turn it off! }
+   Log_Player_Out;
+   If (User_Name='JGETZIN') and DataModified then { Only I can save! Hahaha! }
+      Begin
+         Save_Items;                               Add_Dot (X);
+         Save_Pictures;                            Add_Dot (X);
+         Save_Treasure;                            Add_Dot (X);
+      End;
+   Delete_Virtual_Devices;
+
+   if Not Authorized then $SETPRI (Pri:=Start_Priority);
+   ControlY;
+End;  { Quit }
+
+{**********************************************************************************************************************}
+
+[Global]Procedure Kill_Save_File;
+
+{ This procedure will delete the save file }
+
+Begin { Kill Save File }
+   LIB$DELETE_FILE ('SYS$LOGIN:STONE_SAVE.DAT;*');
+End;  { Kill Save File }
+
+
+{**********************************************************************************************************************}
+
+
+[Global]Function Can_Play: [Volatile]Boolean;
+
+{ Can the user play at this particular time? }
+
+[External]Function Legal_Time: [Volatile]Boolean;External;
+
+Begin { Can Play }
+   Can_Play:=False;
+   Can_Play:=Authorized;
+   If Not Authorized then Can_Play:=Legal_Time;
+End;  { Can Play }
+
+{**********************************************************************************************************************}
+[External]Procedure Demo;External;
+{**********************************************************************************************************************}
+
+
+{ This program is the main driving procedure for STONEQUEST.  It reads the data at the start of the game, and saves it when
+  exiting for fast action. }
+
+Begin { Stonequest }
+  ShowHours:=False;  Main_Menu"=True;  In_Utilities:=False;
+  Authorized:=(User_Name='JGETZIN') or (User_Name='DCORN');
+{ If Not Authorized and Trap_Authorized_Error then Establish (Oh_No); }
+  If Can_Play then
+     Begin
+         Initialize;                    { Initialize variables and read in data }
+         If Not Authorized then Demo;
+         Repeat
+            If Can_Play then
+               Begin { Legal hours }
+                  Draw_Menu;                                    { Print the MAIN_MENU options }
+                  Handle_Response (answer);                     { Get the user's choice }
+                  Main_Menu:=True;
+               End;  { Legal hours }
+            Else
+               Begin { Not legal hours }
+                  Answer:='Q';
+                  ShowHours:=True;
+               End;  { Not legal hours }
+         Until Answer='Q';                                      { Quit if it's a "Q" }
+         Quit;                                                  { Update files }
+         If Not Game_Saved then Kill_Save_File;
+     End;
+  Else
+     ShowHours:=True;
+
+  If Not Authorized and Trap_Authorized_Error then Revert;                              { Turn off MORIA's error handler }
+  If ShowHours then LIB$DO_COMMAND ('TYPE STONE_DATA:HOURS.DAT');
+End.  { StoneQuest }
+
