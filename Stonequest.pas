@@ -302,7 +302,7 @@ begin { Roll_Die }
    Roll_Die:=Trunc(MTH$RANDOM(Seed)*Die_Type)+1  { Get a random number }
 end;  { Roll_Die }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 [Global]Function Random_Number (Die: Die_Type): [Volatile]Integer;
 
@@ -319,7 +319,7 @@ Begin { Random Number }
    Random_Number:=Sum+Die.Z;  { ... and return the result }
 End;  { Random Number }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 [Asynchronous]Procedure Print_Pasteboard (Pasteboard: Unsigned);
 
@@ -330,9 +330,9 @@ begin { Print Pasteboard }
    Printing_Message;
 End;  { Print Pasteboard }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 Procedure Player_Utilities (Var Pasteboard: Unsigned);Forward;
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 Procedure Special_Keys (Key_Code: Unsigned_Word);
 
@@ -345,7 +345,7 @@ Begin { Special Keys }
    If (Key_Code=SMG$K_TRM_DO)    then Shell_Out;
 End;  { Special Keys }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 [Global]Function Get_Key (Time_Out: Integer:=-1;  Time_Out_Char:  Integer:=32): [Volatile]Integer;
 
@@ -386,7 +386,7 @@ Begin { Get Key }
   Get_Key:=Temp;
 End;  { Get Key }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 [Global]Function Get_Response (Time_Out: Integer:=-1;  Time_Out_Char: Char:=' '):[Volatile]Char;
 
@@ -407,7 +407,7 @@ Begin { Get Response }
    Get_Response:=CHR(Num);
 End;  { Get Response }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 [Global]Function Make_Choice (Choices: Char_Set;  Time_Out:  Integer:=-1; Time_Out_Char: Char:=' '): Char;
 
@@ -425,7 +425,7 @@ Begin { Make Choice }
    Make_Choice:=Response { Return that key }
 End;
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 [Global]Function Yes_or_No (Time_OPut: Integer:=-1;  Time_Out_Char: Char:=' '): [Volatile]Char;
 
@@ -435,7 +435,7 @@ Begin { Yes or No }
    Yes_Or_No:=Make_Choice (['Y','N']),Time_Out,Time_Out_Char);
 End;  { Yes or No }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 [Global]Procedure Zero_Through_Six (Var Number: Integer;  Time_Out: Integer:=-1;  Time_Out_Char: Char:='0');
 
@@ -450,7 +450,7 @@ Begin { Zero Through Six }
    Number:=Order(Answer)-48  { Convert CHAR to INT and return }
 End.  { Zero Through Six }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 [Global]Function Pick_Character_Number (Party_Size: Integer;  Current_Party_Size: Integer:=0;
                                         Time_Out: Integer:=-1;  Time_Out_Char: Char:='0'):[Volatile]Integer;
@@ -470,7 +470,7 @@ Begin { Pick Character Number }
    Pick_Character_Number:=Temp;
 End;  { Pick Character Number }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 [Global]Procedure Wait_Key (Time_Out: Integer:=-1);
 
@@ -480,7 +480,7 @@ Begin { Wait Key }
   Get_Response (Time_Out);
 End;
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 [Global]Procedure Ring_Bell (Display_Id: Unsigned; Number_of_Times: Integer:=1);
 
@@ -488,7 +488,7 @@ Begin { Ring Bell }
   If Bells_On then SMG$Ring_Bell (Display_ID,Number_of_Times);
 End;  { Ring Bell }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 [Global]Procedure Cursor;
 
@@ -499,7 +499,7 @@ Begin { Cursor }
   SMG$Set_Cursor_Mode(Pasteboard, 0) { Turn on the cursor }
 End;  { Cursor }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 [Global]Procedure Get_Num (Var Number: Integer; Display: Unsigned);
 
@@ -527,7 +527,7 @@ Begin { Get Num }
    ReadV (Response.Number,Error:=Continue);
 End;  { Get Num }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 [Global]Function User_Name: Line;
 
@@ -571,7 +571,7 @@ Begin { User Name }
   User_Name:=Buffer[0];
 End;  { User Name }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 Procedure Delete_All_Displays;
 
@@ -598,7 +598,7 @@ Begin { Delete All Displays }
    SMG$Delete_Virtual_Display(BottomDisplay);
 End;  { Delete All Displays }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 Procedure Delete_Virtual_Devices;
 
@@ -614,7 +614,7 @@ Begin { Delete Virtual Devices }
    SMG$Delete_Pasteboard (Pasteboard, 1); { Delete the pasteboard }
 End;  { Delete Virtual Devices }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 Procedure Extend_LogFile (Out_Message: Line);
 
@@ -629,7 +629,7 @@ Begin { Extend LogFile }
    Close  (LogFile,Error:=Continue);
 End;  { Extend LogFile }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 [Global]Procedure Read_Error_Window (FileType: Line; Code: Integer:=0);
 
@@ -645,7 +645,7 @@ Begin
 { THIS CODE IS MISSING IN THE PRINT OUT. IT WILL NEED TO BE RECREATED. -- JHG 2023-09-15 }
 End;
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 {[Global]?}Procedure Message_Trap ();
 
@@ -682,7 +682,7 @@ Begin { Message Trap }
    Exit;  { Leve the game. (sorry! ) }
 End;  { Message Trap }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 [Global]Function Load_Saved_Game: [Volatile]Save_Record;
 
@@ -719,7 +719,7 @@ Begin { Load Saved Game }
    Load_Saved_Game:=Temp;
 End;  { Load Saved Game }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 [Global]Procedure Change_Score (Var Character: Character_Type; Score_Num, Inc: Integer);
 
@@ -731,7 +731,7 @@ Begin { Change Score }
       Character.Abilities[Score_Num]:=Character.Abilities[Score_Num]+Inc;
 End;  { Change Score }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 [Global]Procedure Special_Occurance (Var Character: Character_Type; Number: Integer);
 
@@ -796,7 +796,7 @@ Begin { Special Occurance }
    End;
 End;  { Special Occurance }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 [Global]Procedure Show_Image (Number: Pic_Type; Var Display: Unsigned);
 
@@ -823,7 +823,7 @@ Begin { Show Image }
    SMG$End_Display_Update (Display);
 End;  { Show Image }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 Function Time_And_Date_And_Name: [Volatile]Line;
 
@@ -840,7 +840,7 @@ Begin { Time and Date and Name }
    Time_and_Date_and_Name:=T+'     '+T1+'   '
 End;  { Time and Date and Name }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 Procedure Log_Player_In;
 
@@ -850,7 +850,7 @@ Begin { Log Player In }
    If Logging and (User_Name<>'JGETZIN') then Extend_LogFile (Time_And_Date_And_name+'IN');
 End;  { Log Player In }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 Procedure Log_Player_Out;
 
@@ -860,9 +860,9 @@ Begin { Log Player Out }
    If Logging and (User_Name<>'JGETZIN') then Extend_LogFile (Time_And_Date_And_name+'OUT');
 End;  { Log Player Out }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 [Global]Procedure Write_Roster;Forward;
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 Procedure Create_Roster_File;
 
@@ -885,7 +885,7 @@ Begin { Create Roster File }
   Write_Roster;
 End;  { Create Roster File }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 Procedure Read_Roster;
 
@@ -921,7 +921,7 @@ Begin { Read Roster }
       End;  { File is there }
 End;  { Read Roster }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 [Global]Function Get_Level (Level_Number: Integer; Maze: Level; PosZ: Vertical_Type:=0): [Volatile]Level;
 
@@ -966,7 +966,7 @@ Begin { Get Level }
       Get_Level:=Maze;  { Otherwise, return the current level }
 End;  { Get Level }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 Procedure Read_Items;
 
@@ -1019,7 +1019,7 @@ Begin { Read Items }
    Close (Item_File);
 End;  { Read Items }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 Procedure Access_Item_Record (N: Integer);
 
@@ -1031,7 +1031,7 @@ Begin { Access Item Record }
    Until Status(Item_File)=PAS$K_SUCCESS;
 End;  { Access Item Record }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 [Global]Function Get_Item (Item_Number: Integer): Item_Record;
 
@@ -1049,7 +1049,7 @@ End;  { Get Item }
 
 { $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 Procedure Read_Monsters (Var Monster: List_of_monsters);
 
@@ -1074,7 +1074,7 @@ Begin { Read Monsters }
    Close (Monster_File); { Close the file }
 End;  { Read_Monsters }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 Procedure Access_Monster_Record (N: Integer);
 
@@ -1084,7 +1084,7 @@ Begin { Access Monster Record }
    Until Status(Monster_File)=PAS$K_SUCCESS;
 End;  { Access Monster Record }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 [Global]Function Get_Monster (Monster_Number: Integer): Monster_Record;
 
@@ -1101,7 +1101,7 @@ Begin { Get Monster }
    Close (Monster_File);
 End;  { Get Monster }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 Procedure Read_Pictures;
 
@@ -1131,7 +1131,7 @@ Begin { Read Pictures }
    Close (PicFile);
 End;  { Read Pictures }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 [Global]Procedure Read_Messages (Var Messages: Message_Group);
 
@@ -1160,7 +1160,7 @@ Begin { Read Messages }
    Close (Message_File);
 End;  { Read Messages }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 Procedure Read_Treasures;
 
@@ -1185,7 +1185,7 @@ Begin { Read Treasures }
    Close (TreasFile);
 End;  { Read Treasures }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 [Global]Procedure Error_Window (FileType: Line);
 
@@ -1217,7 +1217,7 @@ Begin { Error Window }
   SMG$Delete_Virtual_Display (BroadcastDisplay);
 End;  { Error Window }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 Function Successful (Result_Code: Integer): Boolean;
 
@@ -1225,7 +1225,7 @@ Begin { Successful }
    Successful:=(Result_Code=PAS$K_SUCCESS) or (Result_Code=PAS$K_EOF);
 End;  { Successful }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 Procedure Write_Roster;
 
@@ -1261,6 +1261,227 @@ Begin { Write Roster }
    ControlY;
 End;  { Write Roster }
 
+{**********************************************************************************************************************************}
+
+[Global]Procedure Save_Monsters (Monster: List_of_monsters);
+
+{ This procedure will save the updates monster records if the current user is authorized to do so. }
+
+Var
+   Loop: Integer;
+
+Begin { Save Monsters }
+
+   { Wait until the file is available and then open it }
+
+   Repeat
+      Open (Monster_File,'Stone_Data:Monsters.Dat;1',History:=OLD,Error:=CONTINUE,Sharing:=READONLY)
+   Until (Status(Monster_File)=PAS$K_SUCCESS);
+   ReWrite (Monster_File,Error:=Continue);
+
+   { Write the monsters }
+
+   For Loop:=1 to 450 do Write (Monster_File,Monster[Loop]);
+
+   { Close the file }
+
+   Close (Monster_File);
+End;  { Save Monsters }
+
+{**********************************************************************************************************************************}
+
+Procedure Save_Items;
+
+{ This procedure will save the updated item records if the current user is authorized to do so. }
+
+Var
+   Loop: Integer;
+
+Begin { Save Items }
+
+   { Wait until the file is available and then open it }
+
+   Repeat
+      Open (Item_File,'Stone_Data:Items.Dat;1',History:=OLD,Error:=CONTINUE,Sharing:=READONLY)
+   Until (Status(Item_File)=PAS$K_SUCCESS);
+   ReWrite (Item_File,Error:=Continue);
+
+   { Write the items ... }
+
+   For Loop:=0 to 449 do Write (Item_File,Item_List[Loop]);
+
+   { Close the file }
+
+   Close (Item_File);
+End;  { Save Items }
+
+{**********************************************************************************************************************************}
+
+Procedure Save_Treasure;
+
+{ This procedure will save the updated treasure list if the current user is authorized to do so. }
+
+Var
+   Loop: Integer;
+
+Begin { Save Treasure }
+
+   { Wait until the file is available and then open it }
+
+   Repeat
+      Open (TreasFile,'Stone_Data:Treasure.Dat;1',History:=OLD,Error:=CONTINUE,Sharing:=READONLY)
+   Until (Status(TreasFile)=PAS$K_SUCCESS);
+   ReWrite (TreasFile);
+
+   { Write the treasures ... }
+
+   For Loop:=0 to 150 do Write (TreasFile,Treasure[Loop]);
+
+   { Close the file }
+
+   Close (TreasFile);
+End;  { Save_Treasure }
+
+{**********************************************************************************************************************************}
+
+[Global]Procedure Delay (Seconds: Real);
+
+{ This procedure will wait SECONDS seconmds.  This is good because the game
+  hibernates, saving CPU time.  }
+
+Begin { Delay }
+   Lib$Wait(Seconds);
+End;  { Delay }
+
+{**********************************************************************************************************************************}
+
+[Global]Procedure Print_Roster;
+
+{ This procedure will print the roster of characters to SCREENDISPLAY }
+
+Var
+   Slot: Integer;
+   T: Line;
+
+Begin { Print Roster }
+
+   { Erase and label the proper display }
+
+   SMG$Begin_Display_Update (ScreenDisplay);
+   SMG$Erase_Display (ScreenDisplay);
+   T:='Roster of Characters';
+   SMG$Set_Cursor_ABS (ScreenDisplay,1,40-(t.length div 2));
+   SMG$Put_Line (ScreenDisplay,T,1,1);
+   SMG$Put_Line (ScreenDisplay, ' #)  Name                 Class               Level       Status',1,0);
+
+   { Print all the characters }
+
+   For Slot:=1 to 20 do
+      If Roster[Slot].Status<>Deleted then  { If the slot is used ... }
+        Begin { Print the occupant }
+{          SMG$Put_Chars (ScreenDisplay,String (Slot,2)+')  '); }'
+           SMG$Put_Chars (ScreenDisplay,Pad(Roster[Slot].Name,' ',21));
+           SMG$Put_Chars (ScreenDisplay,AlignName[Roster[Slot].Alignment][1]+'-');
+           SMG$Put_Chars (ScreenDisplay,Pad(ClassName[Roster[Slot].Class],' ',16));
+           SMG$Put_Chars (ScreenDisplay,String (Roster[Slot].Level,3));
+           SMG$Put_Chars (ScreenDisplay,'        '+StatusName[Roster[Slot].Status]);
+        End;  { Print the occupant }
+      Else { Otherwise print a blank line }
+        SMG$Put_Line (ScreenDisplay,'');
+    SMG$End_Display_Update (ScreenDisplay);
+End  { Print Roster }
+
+{**********************************************************************************************************************************}
+
+[Global]Procedure Plane_Difference (Var Plus: Integer; PosZ: Integer);
+
+Var
+   Lower_Bound,Upper_Bound: Integer;
+
+Begin { Plane Difference }
+   If PosZ>10 then
+      If Plus>0 then
+         Begin
+            Lower_Bound:=0;
+            Plus:=Plus-(PosZ-10);
+            If Plus<Lower_Bound then Plus:=Lower_Bound;
+         End;
+   Else
+      If Plus<0 then
+         Begin
+            Upper_Bound:=0;
+            Plus:=Plus+(PosZ-10);
+            If Plus>Upper_Bound then Plus:=Upper_Bound;
+         End;
+End;  { Plane Difference }
+
+{**********************************************************************************************************************************}
+
+[Global]Function Screen_Line (LineWidth: Integer:=80): Line;
+
+{ This function returns a line of the format:
+
+        +------------+
+
+  of width LINEWIDTH.  This is used primarily for KYRN, but other uses may arise. }
+
+Var
+   Temp: Line;
+   Loop: Integer;
+
+Begin { Screen Line }
+   Temp:='+';  { Left '+' }
+   For Loop:=2 to (LineWidth-1) do
+        Temp:=Temp+'-';  { Intermediate '-'s }
+   Screen_Line:=Temp+'+'; { Right '+' }
+End;  { Screen Line }
+
+{**********************************************************************************************************************************}
+
+Procedure Initialize_Displays;
+
+{ This procedure creates virtual displays for use with SMG$.  If any displays, for example a command window, never changes, it is
+  initialized here with the proper text. }
+
+Begin { Initialize Displays }
+
+   { Create the displays }
+
+   SMG$Create_Virtual_Display (7,78,CharacterDisplay,1);
+   SMG$Create_Virtual_Display (4,54,MonsterDisplay,1);
+   SMG$Create_Virtual_Display (4,54,CommandsDisplay,1);
+   SMG$Create_Virtual_Display (4,54,SpellsDisplay,1);
+   SMG$Create_Virtual_Display (4,54,OptionsDisplay,1);
+   SMG$Create_Virtual_Display (4,54,TextDisplay,1);
+   SMG$Create_Virtual_Display (9,23,ViewDisplay,1);
+   SMG$Create_Virtual_Display (9,23,FightDisplay,1);
+   SMG$Create_Virtual_Display (4,78,MessageDisplay,1);
+   SMG$Create_Virtual_Display (22,78,CampDisplay,1);
+   SMG$Create_Virtual_Display (22,78,GraveDisplay,1);
+   SMG$Create_Virtual_Display (22,78,ScenarioDisplay,1);
+   SMG$Create_Virtual_Display (22,78,WinDisplay,1);
+   SMG$Create_Virtual_Display (24,80,HelpDisplay,0);
+   SMG$Create_Virtual_Display (24,80,ShellDisplay,0);
+   SMG$Create_Virtual_Display (10,78,TopDisplay,1);
+   SMG$Create_Virtual_Display (12,80,BottomDisplay);
+
+   { Label the proper borders }
+
+   SMG$Label_Border(ScenarioDisplay,'=*> The Quest of the Stone <*=',SMG$K_TOP);
+   SMG$Label_Border(WinDisplay,'=*> The Quest of the Stone <*=',SMG$K_TOP);
+   SMG$Label_Border(GraveDisplay,' Warrior''s Gate ',SMG$K_TOP);
+   SMG$Label_Border(CampDisplay,' Camp ',SMG$K_TOP);
+   SMG$Label_Border(MonsterDisplay,' Combat ',SMG$K_TOP);
+   SMG$Label_Border(TopDisplay,'Kyrn',SMG$K_RIGHT);
+   SMG$Label_Border(ViewDisplay);
+
+   { Initialize the proper borders }
+
+   SMG$Put_Chars(CommandsDisplay,'F)orward         C)amp          S)tay 1 round',1,3);
+   SMG$Put_Chars(CommandsDisplay,'L)eft            T)ime Delay          ^       ',2,3);
+   SMG$Put_Chars(CommandsDisplay,'R)ight           HELP                 |       ',3,3);
+   SMG$Put_Chars(CommandsDisplay,'K)ick            DO            <------+------>',4,3);
+End;  { Intialize Displays }
 
 { $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ }
 
@@ -1276,7 +1497,7 @@ Begin { Set up Kyrn }
    SMG$Unpaste_Virtual_Display (ScreenDisplay,Pasteboard);
 End;  { Set up Kyrn }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 Procedure Exit_Kyrn;
 
@@ -1294,7 +1515,7 @@ Begin { Exit Kyrn }
    Main_Menu:=False;
 End;  { Exit Kyrn }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 Procedure Start_Game;
 
@@ -1311,7 +1532,7 @@ Begin { Start Game }
   Exit_Kyrn;
 End;  { End Game }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 Procedure Restore_Game;
 
@@ -1330,7 +1551,7 @@ Begin { Restore Game }
    Exit_Kryn;  { For when the user exits Kryn after saving }
 End;  { Restore Game }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 Procedure Handle_Auto_Save;
 
@@ -1344,7 +1565,7 @@ Begin { Handle Auto Save }
    Auto_Save:=Falsep;
 End;  { Handle Auto Save }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 Procedure Print_Help_Screen;
 
@@ -1380,7 +1601,7 @@ Begin
   SMG$Delete_Virtual_Display (HelpMeDisplay);
 End;
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 Procedure Handle_Response (Var Answer: Char);
 
@@ -1410,7 +1631,7 @@ Begin { Handle Response }
    End;
 End;  { Handle Response }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 [Global]Procedure Save_Messages (Messages: Message_Group);
 
@@ -1428,7 +1649,7 @@ Begin { Save Messages }
    Close (Message_File);
 End;  { Save Messages }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 Procedure Quit;
 
@@ -1468,7 +1689,7 @@ Begin { Quit }
    ControlY;
 End;  { Quit }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 [Global]Procedure Kill_Save_File;
 
@@ -1479,7 +1700,7 @@ Begin { Kill Save File }
 End;  { Kill Save File }
 
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 
 [Global]Function Can_Play: [Volatile]Boolean;
@@ -1494,9 +1715,9 @@ Begin { Can Play }
    If Not Authorized then Can_Play:=Legal_Time;
 End;  { Can Play }
 
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 [External]Procedure Demo;External;
-{**********************************************************************************************************************}
+{**********************************************************************************************************************************}
 
 
 { This program is the main driving procedure for STONEQUEST.  It reads the data at the start of the game, and saves it when
