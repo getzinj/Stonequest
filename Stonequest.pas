@@ -966,8 +966,352 @@ Begin { Get Level }
       Get_Level:=Maze;  { Otherwise, return the current level }
 End;  { Get Level }
 
+{**********************************************************************************************************************}
+
+Procedure Read_Items;
+
+{ This procedure will read in the items from the file, and then randomly adjust their prices to simulate increasing and decreasing
+  values of items in a market place. }
+
+Var
+   Flux: Real;  { Some times you just have to say, "what's the flux?" }
+   Max_Items: Integer;
+
+Begin { Read Items }
+
+   Max_Items:=-1;  { So far, no items read }
+
+   { Wait until the file is available and then open it }
+
+   Repeat
+      Open (Item_File,'Stone_Data:Items.dat;1',History:=OLD,Error:=CONTINUE,Sharing:=READWRITE)
+   Until (Status(Item_File)<>PAS$K_FILALROPE);
+   If Status(Item_File)<>PAS$K_SUCCESS then Read_Error_Window ('items',Status(Item_File));
+   Reset (Item_File);
+
+   While Not EOF(Item_File) do
+      Begin { More data }
+
+         { Increase counter and read item }
+
+         Max_Items:=Max_Items+1;
+         Read (Item_File,Item_List[Max_Items]);
+         STR$TRIM (Item_List[Max_Items].Name,Item_List[Max_Items].Name);
+         STR$TRIM (Item_List[Max_Items].True_Name,Item_List[Max_Items].True_Name);
+
+         { Calculate the price fluctuation, FLUX }
+
+         Flux:=Item_List[Max_Items].Gp_Value;
+         Flux:=Flux * Roll_Die(10)/100;
+         If Roll_Die(2)=2 then Flux:=Flux*(-1);
+
+         { Add flux to the current price }
+
+         Item_List[Max_Items].Current_Value:=Round(Item_List[Max_Items].GP_Value+Flux);
+
+         { Making sure items aren't given away... }
+
+         If Item_List[Max_Items].Current_Value<1 then Item_List[Max_Items].Current_Value:=1;
+      End;  { More Data }
+
+   { Close the file when no more data }
+
+   Close (Item_File);
+End;  { Read Items }
+
+{**********************************************************************************************************************}
+
+Procedure Access_Item_Record (N: Integer);
+
+{ This function finds the Nth record in the already opened item_file }
+
+Begin { Access Item Record }
+   Repeat
+      Find (Item_File,N+1,Error:=CONTINUE)
+   Until Status(Item_File)=PAS$K_SUCCESS;
+End;  { Access Item Record }
+
+{**********************************************************************************************************************}
+
+[Global]Function Get_Item (Item_Number: Integer): Item_Record;
+
+{ This function returns the Item_Number'th item from the item_file }
+
+Begin { Get Item }
+   Repeat
+      Open (Item_File,'STONE_DATA:ITEMS.DAT;1',History:=OLD,Access_Method:=DIRECT,Sharing:=READWRITE,Error:=Continue);
+   Until Status(Item_File)=PAS$K_SUCCESS;
+   Access_Item_Record (Item_Number);
+   Get_Item:=Item_File^;
+   Unlock (Item_File);
+   Close (Item_File);
+End;  { Get Item }
 
 { $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ }
+
+{**********************************************************************************************************************}
+
+Procedure Read_Monsters (Var Monster: List_of_monsters);
+
+{ This procedure will read in the monsters from the file into the array, MONSTERS }
+
+Var
+   Max_Monsters: Integer;
+
+Begin { Read Monsters }
+
+   { Wait until the file is available and then open it }
+
+   Repeat
+      Open (Monster_File,'Stone_Data:Monsters.dat;1',History:=OLD,Error:=CONTINUE,Sharing:=READWRITE)
+   Until (Status(Monster_File)<>PAS$K_FILALROPE);
+   If Status(Monster_File)<>PAS$K_SUCCESS then Read_Error_Window ('monster',Status(Monster_File));
+   Reset (Monster_File); { Open the file }
+
+   { Read in the monsters }
+
+   For Max_Monsters:=1 to 450 do Read (Monster_File,Monster[Max_Monsters],Error:=Continue);
+   Close (Monster_File); { Close the file }
+End;  { Read_Monsters }
+
+{**********************************************************************************************************************}
+
+Procedure Access_Monster_Record (N: Integer);
+
+Begin { Access Monster Record }
+   Repeat
+      Find (Monster_File,N,Error:=CONTINUE)
+   Until Status(Monster_File)=PAS$K_SUCCESS;
+End;  { Access Monster Record }
+
+{**********************************************************************************************************************}
+
+[Global]Function Get_Monster (Monster_Number: Integer): Monster_Record;
+
+{ This function returns the Monster_Number'th monster from the
+  Monster_File. }
+
+Begin { Get Monster }
+   Repeat
+      Open (Monster_File,'STONE_DATA:MONSTERS.DAT;1',History:=OLD,Access_Method:=DIRECT,Sharing:=READWRITE,Error:=Continue);
+   Until Status(Monster_File)=PAS$K_SUCCESS;
+   Access_Monster_Record (Monster_Number);
+   Get_Monster:=Monster_File^;
+   Unlock (Monster_File);
+   Close (Monster_File);
+End;  { Get Monster }
+
+{**********************************************************************************************************************}
+
+Procedure Read_Pictures;
+
+{ This procedure reads in the set of pictures }
+
+Var
+   Loop: Integer;
+
+Begin { Read Pictures }
+
+   { Wait until the file is available and then open it }
+
+   Repeat
+      Open (PicFile,'Stone_Data:Pictures.Dat',History:=OLD,Error:=CONTINUE,Sharing:=READWRITE);
+   Until Status(PicFile)<>PAS$K_FILALROPE;
+   If Status(PicFile)<>PAS$K_SUCCESS then Read_Error_Window ('picture',Status(PicFile));
+   Reset (PicFile);
+
+   { Read in the pictures and close the file }
+
+   Loop:=0;
+   While Not EOF(PicFile) do
+      Begin
+         Read(PicFile,Pics[Loop]);
+         Loop:=Loop+1;
+      End;
+   Close (PicFile);
+End;  { Read Pictures }
+
+{**********************************************************************************************************************}
+
+[Global]Procedure Read_Messages (Var Messages: Message_Group);
+
+{ This procedure reads in the text from the message file }
+
+Var
+   Loop: Integer;
+
+Begin { Read Messages }
+
+   { Wait until the file is available and then open it }
+
+   Repeat
+      Open (Message_File,'Stone_Data:Messages.Dat;1',History:=OLD,Error:=CONTINUE,Sharing:=READWRITE);
+   Until Status(Message_File)<>PAS$K_FILALROPE;
+   If Status(Message_File)<>PAS$K_SUCCESS then Read_Error_Window ('messages',Status(Message_File));
+   Reset (Message_File);
+
+   { Read in the messages and close the file }
+
+   For Loop:=1 to 999 do
+      Begin
+         Readln (Message_File,Messages[Loop],Error:=Continue);
+         If Not ((Status(Message_File)=PAS$K_SUCCESS) or (Status(Message_File)=PAS$K_EOF)) then Messages[Loop]:='';
+      End;
+   Close (Message_File);
+End;  { Read Messages }
+
+{**********************************************************************************************************************}
+
+Procedure Read_Treasures;
+
+{ This procedure will read in the treasure types }
+
+Var
+   Loop: Integer;
+
+Begin { Read Treasures }
+
+   { Wait until the file is available and then open it }
+
+   Repeat
+      Open (TreasFile,'Stone_Data:Messages.Dat;1',History:=OLD,Error:=CONTINUE,Sharing:=READWRITE);
+   Until Status(TreasFile)<>PAS$K_FILALROPE;
+   If Status(TreasFile)<>PAS$K_SUCCESS then Read_Error_Window ('treasure',Status(TreasFile));
+   Reset (TreasFile);
+
+   { Read in the treasures and close the file }
+
+   For Loop:=1 to 150 do Read (TreasFile,Treasure[Loop]);
+   Close (TreasFile);
+End;  { Read Treasures }
+
+{**********************************************************************************************************************}
+
+[Global]Procedure Error_Window (FileType: Line);
+
+{ Print a error message window }
+
+Var
+   BroadcastDisplay: Unsigned;  { Virtual keyboard and Broadcast }
+   Msg: Line;
+
+Begin { Error Window }
+  Msg:='* * * Error writing '+FileType+' file! * * *';
+  SMG$Create_Virtual_Display(5,78,BroadcastDisplay,1);
+  SMG$Erase_Display (BroadcastDisplay);
+  SMG$Label_Border (BroadcastDisplay,'> Yikes! <',SMG$K_TOP);
+
+        { Print the message to the display }
+
+  SMG$Put_Chars    (BroadcastDisplay,Msg,3,39-(Msg.Length div 2));
+
+        { Paste it onto the pasteboard }
+
+  SMG$Paste_Virtual_Display (BroadcastDisplay,Pasteboard);
+
+               { Delete all created virtual devices }
+
+  LIB$WAIT (3);
+
+  SMG$Unpaste_Virtual_Display (BroadcastDisplay,Pasteboard);
+  SMG$Delete_Virtual_Display (BroadcastDisplay);
+End;  { Error Window }
+
+{**********************************************************************************************************************}
+
+Function Successful (Result_Code: Integer): Boolean;
+
+Begin { Successful }
+   Successful:=(Result_Code=PAS$K_SUCCESS) or (Result_Code=PAS$K_EOF);
+End;  { Successful }
+
+{**********************************************************************************************************************}
+
+Procedure Write_Roster;
+
+{ This procedure is used to write the current roster to the character file }
+
+Var
+   Loop: Integer;
+   Error: Boolean;
+
+Begin { Write Roster }
+   No_ControlY;
+   Error:=False;
+   Repeat
+      Open (Char_File,'SYS$LOGIN:Character.Dat;1',History:=UNKNOWN,Error:=CONTINUE,Sharing:=NONE)
+   Until (Status(Char_File)<>PAS$K_FILALROPE);
+   Error:=(Status(Char_File)<>PAS$K_SUCCESS);
+
+   ReWrite (Char_File,Error:=Continue);
+   Error:=Error or Not(Successful(Status(Char_File)));
+
+   { Write the characters and close the file }
+
+   For Loop:=1 to 20 do
+      Begin
+         Write (Char_File,Roster[Loop]{,Error:=continue});
+         Error:=Error or Not(Successful(Status(Char_File)));
+      End;
+
+   Close (Char_File{,Error:=Continue});
+   Error:=Error or Not(Successful(Status(Char_File)));
+
+   If Error then Error_Window ('Character');        { Put a window declaring the error }
+   ControlY;
+End;  { Write Roster }
+
+
+{ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ }
+
+Procedure Set_Up_Kyrn;
+
+{ This procedure sets up the pasteboard et al for Kyrn }
+
+Begin { Set up Kyrn }
+   Main_Menu:=False;
+   SMG$Begin_Pasteboard_Update (Pasteboard);           { End_Pasteboard_Update occurs in TOWN/INITIALIZE }
+   SMG$Paste_Virtual_Display (TopDisplay,Pasteboard,2,2);
+   SMG$Paste_Virtual_Display (BottomDisplay,Pasteboard,13,1);
+   SMG$Unpaste_Virtual_Display (ScreenDisplay,Pasteboard);
+End;  { Set up Kyrn }
+
+{**********************************************************************************************************************}
+
+Procedure Exit_Kyrn;
+
+{ This does all the stuff that needs to be done (like updating the high scores)
+  when leaving Kyrn }
+
+[External]Procedure Update_High_Scores (Username: Line);external;
+
+Begin { Exit Kyrn }
+   Update_High_Scores (User_Name);
+   SMG$Erase_Display (ScreenDisplay);
+   If Not Auto_Save then SMG$Paste_Virtual_Display (ScreenDisplay,Pasteboard,1,1);
+   SMG$Unpaste_Virtual_Display (TopDisplay,Pasteboard);
+   SMG$Unpaste_Virtual_Display (BottomDisplay,Pasteboard);
+   Main_Menu:=False;
+End;  { Exit Kyrn }
+
+{**********************************************************************************************************************}
+
+Procedure Start_Game;
+
+{ This procedure enters the game play mode.  It pastes two necessary displays onto the pasteboard before entering, and then removes
+  them when done.  }
+
+[External]Procedure Kyrn (Var Roster: Roster_Type);external;
+
+Begin { Start Game }
+  Set_up_Kyrn;
+
+  Kyrn (Roster);
+
+  Exit_Kyrn;
+End;  { End Game }
+
+{**********************************************************************************************************************}
 
 Procedure Restore_Game;
 
