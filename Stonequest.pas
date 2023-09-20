@@ -1481,9 +1481,318 @@ Begin { Initialize Displays }
    SMG$Put_Chars(CommandsDisplay,'L)eft            T)ime Delay          ^       ',2,3);
    SMG$Put_Chars(CommandsDisplay,'R)ight           HELP                 |       ',3,3);
    SMG$Put_Chars(CommandsDisplay,'K)ick            DO            <------+------>',4,3);
-End;  { Intialize Displays }
+End;  { Initialize Displays }
+
+{**********************************************************************************************************************************}
+
+[Global]Procedure Dont_Trap_Out_of_Bands;
+
+Begin { Dont Trap Out of Bands }
+   SMG$Set_Out_Of_Bands_ASTs (Pasteboard,0);
+End;  { Dont Trap Out of Bands }
+
+{**********************************************************************************************************************************}
+
+Procedure Create_Virtual_Devices;
+
+{ This procedure creates two virtual devices for use with SMG$.  The first is PASTEBOARD, which handles all screen output and is a
+  virtual screen.  The display SCREENDISPLAY is pasted on it to start out with, but other displays may be pasted and removed during
+  the course of game play.  The second device is the Virtual Keyboard, through which keys are read. }
+
+[External,Unbound]Procedure Message_trap;external;
+
+Begin { Create Virtual Devices }
+
+   { Create the virtual terminal and keyboard }
+
+   SMG$Create_Pasteboard (Pasteboard);
+   SMG$Create_Virtual_Keyboard(keyboard);
+
+   { Turn off the cursor }
+
+   No_Cursor;
+
+   { Enable message trapping }
+
+   SMG$Set_Broadcast_Trapping (pasteboard,%Immed Message_Trap,0);
+
+   { Enable screen repainting on ^W }
+
+   Trap_Out_of_Bands;
+
+   { Create and clear the primary screen display }
+
+   SMG$Create_Virtual_Display (24, 80,ScreenDisplay,0);
+   SMG$Erase_Display (ScreenDisplay);
+
+   { Print the initialization message to the display }
+
+   SMG$Put_Chars (ScreenDisplay, 'Initializing Game',10,33,,1);
+   SMG$Put_Chars (ScreenDisplay, 'Please Wait. ',11,35);
+
+   { Paste the display onto the pasteboard }
+
+   SMG$Paste_Virtual_Display (ScreenDisplay,Pasteboard,1,1);
+End;  { Create Virtual Devices }
+
+{**********************************************************************************************************************************}
+
+Function Get_Seed: [Volatile]Integer;
+
+{ This function returns a random seed for use with the random number generator. The randomness is achieved by making the seed a
+  function of the time the program is run at. }
+
+Var
+   Seed: Integer;
+   Timex: Time_Type;
+
+Begin { Get Seed }
+
+   { Put the current time in the Packed Array, TIMEX }
+
+   Time(Timex);
+
+   { Get a seed from the time }
+
+   Seed:=Ord(Timex[8])-ZeroOrd+(ord(timex[7])-ZeroOrd)*10;
+   Seed:=Seed*Ord(Timex[6]);
+
+   { Return it }
+
+   Get_Seed:=Seed mod Maxint;
+End;  { Get Seed }
+
+{**********************************************************************************************************************************}
+
+[Global]Function Saved_Game: [Volatile]Boolean;
+
+{ This function returns TRUE is there is a previous game saved, and FALSE otherwise. }
+
+Var
+   Temp: Boolean;
+
+Begin { Saved Game }
+
+   { Open the save file }
+
+   Open (SaveFile,'SYS$LOGIN:STONE_SAVE.DAT',History:=OLD,Error:=CONTINUE,Sharing:=NONE);
+
+   { No data in the file => No saved game }
+
+   Temp:=NOT(Status(SaveFile)=PAS$K_FILNOTFOU);
+   Saved_Game:=Temp;
+
+   { Close the save file }
+
+   If Temp then Close (SaveFile);
+End;  { Saved Game }
+
+{**********************************************************************************************************************************}
+
+Procedure Initialize_Globals;
+
+{ This procedure initializes all globals and externally used variables.  This is so that when a call is mode to, say,
+  Print_Character, MAZE is defined even though it may not be used. }
+
+Begin { Initialize Globals }
+   Experience_Needed:=Zero;
+
+   { We're not leaving the maze when we haven't entered it... }
+
+   Leave_Maze:=False;
+
+   { The current "level" has no contents... }
+
+   Maze.Room:=Zero;
+
+   { The backup level is the same... }
+
+   Position:=Maze;
+
+   { We're arbitrarily facing North... }
+
+   Direction:=North;
+
+   { We've spent zero minutes in the maze... }
+
+   Minute_Counter:=0;
+
+   { We've casted no spells }
+
+   Rounds_Left:=Zero;
+
+   { ... and we're at maze coordinates (0,0,0) }
+
+   PosX:=0;   PosY:=0;  PosZ:=0;
+End;  { Initialize Globals }
+
+{**********************************************************************************************************************************}
+
+Procedure Initialize;
+
+{ This procedure initializes the game. Initialized are virtual devices, string constants, and virtual displays.  Information from
+  the disk is brought in at this point. }
+
+Var
+   X: Integer;
+
+Begin { Initialize }
+   If Not (Authorized or (User_name='JGETZIN1')) then $SETPRI (Pri:=4,PrvPri:=Start_Priority);
+   Log_Player_In;
+   X:=47;                                  { Initialize X for ADD_DOT }
+   Cursor_Mode:=True;                      { The cursor is on at the moment }
+   Create_Virtual_Devices;  Add_Dot(X);    { Create pasteboard and keyboard }
+   Read_Pictures;           Add_Dot(X);    { Read in the picture images }
+   Read_Roster;             Add_Dot(X);    { Read in the characters }
+   Read_Treasures;          Add_Dot(X);    { Read in the treasure types }
+   Read_Items;              Add_Dot(X);    { Read in items }
+   Initialize_Displays;     Add_Dot(X);    { Create and initialize displays }
+   Initialize_Globals;      Add_Dot(X);    { Initialize external variables }
+   Broadcast_On:=True;      Add_Dot(X);
+   Bells_On:=True;          Add_Dot(X);
+   Game_Sazed:=Saved_Game;  Add_Dot(X);    { Is there a saved game? }
+   Auto_Load:=False;        Add_Dot(X);
+   Auto_Save:=False;        Add_Dot(X);
+   Seed:=Get_Seed;          Add_Dot(X);    { Get a seed for the rand. #s }
+End;  { Initialize }
+
+{**********************************************************************************************************************************}
+
+[Global]Function Rendition_Set (Var T: Line): Unsigned;
+
+{ This function scans T for special characters, and then returns the renditionset for SMG$ to print out T with the right
+  renditions }
+
+Var
+  New_Line: Line;
+  Position: Integer;
+  Blinking,Bold,Inverse,Underline: Boolean;
+  Temp: Unsigned;
+
+Begin { Rendition_Set }
+   New_Line:='';
+   Bold:=False;  Inverse:=False;  Underline:=False;  Blinking:=False;
+   For Position:=1 to T.Length do
+     Case T[Position] of
+        '^': Bold:=True;
+        '_': Underline:=True;
+        '`': Inverse:=True;
+        '{': Blinking:=True;
+        Otherwise New_Line:=New_Line+T[Position];
+     End;
+   T:=New_Line;      Temp:=SMG$M_NORMAL;
+   If Bold then      Temp:=Temp+SMG$M_BOLD;
+   If Inverse then   Temp:=Temp+SMG$M_REVERSE;
+   If Blinking then  Temp:=Temp+SMG$M_BLINK;
+   If Underline then Temp:=Temp+SMG$M_UNDERLINE;
+   Rendition_Set:=Temp;
+End;  { Rendition Set }
+
+{**********************************************************************************************************************************}
+
+
+
+
+
+
+
 
 { $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ }
+
+Procedure Handle_Key (Var Exit: boolean;              Var Pics: Pic_List;                 Var MazeFile: LevelFile;
+                      Var Roster: Roster_Type;        Var Treasure: List_of_Treasures;    Var Item_list: List_of_Items);
+
+{ This procedure gets and handles a key and runs the selected utility }
+
+Var
+   Key_Stroke: Car;
+   Choices: Char_Set;
+
+[External]Procedure Pic_Edit (Var Pics: Pic_List);external;
+[External]Procedure Edit_Maze (Var MazeFile: LevelFile);external;
+[External]Procedure Edit_Players_Characters;external;
+[External]Procedure Edit_Treasures(Var Treasure: List_of_Treasures);external;
+[External]Procedure Edit_Monster;external;
+[External]Procedure Edit_Item;External;
+[External]Procedure Edit_Character (Var Roster: Roster_Type);external;
+[External]Procedure Edit_messages;external;
+[External]Procedure Clear_High_Scores;external;
+
+Begin { Handle Key }
+    Choices:=['U','H','A','V','T','S','M','I','E','C','F','P','L'];
+    If User_Name<>'JGETZIN' then Choices:=['F','E'];
+    Key_Stroke:=Make_Choice (Choices);
+    Case Key_Stroke of
+        'H':  Begin
+               Clear_High_Scores;
+               SMG$Put_Chars (ScreenDisplay,'* * * Scores Cleared * * *',23,22);
+               Delay (1);
+              End;
+        'L':  If Logging then Clear_Log;
+        'V':  If Logging then View_Log;
+        'U':  Player_Utilities (Pasteboard);
+        'P':  Pic_Edit (Pics);
+        'F':  Begin
+               SMG$Put_Chars (ScreenDisplay,'* * * Loading Maze Editor * * *',23,22);
+               Edit_Maze (MazeFile);
+              End;
+        'C':  Edit_Character (Roster);
+        'T':  Edit_Treasures (Treasure);
+        'S':  Begin
+                 SMG$Put_Chars (ScreenDisplay,'* * * Loading Message Editor * * *',23,22);
+                 Edit_Messages;
+              End;
+        'M':  Begin
+                 SMG$Put_Chars (ScreenDisplay,'* * * Loading Monster Editor * * *',23,22);
+                 Edit_Monster;
+              End;
+        'I':  Edit_Item;
+        'A':  Edit_Players_Character;
+        'E':  Exit:=True;
+        Otherwise ;
+    End;
+End;  { Handle Key }
+
+{**********************************************************************************************************************************}
+
+Procedure Utilities (Var Pics: Pic_List;   Var MazeFile: LevelFile;  Var Roster: Roster_Type;
+                     Var Treasure: List_of_Treasures;   Var Item_List: List_of_Items);
+
+{ This procedure runs the main utility menu }
+
+Var
+   Done: Boolean;
+
+Begin { Utilities }
+   DataModified:=True;
+   Repeat
+        Begin
+           Done:=False;
+           SMG$Begin_Display_Update (ScreenDisplay);
+           SMG$Erase_Display (ScreenDisplay);
+           SMG$Put_Chars (ScreenDisplay,'Utilities Main Menu',5,28,,1);
+           SMG$Put_Chars (ScreenDisplay,'--------- ---- ----',6,28,,1);
+           SMG$Put_Chars (ScreenDisplay,' A)lter player''s characters',7,28);
+           SMG$Put_Chars (ScreenDisplay,' C)haracter edit',8,28);
+           SMG$Put_Chars (ScreenDisplay,' F)loorplan edit',9,28);
+           SMG$Put_Chars (ScreenDisplay,' H)igh Score Clear',10,28);
+           SMG$Put_Chars (ScreenDisplay,' I)tem edit',11,28);
+           SMG$Put_Chars (ScreenDisplay,' M)onster edit',12,28);
+           SMG$Put_Chars (ScreenDisplay,' P)icture edit',13,28);
+           SMG$Put_Chars (ScreenDisplay,' S)cenario message edit',14,28);
+           SMG$Put_Chars (ScreenDisplay,' T)reasure edit',15,28);
+           SMG$Put_Chars (ScreenDisplay,' V)iew Userlog',16,28);
+           SMG$Put_Chars (ScreenDisplay,' L)og clear',17,28);
+           SMG$Put_Chars (ScreenDisplay,' E)xit',19,28);
+           SMG$Put_Chars (ScreenDisplay,' U)tilities (player)',18,28);
+           SMG$Put_Chars (ScreenDisplay,' Which?',20,28);
+           SMG$End_Display_Update (ScreenDisplay);
+           Handle_Key (Done,Pics,MazeFile,Roster,Treasure,Item_List);
+        End;
+   Until Done
+End;  { Utilities }
+
+{**********************************************************************************************************************************}
 
 Procedure Set_Up_Kyrn;
 
