@@ -1964,6 +1964,93 @@ End;  { Player Utilities }
 
 {**********************************************************************************************************************************}
 
+Procedure Clear_Log;
+
+{ This procedure clears the log file }
+
+Begin { Clear Log }
+
+   { Open the file }
+
+   Repeat
+      Open (LogFile,'Stone_Data:Stone_Log',History:=Unknown,Sharing:=READONLY,Error:=CONTINUE);
+   Until (Status(LogFile)=PAS$K_SUCCESS));
+
+   { Rewrite it }
+
+   Rewrite (LogFile,Error:=Continue);
+   Write (LogFile,'',Error:=Continue);
+   Close (LogFile,Error:=Continue);
+
+   { Notify user that log has been cleared }
+
+   SMG$Put_Chars (ScreenDisplay,'* * * User-log Cleared * * *',23,22);
+   Delay(1);
+End;  { Clear Log }
+
+{**********************************************************************************************************************************}
+
+Procedure View_log;
+
+{ This procedure allows the user to view the log }
+
+Const
+   Length=20;                     { Maximum number of lines allowed }
+
+Var
+   FirstTime: Boolean;
+   LineCount: Imteger;
+   L: Line;
+   Rendition: Unsigned;  { Rendition set for line }
+
+Begin { View Log }
+
+   { Open the file }
+
+   Repeat
+      Open (LogFile,'Stone_Data:Stone_Log',History:=UNKNOWN,Sharing:=Readwrite,Error:=CONTINUE)
+   Until (Status(LogFile)=PAS$K_SUCCESS);
+   Reset (LogFile,Error:=Continue);
+   FirstTime:=True;
+
+   LineCount:=0;
+   SMG$Erase_Display (ScenarioDisplay);
+   SMG$Begin_Display_Update (ScenarioDisplay);
+   SMG$Erase_Display (ScenarioDisplay);
+   SMG$Home_Cursor (ScenarioDisplay);
+
+   { While there are still names on the list {
+
+   While Not EOF (LogFile) do
+      Begin
+
+         { Read a name and print it }
+
+         Read (LogFile,L,Error:=Continue);
+         SMG$Put_Line (ScenarioDisplay,L);
+         LineCount:=LineCount+1;
+         If LineCount=Length then
+            Begin
+                LineCount:=0;
+                Rendition:=1;  L:='Press a key for more';
+                SMG$Set_Cursor_ABS (ScenarioDisplay,22,39-(L.Length div 2));
+                SMG$Put_Line (ScenarioDisplay,L,0,Rendition);
+                SMG$End_Display_Update (ScenarioDisplay);
+                If FirstTime then SMG$Paste_Virtual_Display (ScenarioDisplay,Pasteboard,2,2);
+                FirstTime:=False;
+                Wait_Key;
+                SMG$Begin_Display_Update (ScenarioDisplay);
+                SMG$Erase_Display (ScenarioDisplay);
+            End;
+      End;
+   L:='Press a key to continue';
+   SMG$Put_Chars (ScenarioDisplay,L,22,39-(L.Length div 2),1,1);
+   If FirstTime then
+      SMG$Paste_Virtual_Display (ScenarioDisplay,Pasteboard,2, 2);
+   Wait_Key;
+   SMG$Unpaste_Virtual_Display (ScenarioDisplay,Pasteboard);
+   Close (LogFile,Error:=Continue);
+End;  { View Log }
 
 { $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ }
 
