@@ -19,7 +19,7 @@ Type
 
 (*******************************************************************************)
 
-[Global]Function Empty_Stacks (Stack: Place_Stack): Boolean;
+[Global]Function Empty_Stack (Stack: Place_Stack): Boolean;
 
 { This function returns TRUE if there are no nodes on the STACK, and FALSE
   otherwise }
@@ -59,3 +59,42 @@ End;  { Remove Nodes }
 
 (*******************************************************************************)
 
+[Global]Procedure Insert_Place (PosX,PosY: Horizontal_Type;  PosZ: Vertical_Type;  Var Stack: Place_Stack);
+
+Var
+   Temp: Place_Ptr;
+
+Begin
+  New(Temp);
+  Temp^.PosX:=PosX;              Temp^.PosY:=PosY;           Temp^.PosZ:=PosZ;
+
+  Temp^.Next:=Stack.Front;
+  Stack.Front:=Temp;
+  Stack.Length:=Stack.Length+1;
+End;
+
+(*******************************************************************************)
+
+[Global]Procedure POP (Var PosX,PosY: Horizontal_Type;  Var PosZ: Vertical_Type; Var Stack: Place_Stack);
+
+Var
+   Temp: Place_Ptr;
+
+Begin
+   If Not Empty_Stack(Stack) then
+      Begin
+         PosX:=Stack.Front^.PosX;   PosY:=Stack.Front^.PosY;
+         PosZ:=Stack.Front^.PosZ;
+
+         Temp:=Stack.Front;
+         Stack.Front:=Stack.Front^.Next;
+         Dispose(Temp);
+         Stack.Length:=Stack.Length-1;
+      End
+   Else
+      Begin
+         Stack.Length:=0;
+         PosX:=0;  PosY:=0;  PosZ:=0;
+      End;
+End;
+End.
