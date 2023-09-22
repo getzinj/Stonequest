@@ -596,13 +596,13 @@ Begin { Get Num }
    No_Cursor;
 
    If Response.Length=0 then
-      Response:='0';
+      Response:='0'
    Else
       For Position:=1 to Response.Length do
-          If Not(Response.Body[Position] in ['0'..'9','+','-]]) then
+          If Not(Response.Body[Position] in ['0'..'9','+','-']) then
              Response.Body[Position]:='0';
 
-   ReadV (Response.Number,Error:=Continue);
+   ReadV (Response,Number,Error:=Continue);
 End;  { Get Num }
 
 {**********************************************************************************************************************************}
@@ -642,7 +642,7 @@ Begin { User Name }
 
   pid:=0;       { Indicate the current process }
 
-  $getjpi(pidadr:=%ref pid,itmlst:=%rref item_list);
+  $getjpi(pidadr:=%ref pid,itmlst:=%ref item_list);
 
   { Return current username in Buffer[0] }
 
@@ -725,13 +725,18 @@ End;
 
 {**********************************************************************************************************************************}
 
-{[Global]?}Procedure Message_Trap ();
+{[Global]?}
+Procedure Message_Trap (Code: Integer; FileType: Line);
 
 { THIS CODE IS MISSING IN THE PRINT OUT. IT WILL NEED TO BE RECREATED. -- JHG 2023-09-15 }
 
+Var
+   Msg: Line;
+   BroadcastDisplay: Unsigned;
+
 Begin { Message Trap }
    Msg:='* * * Error reading '+FileType+' file!';
-   If Code<>0 then msg:=msg+'  Error #'String(code);
+   If Code<>0 then msg:=msg+'  Error #'+String(code);
    Msg:=Msg+' * * *';
 
    If Logging then Extend_LogFile (Msg);
