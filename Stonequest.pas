@@ -256,7 +256,7 @@ Value { We got a lot of 'em! }
   ClerSpells[2]:=[Dspl,CrPs]+[CoLi];
   ClerSpells[3]:=[CrSe..CoLi,Loct]-[CoLi]+[ChTr];
   ClerSpells[4]:=[CrVs..Wrth,Fear]+[CrPa];
-  ClerSpells[5]:=[CrCr..GrWr,Level]+[AnDe];
+  ClerSpells[5]:=[CrCr..GrWr,Levi]+[AnDe];
   ClerSpells[6]:=[Heal..HoWr,DetS]-[ReDo];
   ClerSpells[7]:=[Ress..PaHe,Bani];
   ClerSpells[8]:=[DiWr..RaDe];
@@ -454,7 +454,8 @@ End;  { Get Key }
 
 {**********************************************************************************************************************************}
 
-[Global]Function Get_Response (Time_Out: Integer:=-1;  Time_Out_Char: Char:=' '):[Volatile]Char;
+[Global]Function Get_Response (
+    Time_Out: Integer:=-1;  Time_Out_Char: Char:=' '):[Volatile]Char;
 
 { This procedure will read in a letter from 'A' to 'Z' and return it as the function value.  Note:  All lower case letters are
   converted to uppercase, so if lower case letters are needed, another function must be used.  HELPs are removed since they serve
@@ -466,7 +467,7 @@ Var
 Begin { Get Response }
    Repeat { Keep reading keys ... }
       Begin { Key loop }
-         Num:=Get_Key (Time_Out,Org(Time_Out_Char));  { Get a key }
+         Num:=Get_Key (Time_Out,Ord(Time_Out_Char));  { Get a key }
          If (CHR(Num) in ['a'..'z']) then Num:=Num-32; { Convert to U/C }
       End;  { Key loop }
    Until (Num<>SMG$K_TRM_HELP) and (Num<>SMG$K_TRM_DO);
@@ -493,12 +494,12 @@ End;
 
 {**********************************************************************************************************************************}
 
-[Global]Function Yes_or_No (Time_OPut: Integer:=-1;  Time_Out_Char: Char:=' '): [Volatile]Char;
+[Global]Function Yes_or_No (Time_Out: Integer:=-1;  Time_Out_Char: Char:=' '): [Volatile]Char;
 
 { This function will return a keystroke, 'Y' or 'N' }
 
 Begin { Yes or No }
-   Yes_Or_No:=Make_Choice (['Y','N']),Time_Out,Time_Out_Char);
+   Yes_Or_No:=Make_Choice (['Y','N'],Time_Out,Time_Out_Char);
 End;  { Yes or No }
 
 {**********************************************************************************************************************************}
@@ -513,7 +514,7 @@ Var
 Begin { Zero Through Six }
    Answer:=Make_Choice(['0'..'6',CHR(13),CHR(32)],Time_Out,Time_Out_Char);
    If Answer in [CHR(13),CHR(32)] then Answer:='0';                          { Convert <CR> to '0' }
-   Number:=Order(Answer)-48  { Convert CHAR to INT and return }
+   Number:=Ord(Answer)-48  { Convert CHAR to INT and return }
 End;  { Zero Through Six }
 
 {**********************************************************************************************************************************}
@@ -564,6 +565,17 @@ Begin { Cursor }
   Cursor_Mode:=True; { Set the cursor flag }
   SMG$Set_Cursor_Mode(Pasteboard, 0) { Turn on the cursor }
 End;  { Cursor }
+
+{**********************************************************************************************************************************}
+
+[Global]Procedure No_Cursor;
+
+{ This procedure will turn the cursor off, and set CURSOR_MODE, the cursor's flag, to be false }
+
+Begin { No Cursor }
+  Cursor_Mode:=False; { Clear the cursor flag }
+  SMG$Set_Cursor_Mode(Pasteboard, 1) { Turn off the cursor }
+End;  { No Cursor }
 
 {**********************************************************************************************************************************}
 
@@ -745,7 +757,7 @@ Begin { Message Trap }
    SMG$Unpaste_Virtual_Display (BroadcastDisplay,Pasteboard);
    SMG$Delete_Virtual_Display  (BroadcastDisplay);
    Delete_Virtual_Devices;
-   Exit;  { Leve the game. (sorry! ) }
+   Exit;  { Leave the game. (sorry! ) }
 End;  { Message Trap }
 
 {**********************************************************************************************************************************}
