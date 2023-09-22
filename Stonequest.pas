@@ -1,4 +1,4 @@
-[Inherit('TYPES', 'SYS$LIBRARY:STARLET','LIBRTL','SMGRTL','STRRTL)]
+[Inherit('TYPES', 'SYS$LIBRARY:STARLET','LIBRTL','SMGRTL','STRRTL')]
 Program Stonequest (Input,Output,Char_File,Item_File,Monster_File,Message_File,TreasFile,MazeFile,SaveFile,PickFile,AmountFile,
                    ScoresFile,LogFile,HoursFile,PrintMazeFile);
 
@@ -103,7 +103,7 @@ Var
   Game_Saved:             [Global]Boolean;                             { Is there a previous game saved? }
 {*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Game Loading and Saving Variables~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*}
   Auto_Load:              [Global]Boolean;                     { Auto-load in progress }
-  Auth_Size:              [Global]Boolean;                     { Auto-save in progress }
+  Auto_Save:              [Global]Boolean;                     { Auto-save in progress }
 {*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Externally Used Variables~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*}
   Delay_Constant:         [Global]Real;
   Leave_Maze:             [Global]Boolean;                             { Is there a forced leave maze? }
@@ -662,7 +662,7 @@ Begin { Delete All Displays }
    SMG$Delete_Virtual_Display(ShellDisplay);
    SMG$Delete_Virtual_Display(CharacterDisplay);
    SMG$Delete_Virtual_Display(MonsterDisplay);
-   SMG$Delete_Virtual_Display(CommandDisplay);
+   SMG$Delete_Virtual_Display(CommandsDisplay);
    SMG$Delete_Virtual_Display(SpellsDisplay);
    SMG$Delete_Virtual_Display(OptionsDisplay);
    SMG$Delete_Virtual_Display(TextDisplay);
@@ -989,7 +989,7 @@ Begin { Read Roster }
    { If the file doesn't exist, or is in an out-dated format }
 
    If Status(Char_File)=PAS$K_FILNOTFOU then
-      Create_Roster_file;
+      Create_Roster_file
    Else
       Begin { File is there }
          Reset (Char_File,Error:=Continue);
@@ -1478,7 +1478,7 @@ Begin { Print Roster }
       Else { Otherwise print a blank line }
         SMG$Put_Line (ScreenDisplay,'');
     SMG$End_Display_Update (ScreenDisplay);
-End  { Print Roster }
+End;  { Print Roster }
 
 {**********************************************************************************************************************************}
 
@@ -1584,10 +1584,51 @@ End;  { Initialize Displays }
 
 {**********************************************************************************************************************************}
 
+Procedure Add_Dot (Var X: Integer);
+
+{ This procedure adds a dot to the line of dots on the screen }
+
+Begin { Add Dot }
+   SMG$Put_Chars (ScreenDisplay,'. ',11,X);
+   X:=X+1;
+End;  { Add Dot }
+
+{**********************************************************************************************************************************}
+
+[Asynchronous,Global]Procedure Out_of_Band_AST (Var Arguments: AST_Arg_Type);
+
+{ This procedure handles any control characters typed by the users during
+  the game }
+
+Begin { Out of Band AST }
+   Case Arguments.Control_Key of
+         SMG$K_TRM_CTRLW,SMG$K_TRM_CTRLR:  SMG$Repaint_Screen (Arguments,Pasteboard);
+         SMG$K_TRM_CTRLP:                  Print_Pasteboard  (Arguments,Pasteboard);
+         Otherwise ;
+   End;
+End;  { Out of Band AST }
+
+{**********************************************************************************************************************************}
+
+[Global]Procedure Trap_Out_of_Bands;
+
+{ This procedure enables the trapping of special keys }
+
+Const  { Trap these characters }
+   Trap = 2**SMG$K_TRM_CTRLW+
+          2**SMG$K_TRM_CTRLR+
+          2**SMG$K_TRM_CTRLP;
+
+Begin { Trap Out of Bands }
+   SMG$Set_Out_Of_Band_ASTs (Pasteboard,Trap,AST_Routine:=%Immed OUT_OF_BAND_AST);
+End;  { Trap Out of Bands }
+
+{**********************************************************************************************************************************}
+
 [Global]Procedure Dont_Trap_Out_of_Bands;
 
 Begin { Dont Trap Out of Bands }
-   SMG$Set_Out_Of_Bands_ASTs (Pasteboard,0);
+   SMG$Set_Out_Of_Band_ASTs (Pasteboard,0);
 End;  { Dont Trap Out of Bands }
 
 {**********************************************************************************************************************************}
@@ -1889,7 +1930,8 @@ Begin { Recover Heading }
    SMG$Put_Line (screendisplay,
        '------------------');
    SMG$Put_Line (screendisplay,
-       'This process will attempt to recover characters lost through system crashes of');
+       'This process will attempt to recover characters '
+       +'lost through system crashes of');
    SMG$Put_Line (screendisplay,
        'accidental ^C or ^Y.');
    SMG$Put_Line (screendisplay,
@@ -1958,7 +2000,7 @@ Begin { Change Queue }
    Cursor;  SMG$Read_String (Keyboard,Temp,Display_ID:=screendisplay,
                              Prompt_String:='--->');  No_Cursor;
    If Temp<>'' then
-      If Temp='' then Print_Queue:='SYS$PRINT';
+      If Temp='' then Print_Queue:='SYS$PRINT'
       Else Print_Queue:=Temp;
 End;  { Change Queue }
 
@@ -2372,7 +2414,7 @@ Begin { Handle Auto Save }
    SMG$Unpaste_Virtual_Display (TopDisplay,Pasteboard);
    SMG$Unpaste_Virtual_Display (BottomDisplay,Pasteboard);
    SMG$End_Pasteboard_Update   (Pasteboard);
-   Auto_Save:=Falsep;
+   Auto_Save:=False;
 End;  { Handle Auto Save }
 
 {**********************************************************************************************************************************}
