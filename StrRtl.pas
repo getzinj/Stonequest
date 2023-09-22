@@ -1,5 +1,5 @@
-[Environment('librtl')]
-MODULE librtl;
+[Environment('strrtl')]
+MODULE strrtl;
 
 
 [HIDDEN]
@@ -17,17 +17,9 @@ TYPE
                       lsl,msl:  [UNSAFE] INTEGER;
                     End;
 
-[ASYNCHRONOUS, UNBOUND]FUNCTION lib$wait
-  (          duration: Real ) : UNSIGNED;
-        EXTERNAL;
-
-
-[ASYNCHRONOUS, UNBOUND]FUNCTION lib$delete_file
-  (%descr filename: VARYING [$len3] OF CHAR ) : UNSIGNED;
-        EXTERNAL;
-
-[ASYNCHRONOUS, UNBOUND]FUNCTION lib$do_command
-  (%descr command: VARYING [$len4] OF CHAR ) : UNSIGNED;
+[ASYNCHRONOUS, UNBOUND]FUNCTION str$trim
+  (%descr string: VARYING [$len3] OF CHAR;
+   %descr output: VARYING [$len4] OF CHAR) : UNSIGNED;
         EXTERNAL;
 
 END.

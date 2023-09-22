@@ -1,4 +1,4 @@
-[Inherit('TYPES', 'SYS$LIBRARY:STARLET','LIBRTL','SMGRTL')]
+[Inherit('TYPES', 'SYS$LIBRARY:STARLET','LIBRTL','SMGRTL','STRRTL)]
 Program Stonequest (Input,Output,Char_File,Item_File,Monster_File,Message_File,TreasFile,MazeFile,SaveFile,PickFile,AmountFile,
                    ScoresFile,LogFile,HoursFile,PrintMazeFile);
 
@@ -713,6 +713,8 @@ End;  { Extend LogFile }
 
 { This procedure prints an error message and then exits Stonequest. }
 
+[External]Procedure Exit (XStatus:  Integer:=1);External;
+
 Var
   BroadcastDisplay:  Unsigned;  { Virtual keyboard and Broadcast }
   Msg: Line;
@@ -729,6 +731,8 @@ End;
 Procedure Message_Trap (Code: Integer; FileType: Line);
 
 { THIS CODE IS MISSING IN THE PRINT OUT. IT WILL NEED TO BE RECREATED. -- JHG 2023-09-15 }
+
+[External]Procedure Exit (XStatus:  Integer:=1);External;
 
 Var
    Msg: Line;
@@ -847,7 +851,7 @@ Begin { Special Occurance }
               Else
                  Character.Experience:=XP_Needed (Character.Class,Character.Level);
            End;  { Lower character's level }
-        3. Begin { Reduce a character's age 2-20 years }
+        3: Begin { Reduce a character's age 2-20 years }
               Character.Age:=Character.Age-(Roll_Die(10)*2*365);
               If Character.Age<(10*365) then Character.Age:=10*365;
            End;  { Increase a characters age }
@@ -863,12 +867,12 @@ Begin { Special Occurance }
                    If Character.Class=Barbarian then
                       Character.Class:=Cleric
                    Else
-                      Caracter.Class:=Succ(Character.Class);
+                      Character.Class:=Succ(Character.Class);
                If Character.Class=Character.PreviousClass then
                    If Character.Class=Barbarian then
                       Character.Class:=Cleric
                    Else
-                      Caracter.Class:=Succ(Character.Class);
+                      Character.Class:=Succ(Character.Class);
 
             End;
         19: Begin
@@ -1036,7 +1040,7 @@ Begin { Get Level }
          { If the level is defined load it, otherwise return the current level }
 
          If Not(Eof(MazeFile)) then
-            Read (MazeFile,Temp);
+            Read (MazeFile,Temp)
          Else
             Temp:=Maze;
 
@@ -1044,7 +1048,7 @@ Begin { Get Level }
 
          Close (MazeFile);
          Get_Level:=Temp;
-      End;
+      End
    Else
       Get_Level:=Maze;  { Otherwise, return the current level }
 End;  { Get Level }
@@ -1129,8 +1133,6 @@ Begin { Get Item }
    Unlock (Item_File);
    Close (Item_File);
 End;  { Get Item }
-
-{ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ }
 
 {**********************************************************************************************************************************}
 
@@ -1290,7 +1292,7 @@ Begin { Error Window }
 
         { Paste it onto the pasteboard }
 
-  SMG$Paste_Virtual_Display (BroadcastDisplay,Pasteboard);
+  SMG$Paste_Virtual_Display (BroadcastDisplay,Pasteboard,2,2);
 
                { Delete all created virtual devices }
 
@@ -1472,7 +1474,7 @@ Begin { Print Roster }
            SMG$Put_Chars (ScreenDisplay,String (Roster[Slot].Level,3));
            SMG$Put_Chars (ScreenDisplay,'        '
                           +StatusName[Roster[Slot].Status]);
-        End;  { Print the occupant }
+        End  { Print the occupant }
       Else { Otherwise print a blank line }
         SMG$Put_Line (ScreenDisplay,'');
     SMG$End_Display_Update (ScreenDisplay);
@@ -1492,7 +1494,7 @@ Begin { Plane Difference }
             Lower_Bound:=0;
             Plus:=Plus-(PosZ-10);
             If Plus<Lower_Bound then Plus:=Lower_Bound;
-         End;
+         End
    Else
       If Plus<0 then
          Begin
@@ -1554,12 +1556,18 @@ Begin { Initialize Displays }
 
    { Label the proper borders }
 
-   SMG$Label_Border(ScenarioDisplay,'=*> The Quest of the Stone <*=',SMG$K_TOP);
-   SMG$Label_Border(WinDisplay,'=*> The Quest of the Stone <*=',SMG$K_TOP);
-   SMG$Label_Border(GraveDisplay,' Warrior''s Gate ',SMG$K_TOP);
-   SMG$Label_Border(CampDisplay,' Camp ',SMG$K_TOP);
-   SMG$Label_Border(MonsterDisplay,' Combat ',SMG$K_TOP);
-   SMG$Label_Border(TopDisplay,'Kyrn',SMG$K_RIGHT);
+   SMG$Label_Border(ScenarioDisplay,
+       '=*> The Quest of the Stone <*=',SMG$K_TOP);
+   SMG$Label_Border(WinDisplay,
+       '=*> The Quest of the Stone <*=',SMG$K_TOP);
+   SMG$Label_Border(GraveDisplay,
+       ' Warrior''s Gate ',SMG$K_TOP);
+   SMG$Label_Border(CampDisplay,
+       ' Camp ',SMG$K_TOP);
+   SMG$Label_Border(MonsterDisplay,
+       ' Combat ',SMG$K_TOP);
+   SMG$Label_Border(TopDisplay,
+       'Kyrn',SMG$K_RIGHT);
    SMG$Label_Border(ViewDisplay);
 
    { Initialize the proper borders }
@@ -2577,7 +2585,7 @@ Begin { Stonequest }
          Until Answer='Q';                                      { Quit if it's a "Q" }
          Quit;                                                  { Update files }
          If Not Game_Saved then Kill_Save_File;
-     End;
+     End
   Else
      ShowHours:=True;
 
