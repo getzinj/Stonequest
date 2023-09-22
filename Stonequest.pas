@@ -2052,23 +2052,23 @@ Begin { View Log }
    Close (LogFile,Error:=Continue);
 End;  { View Log }
 
-{ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ }
+{**********************************************************************************************************************************}
 
-Procedure Handle_Key (Var Exit: boolean;              Var Pics: Pic_List;                 Var MazeFile: LevelFile;
-                      Var Roster: Roster_Type;        Var Treasure: List_of_Treasures;    Var Item_list: List_of_Items);
+Procedure Handle_Key (Var Exit: Boolean;              Var Pics: Pic_List;                   Var MazeFile: LevelFile;
+                      Var Roster: Roster_Type;        Var Treasure: List_of_Treasures;      Var Item_list: List_of_Items);
 
 { This procedure gets and handles a key and runs the selected utility }
 
 Var
-   Key_Stroke: Car;
+   Key_Stroke: Char;
    Choices: Char_Set;
 
 [External]Procedure Pic_Edit (Var Pics: Pic_List);external;
 [External]Procedure Edit_Maze (Var MazeFile: LevelFile);external;
-[External]Procedure Edit_Players_Characters;external;
+[External]Procedure Edit_Player_Characters;external;
 [External]Procedure Edit_Treasures(Var Treasure: List_of_Treasures);external;
-[External]Procedure Edit_Monster;external;
-[External]Procedure Edit_Item;External;
+[External]Procedure Edit_Monsters;external;
+[External]Procedure Edit_Item;external;
 [External]Procedure Edit_Character (Var Roster: Roster_Type);external;
 [External]Procedure Edit_messages;external;
 [External]Procedure Clear_High_Scores;external;
@@ -2078,40 +2078,40 @@ Begin { Handle Key }
     If User_Name<>'JGETZIN' then Choices:=['F','E'];
     Key_Stroke:=Make_Choice (Choices);
     Case Key_Stroke of
-        'H':  Begin
+         'H': Begin
                Clear_High_Scores;
                SMG$Put_Chars (ScreenDisplay,'* * * Scores Cleared * * *',23,22);
                Delay (1);
               End;
-        'L':  If Logging then Clear_Log;
-        'V':  If Logging then View_Log;
-        'U':  Player_Utilities (Pasteboard);
-        'P':  Pic_Edit (Pics);
-        'F':  Begin
+         'L': If Logging then Clear_Log;
+         'V': If Logging then View_Log;
+         'U': Player_Utilities (Pasteboard);
+         'P': Pic_Edit (Pics);
+         'F': Begin
                SMG$Put_Chars (ScreenDisplay,'* * * Loading Maze Editor * * *',23,22);
-               Edit_Maze (MazeFile);
+               Edit_Maze  (MazeFile);
               End;
-        'C':  Edit_Character (Roster);
-        'T':  Edit_Treasures (Treasure);
-        'S':  Begin
+         'C': Edit_Character (Roster);
+         'T': Edit_Treasures (Treasure);
+         'S': Begin
                  SMG$Put_Chars (ScreenDisplay,'* * * Loading Message Editor * * *',23,22);
                  Edit_Messages;
               End;
-        'M':  Begin
+         'M': Begin
                  SMG$Put_Chars (ScreenDisplay,'* * * Loading Monster Editor * * *',23,22);
                  Edit_Monster;
               End;
-        'I':  Edit_Item;
-        'A':  Edit_Players_Character;
-        'E':  Exit:=True;
-        Otherwise ;
+         'I': Edit_Item;
+         'A': Edit_Players_Character;
+         'E': Exit:=True;
+         Otherwise ;
     End;
 End;  { Handle Key }
 
 {**********************************************************************************************************************************}
 
-Procedure Utilities (Var Pics: Pic_List;   Var MazeFile: LevelFile;  Var Roster: Roster_Type;
-                     Var Treasure: List_of_Treasures;   Var Item_List: List_of_Items);
+Procedure Utilities (Var Pics: Pic_List;  Var MazeFile: LevelFile;  Var Roster: Roster_Type;
+                     Var Treasure: List_of_Treasures;  Var Item_List: List_of_Items);
 
 { This procedure runs the main utility menu }
 
@@ -2126,7 +2126,7 @@ Begin { Utilities }
            SMG$Begin_Display_Update (ScreenDisplay);
            SMG$Erase_Display (ScreenDisplay);
            SMG$Put_Chars (ScreenDisplay,'Utilities Main Menu',5,28,,1);
-           SMG$Put_Chars (ScreenDisplay,'--------- ---- ----',6,28,,1);
+           SMG$Put_Chars (ScreenDisplay,'-------- ---- ----',6,28,,1);
            SMG$Put_Chars (ScreenDisplay,' A)lter player''s characters',7,28);
            SMG$Put_Chars (ScreenDisplay,' C)haracter edit',8,28);
            SMG$Put_Chars (ScreenDisplay,' F)loorplan edit',9,28);
@@ -2417,4 +2417,3 @@ Begin { Stonequest }
   If Not Authorized and Trap_Authorized_Error then Revert;                              { Turn off MORIA's error handler }
   If ShowHours then LIB$DO_COMMAND ('TYPE STONE_DATA:HOURS.DAT');
 End.  { StoneQuest }
-
