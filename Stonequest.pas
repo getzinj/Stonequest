@@ -1,4 +1,4 @@
-[Inherit('TYPES', 'SYS$LIBRARY:STARLET','SYS$LIBRARY:LIBRTL','SMGRTL','SYS$:LIBRARY:STRRTL')]
+[Inherit('TYPES', 'SYS$LIBRARY:STARLET','LIBRTL','SMGRTL')]
 Program Stonequest (Input,Output,Char_File,Item_File,Monster_File,Message_File,TreasFile,MazeFile,SaveFile,PickFile,AmountFile,
                    ScoresFile,LogFile,HoursFile,PrintMazeFile);
 
@@ -61,7 +61,7 @@ Var
    PicFile:                    Picture_File_Type;           { Pictures }
    AmountFile:                 [Global]Number_File;         { Item amounts }
    ScoresFile:                 [Global]Score_File;          { High scores }
-   LogFile:                    Packed file fo Line;         { Player log }
+   LogFile:                    Packed file of Line;         { Player log }
 {*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Tables~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*}
    Roster:                     [Global]Roster_Type;         { All characters }
    Treasure:                   [Global]List_of_Treasures;   { All treasure types }
@@ -114,7 +114,7 @@ Var
   Rounds_Left:            [Global]Array [Spell_Name] of Unsigned;      { spell's time left }
   PosX,PosY,PosZ:         [Global,Byte]0..20;                          { Global position in maze }
 {*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Used for Encounter Module~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*}
-  Party_Spell,Person_Spell,Caster_Spell,All_Monster_Spell,Group_Spell,Area_Spell: [Global]Set of Spell_Name;
+  Party_Spell,Person_Spell,Caster_Spell,All_Monsters_Spell,Group_Spell,Area_Spell: [Global]Set of Spell_Name;
 
   Version_Number:         [Global]Line;
 
@@ -214,9 +214,9 @@ Value { We got a lot of 'em! }
   Person_Spell       :=[AnDe,CrLt,CrPs,CrPa,CrVs,CrSe,CrCr,Raze,Heal,Ress,ReFe];
   Caster_Spell       :=[Prot,Shld,Besk];
   All_Monsters_Spell :=[HoWr,DiWr,DeSp,Holo];
-  Group_Spell        :=[Sleep,CsLt,Dspl,CsSe,CsVs,Wrth,CsCr,Slay,GrWr,Harm,Dest,MaMs,Fear,FiBl,LiBt,CoCd,Bani,MgFi,Kill,DiDe,LtId,
-                        BgId,Sile];
-  Area_Spell         :=[Comp,Lght,Levi,ColI,Deu,RaDe,TiSt,DetS];
+  Group_Spell        :=[Slep,CsLt,Dspl,CsSe,CsVs,Wrth,CsCr,Slay,GrWr,Harm,Dest,MaMs,Fear,FiBl,LiBt,CoCd,
+                        Bani,MgFi,Kill,DiDe,LtId,BgId,Sile];
+  Area_Spell         :=[Comp,Lght,Levi,ColI,Deus,RaDe,TiSt,DetS];
 
 { Define what classes get what spell at what spell level: format is
      Spell_Class_Type [Spell_Level]:=[Set of all spells of this level }
@@ -233,12 +233,24 @@ Value { We got a lot of 'em! }
 
               { The names of the chest traps }
 
-  TrapName[Trapless]:='Trapless Chest';     TrapName[PoisonNeedle]:='Poisoned Need';    TrapName[Alarm]:='Alarm';
-  TrapName[Teleporter]:='Teleporter';       TrapName[CrossbowBolt]:='Crossbow bolt';    TrapName[Blades]:='Blades';
-  TrapName[SnoozeAlarm]:='Snooze Alarm';    TrapName[GasCloud]:='Gas Cloud';            TrapName[Acid]:='Acid';
-  TrapName[Paralyzer]:='Paralyzer';         TrapName[BoobyTrap]:='Booby-Trap';          TrapName[Sleeper]:='Sleeper';
-  TrapName[AntiWizard]:='Anti-Wizard';      TrapName[AntiCleric]:='Anti-Cleric';        TrapName[Darts]:='Darts';
-  TrapName[ExplodingBox]:='Exploding box';  TrapName[Splinters]:='Splinters';           TrapName[Stunner]:='Stunner';
+  TrapName[Trapless]:='Trapless Chest';
+  TrapName[PoisonNeedle]:='Poisoned Needle';
+  TrapName[Alarm]:='Alarm';
+  TrapName[Teleporter]:='Teleporter';
+  TrapName[CrossbowBolt]:='Crossbow bolt';
+  TrapName[Blades]:='Blades';
+  TrapName[SnoozeAlarm]:='Snooze Alarm';
+  TrapName[GasCloud]:='Gas Cloud';
+  TrapName[Acid]:='Acid';
+  TrapName[Paralyzer]:='Paralyzer';
+  TrapName[BoobyTrap]:='Booby-Trap';
+  TrapName[Sleeper]:='Sleeper';
+  TrapName[AntiWizard]:='Anti-Wizard';
+  TrapName[AntiCleric]:='Anti-Cleric';
+  TrapName[Darts]:='Darts';
+  TrapName[ExplodingBox]:='Exploding box';
+  TrapName[Splinters]:='Splinters';
+  TrapName[Stunner]:='Stunner';
 
               { Types of items that can be found }
 
@@ -283,11 +295,13 @@ Value { We got a lot of 'em! }
 
                { Character Abilities }
 
-  AbilName[1]:='Strength;         AbilName[2]:='Intelligence';        AbilName[3]:='Wisdom';       AlbilName[4]:='Dexterity';
-  AbilName[5]:='Contitution';     AbilName[6]:='Charisma';            AbilName[7]:='Luck';
+  AbilName[1]:='Strength';        AbilName[2]:='Intelligence';        AbilName[3]:='Wisdom';       AbilName[4]:='Dexterity';
+  AbilName[5]:='Constitution';    AbilName[6]:='Charisma';            AbilName[7]:='Luck';
 
 {*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~External DEClarations~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*}
-[Asynchronous,External]Function Oh_No (Var SA: Array [$u1..$u2:Integer] of Integer;  Var MA: Array [$u3..$u4:Integer] of [Unsafe]Integer;
+{ Note: 2023-09-21: the rest of the parameters were truncated by the printout. Am just closing the function for now to
+  get past the compilation errors. Will need to match params once in the linking stage. -JHG }
+[Asynchronous,External]Function Oh_No (Var SA: Array [$u1..$u2:Integer] of Integer;  Var MA: Array [$u3..$u4:Integer] of [Unsafe]Integer):Unsigned;external;
 [External]Procedure No_Controly;External;
 [External]Procedure Controly;External;
 [External]Function String(Num: Integer; Len: Integer:=0):Line;external;
@@ -340,7 +354,7 @@ Procedure Special_Keys (Key_Code: Unsigned_Word);
 [External]Procedure Shell_Out;External;
 
 Begin { Special Keys }
-   If (Key_Code=SMG$K_TRM_CTRLU) and Not (Main_Menu or In_Utilities) then PlayerUtilities(Pasteboard);
+   If (Key_Code=SMG$K_TRM_CTRLU) and Not (Main_Menu or In_Utilities) then Player_Utilities(Pasteboard);
    If (Key_Code=SMG$K_TRM_HELP)  then Help;
    If (Key_Code=SMG$K_TRM_DO)    then Shell_Out;
 End;  { Special Keys }
@@ -362,7 +376,7 @@ Var
 
 Begin { Get Key }
   Temp:=0; Get_Key:=0;
-  If Time_Out=-1 then SMG$Read_Keystroke(Keyboard, Temp); { If there's no time delay }
+  If Time_Out=-1 then SMG$Read_Keystroke(Keyboard, Temp) { If there's no time delay }
   Else
      Begin
         Result:=SMG$Read_Keystroke(Keyboard,Temp,Timeout:=Time_Out);
@@ -401,7 +415,7 @@ Begin { Get Response }
    Repeat { Keep reading keys ... }
       Begin { Key loop }
          Num:=Get_Key (Time_Out,Org(Time_Out_Char));  { Get a key }
-         If (CHR(Num) in ['a'..'z'] then Num:=Num-32; { Convert to U/C }
+         If (CHR(Num) in ['a'..'z']) then Num:=Num-32; { Convert to U/C }
       End;  { Key loop }
    Until (Num<>SMG$K_TRM_HELP) and (Num<>SMG$K_TRM_DO);
    Get_Response:=CHR(Num);
@@ -448,7 +462,7 @@ Begin { Zero Through Six }
    Answer:=Make_Choice(['0'..'6',CHR(13),CHR(32)],Time_Out,Time_Out_Char);
    If Answer in [CHR(13),CHR(32)] then Answer:='0';                          { Convert <CR> to '0' }
    Number:=Order(Answer)-48  { Convert CHAR to INT and return }
-End.  { Zero Through Six }
+End;  { Zero Through Six }
 
 {**********************************************************************************************************************************}
 
