@@ -131,16 +131,36 @@ Value { We got a lot of 'em! }
 
    { Define the abreviated text for each spell }
 
-  Spell[CrLt]:='CrLt'; Spell[CsLt]:='CsLt'; Spell[Lght]:='Lght'; Spell[Prot]:='Prot'; Spell[Dspl]:='Dspl'; Spell[CrPs]:='CrPs';
-  Spell[AnDe]:='AnDe'; Spell[CrSe]:='CrSe'; Spell[CsSe]:='CsSe'; Spell[CoLi]:='CoLi'; Spell[CrVs]:='CrVs'; Spell[CsVs]:='CsVs';
-  Spell[Wrth]:='Wrth'; Spell[CrCr]:='CrCr'; Spell[CsCr]:='CsCr'; Spell[Raze]:='Raze'; Spell[Slay]:='Slay'; Spell[GrWr]:='GrWr';
-  Spell[Heal]:='Heal'; Spell[Harm]:='Harm'; Spell[DiPr]:='DiPr'; Spell[HoWr]:='HoWr'; Spell[Ress]:='Ress'; Spell[Dest]:='Dest';
-  Spell[WoRe]:='WoRe'; Spell[PaHe]:='PaHe'; Spell[DiWr]:='DiWr'; Spell[RaDe]:='RaDe'; Spell[DiDe]:='DiDe'; Spell[Deus]:='Deus';
-  Spell[MaMs]:='MaMs'; Spell[Shld]:='Shld'; Spell[Loct]:='Loct'; Spell[Fear]:='Fear'; Spell[ChTr]:='ChTr'; Spell[FiBl]:='FiBl';
-  Spell[LiBt]:='LiBt'; Spell[BiSh]:='BiSh'; Spell[GrSh]:='GrSh'; Spell[DuBl]:='DuBl'; Spell[CoCd]:='CoCd'; Spell[Tele]:='Tele';
-  Spell[Bani]:='Bani'; Spell[DeSp]:='DeSp'; Spell[HgSh]:='HgSh'; Spell[Besk]:='Besk'; Spell[Slep]:='Slep'; Spell[MgFi]:='MgFi';
-  Spell[Rein]:='Rein'; Spell[Kill]:='Kill'; Spell[Holo]:='Holo'; Spell[Sile]:='Sile'; Spell[TiSt]:='TiSt'; Spell[Levi]:='Levi';
-  Spell[CrPa]:='CrPa'; Spell[UnCu]:='UnCu'; Spell[ReDo]:='';     Spell[LtId]:='LtId'; Spell[BgId]:='BgId'; Spell[Comp]:='Comp';
+  Spell[CrLt]:='CrLt'; Spell[CsLt]:='CsLt';
+  Spell[Lght]:='Lght'; Spell[Prot]:='Prot';
+  Spell[Dspl]:='Dspl'; Spell[CrPs]:='CrPs';
+  Spell[AnDe]:='AnDe'; Spell[CrSe]:='CrSe';
+  Spell[CsSe]:='CsSe'; Spell[CoLi]:='CoLi';
+  Spell[CrVs]:='CrVs'; Spell[CsVs]:='CsVs';
+  Spell[Wrth]:='Wrth'; Spell[CrCr]:='CrCr';
+  Spell[CsCr]:='CsCr'; Spell[Raze]:='Raze';
+  Spell[Slay]:='Slay'; Spell[GrWr]:='GrWr';
+  Spell[Heal]:='Heal'; Spell[Harm]:='Harm';
+  Spell[DiPr]:='DiPr'; Spell[HoWr]:='HoWr';
+  Spell[Ress]:='Ress'; Spell[Dest]:='Dest';
+  Spell[WoRe]:='WoRe'; Spell[PaHe]:='PaHe';
+  Spell[DiWr]:='DiWr'; Spell[RaDe]:='RaDe';
+  Spell[DiDe]:='DiDe'; Spell[Deus]:='Deus';
+  Spell[MaMs]:='MaMs'; Spell[Shld]:='Shld';
+  Spell[Loct]:='Loct'; Spell[Fear]:='Fear';
+  Spell[ChTr]:='ChTr'; Spell[FiBl]:='FiBl';
+  Spell[LiBt]:='LiBt'; Spell[BiSh]:='BiSh';
+  Spell[GrSh]:='GrSh'; Spell[DuBl]:='DuBl';
+  Spell[CoCd]:='CoCd'; Spell[Tele]:='Tele';
+  Spell[Bani]:='Bani'; Spell[DeSp]:='DeSp';
+  Spell[HgSh]:='HgSh'; Spell[Besk]:='Besk';
+  Spell[Slep]:='Slep'; Spell[MgFi]:='MgFi';
+  Spell[Rein]:='Rein'; Spell[Kill]:='Kill';
+  Spell[Holo]:='Holo'; Spell[Sile]:='Sile';
+  Spell[TiSt]:='TiSt'; Spell[Levi]:='Levi';
+  Spell[CrPa]:='CrPa'; Spell[UnCu]:='UnCu';
+  Spell[ReDo]:='';     Spell[LtId]:='LtId';
+  Spell[BgId]:='BgId'; Spell[Comp]:='Comp';
   Spell[ReFe]:='ReFe'; Spell[DetS]:='DetS';
 
    { Define the fill text for each spell }
@@ -214,22 +234,33 @@ Value { We got a lot of 'em! }
   Person_Spell       :=[AnDe,CrLt,CrPs,CrPa,CrVs,CrSe,CrCr,Raze,Heal,Ress,ReFe];
   Caster_Spell       :=[Prot,Shld,Besk];
   All_Monsters_Spell :=[HoWr,DiWr,DeSp,Holo];
-  Group_Spell        :=[Slep,CsLt,Dspl,CsSe,CsVs,Wrth,CsCr,Slay,GrWr,Harm,Dest,MaMs,Fear,FiBl,LiBt,CoCd,
-                        Bani,MgFi,Kill,DiDe,LtId,BgId,Sile];
+  Group_Spell        :=[Slep,CsLt,Dspl,CsSe,CsVs,Wrth,CsCr,Slay,GrWr,Harm,Dest,
+                        MaMs,Fear,FiBl,LiBt,CoCd,Bani,MgFi,Kill,DiDe,LtId,BgId,
+                        Sile];
   Area_Spell         :=[Comp,Lght,Levi,ColI,Deus,RaDe,TiSt,DetS];
 
 { Define what classes get what spell at what spell level: format is
      Spell_Class_Type [Spell_Level]:=[Set of all spells of this level }
 
-  WizSpells[1]:=[MaMs..Loct,Lght];     WizSpells[2]:=[Fear..ChTr,CoLi,Levi];   WizSpells[3]:=[FiBl..BiSh]+[Comp];
-  WizSpells[4]:=[GrSh..DuBl,ChTr];     WizSpells[5]:=[CoCd..Bani];             WizSpells[6]:=[DeSp..Besk,Rein];
-  WizSpells[7]:=[Slep..MgFi]+[AnDe];   WizSpells[8]:=[Raze,Slay]+[UnCu];       WizSpells[9]:=[Kill,Holo,Heal,Harm,TiSt];
+  WizSpells[1]:=[MaMs..Loct,Lght];
+  WizSpells[2]:=[Fear..ChTr,CoLi,Levi];
+  WizSpells[3]:=[FiBl..BiSh]+[Comp];
+  WizSpells[4]:=[GrSh..DuBl,ChTr];
+  WizSpells[5]:=[CoCd..Bani];
+  WizSpells[6]:=[DeSp..Besk,Rein];
+  WizSpells[7]:=[Slep..MgFi]+[AnDe];
+  WizSpells[8]:=[Raze,Slay]+[UnCu];
+  WizSpells[9]:=[Kill,Holo,Heal,Harm,TiSt];
 
   ClerSpells[1]:=[CrLt..Prot,ReFe]-[Levi];
   ClerSpells[2]:=[Dspl,CrPs]+[CoLi];
   ClerSpells[3]:=[CrSe..CoLi,Loct]-[CoLi]+[ChTr];
-  ClerSpells[4]:=[CrVs..Wrth,Fear]+[CrPa];                                  ClerSpells[7]:=[Ress..PaHe,Bani];
-  ClerSpells[8]:=[DiWr..RaDe];                                              ClerSpells[9]:=[DiDe..Deus];
+  ClerSpells[4]:=[CrVs..Wrth,Fear]+[CrPa];
+  ClerSpells[5]:=[CrCr..GrWr,Level]+[AnDe];
+  ClerSpells[6]:=[Heal..HoWr,DetS]-[ReDo];
+  ClerSpells[7]:=[Ress..PaHe,Bani];
+  ClerSpells[8]:=[DiWr..RaDe];
+  ClerSpells[9]:=[DiDe..Deus];
 
               { The names of the chest traps }
 
@@ -254,33 +285,53 @@ Value { We got a lot of 'em! }
 
               { Types of items that can be found }
 
-  Item_Name[Weapon]:='Weapon';              Item_Name[Armor]:='Armor';           Item_Name[Gloves]:='Gloves';
-  Item_Name[Shield]:='Shield';              Item_Name[Helmet]:='Helmet';         Item_Name[Scroll]:='Scroll';
-  Item_Name[Misc]:='Misc';                  Item_Name[Ring]:='Ring';             Item_Name[Boots]:='Boots';
-  Item_Name[Amulet]:='Amulet';              Item_Name[Cloak]:='Cloak';
+  Item_Name[Weapon]:='Weapon';
+  Item_Name[Armor]:='Armor';
+  Item_Name[Gloves]:='Gloves';
+  Item_Name[Shield]:='Shield';
+  Item_Name[Helmet]:='Helmet';
+  Item_Name[Scroll]:='Scroll';
+  Item_Name[Misc]:='Misc';
+  Item_Name[Ring]:='Ring';
+  Item_Name[Boots]:='Boots';
+  Item_Name[Amulet]:='Amulet';
+  Item_Name[Cloak]:='Cloak';
 
                        { Alignments }
 
-  AlignName[NoAlign]:='None';   AlignName[Good]:='Good';        AlignName[Neutral]:='Neutral';   AlignName[Evil]:='Evil';
+  AlignName[NoAlign]:='None';     AlignName[Good]:='Good';
+  AlignName[Neutral]:='Neutral';  AlignName[Evil]:='Evil';
 
 
                    { Character Classes }
 
-  ClassName[NoClass]:='';       ClassName[Cleric]:='Cleric';    ClassName[Fighter]:='Fighter';   ClassName[Paladin]:='Paladin';
-  ClassName[Ranger]:='Ranger';  ClassName[Wizard]:='Wizard';    ClassName[Thief]:='Thief';       ClassName[Assassin]:='Assassin';
-  ClassName[Monk]:='Monk';      ClassName[Ninja]:='Ninja';      ClassName[Bard]:='Bard';         ClassName[Samurai]:='Samurai';
-  ClassName[Barbarian]:='Barbarian';                            ClassName[AntiPaladin]:='AntiPaladin';
+  ClassName[NoClass]:='';            ClassName[Cleric]:='Cleric';
+  ClassName[Fighter]:='Fighter';     ClassName[Paladin]:='Paladin';
+  ClassName[Ranger]:='Ranger';       ClassName[Wizard]:='Wizard';
+  ClassName[Thief]:='Thief';         ClassName[Assassin]:='Assassin';
+  ClassName[Monk]:='Monk';           ClassName[Ninja]:='Ninja';
+  ClassName[Bard]:='Bard';           ClassName[Samurai]:='Samurai';
+  ClassName[Barbarian]:='Barbarian'; ClassName[AntiPaladin]:='AntiPaladin';
 
                    { Character Sexes }
 
-  SexName[NoSex]:=''; SexName[Male]:='Male';  SexName[Female]:='Female';      SexName[Androgynous]:='Androgynous';
+  SexName[NoSex]:='';         SexName[Male]:='Male';
+  SexName[Female]:='Female';  SexName[Androgynous]:='Androgynous';
 
                 { Character Status Types }
 
-  StatusName[NoStatus]    :='';       StatusName[Healthy]      :='Healthy'; StatusName[Dead]          :='Dead';
-  StatusName[Deleted]     :='Lost';   StatusName[Afraid]       :='Afraid';  StatusName[Paralyzed]     :='Paralyzed';
-  StatusName[Ashes]       :='Ashes';  StatusName[Asleep]       :='Asleep';  StatusName[Petrified]     :='Petrified';
-  StatusName[Insane]      :='Insane'; StatusName[Zombie]       :='Zombie';  StatusName[Poisoned]      :='Poisoned';
+  StatusName[NoStatus]    :='';
+  StatusName[Healthy]     :='Healthy';
+  StatusName[Dead]        :='Dead';
+  StatusName[Deleted]     :='Lost';
+  StatusName[Afraid]      :='Afraid';
+  StatusName[Paralyzed]   :='Paralyzed';
+  StatusName[Ashes]       :='Ashes';
+  StatusName[Asleep]      :='Asleep';
+  StatusName[Petrified]   :='Petrified';
+  StatusName[Insane]      :='Insane';
+  StatusName[Zombie]      :='Zombie';
+  StatusName[Poisoned]    :='Poisoned';
 
                { Character Races }
 
@@ -295,13 +346,14 @@ Value { We got a lot of 'em! }
 
                { Character Abilities }
 
-  AbilName[1]:='Strength';        AbilName[2]:='Intelligence';        AbilName[3]:='Wisdom';       AbilName[4]:='Dexterity';
-  AbilName[5]:='Constitution';    AbilName[6]:='Charisma';            AbilName[7]:='Luck';
+  AbilName[1]:='Strength';     AbilName[2]:='Intelligence';
+  AbilName[3]:='Wisdom';       AbilName[4]:='Dexterity';
+  AbilName[5]:='Constitution'; AbilName[6]:='Charisma';
+  AbilName[7]:='Luck';
 
 {*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~External DEClarations~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*}
-{ Note: 2023-09-21: the rest of the parameters were truncated by the printout. Am just closing the function for now to
-  get past the compilation errors. Will need to match params once in the linking stage. -JHG }
-[Asynchronous,External]Function Oh_No (Var SA: Array [$u1..$u2:Integer] of Integer;  Var MA: Array [$u3..$u4:Integer] of [Unsafe]Integer):Unsigned;external;
+{ 2023-09-21 JHG: Located the missing definition at https://github.com/dungeons-of-moria/vms-moria/blob/55058f595a810fb8576f898e76a4eb2937fa362c/source/moria.pas#L26 }
+[Asynchronous,External]Function Oh_No (Var SA: Array [$u1..$u2:Integer] of Integer;  Var MA: Array [$u3..$u4:Integer] of [Unsafe]Integer):[Unsafe]Integer;external;
 [External]Procedure No_Controly;External;
 [External]Procedure Controly;External;
 [External]Function String(Num: Integer; Len: Integer:=0):Line;external;
@@ -1386,19 +1438,23 @@ Begin { Print Roster }
    T:='Roster of Characters';
    SMG$Set_Cursor_ABS (ScreenDisplay,1,40-(t.length div 2));
    SMG$Put_Line (ScreenDisplay,T,1,1);
-   SMG$Put_Line (ScreenDisplay, ' #)  Name                 Class               Level       Status',1,0);
+   SMG$Put_Line (ScreenDisplay,
+       ' #)  Name                 Class               Level       Status',1,0);
 
    { Print all the characters }
 
    For Slot:=1 to 20 do
       If Roster[Slot].Status<>Deleted then  { If the slot is used ... }
         Begin { Print the occupant }
-{          SMG$Put_Chars (ScreenDisplay,String (Slot,2)+')  '); }'
+{          SMG$Put_Chars (ScreenDisplay,String (Slot,2)+')  '); }
            SMG$Put_Chars (ScreenDisplay,Pad(Roster[Slot].Name,' ',21));
-           SMG$Put_Chars (ScreenDisplay,AlignName[Roster[Slot].Alignment][1]+'-');
-           SMG$Put_Chars (ScreenDisplay,Pad(ClassName[Roster[Slot].Class],' ',16));
+           SMG$Put_Chars (ScreenDisplay,AlignName[Roster[Slot].Alignment][1]
+                          +'-');
+           SMG$Put_Chars (ScreenDisplay,
+                          Pad(ClassName[Roster[Slot].Class],' ',16));
            SMG$Put_Chars (ScreenDisplay,String (Roster[Slot].Level,3));
-           SMG$Put_Chars (ScreenDisplay,'        '+StatusName[Roster[Slot].Status]);
+           SMG$Put_Chars (ScreenDisplay,'        '
+                          +StatusName[Roster[Slot].Status]);
         End;  { Print the occupant }
       Else { Otherwise print a blank line }
         SMG$Put_Line (ScreenDisplay,'');
@@ -1491,10 +1547,14 @@ Begin { Initialize Displays }
 
    { Initialize the proper borders }
 
-   SMG$Put_Chars(CommandsDisplay,'F)orward         C)amp          S)tay 1 round',1,3);
-   SMG$Put_Chars(CommandsDisplay,'L)eft            T)ime Delay          ^       ',2,3);
-   SMG$Put_Chars(CommandsDisplay,'R)ight           HELP                 |       ',3,3);
-   SMG$Put_Chars(CommandsDisplay,'K)ick            DO            <------+------>',4,3);
+   SMG$Put_Chars(CommandsDisplay,
+       'F)orward         C)amp          S)tay 1 round',1,3);
+   SMG$Put_Chars(CommandsDisplay,
+       'L)eft            T)ime Delay          ^       ',2,3);
+   SMG$Put_Chars(CommandsDisplay,
+       'R)ight           HELP                 |       ',3,3);
+   SMG$Put_Chars(CommandsDisplay,
+       'K)ick            DO            <------+------>',4,3);
 End;  { Initialize Displays }
 
 {**********************************************************************************************************************************}
@@ -1767,11 +1827,16 @@ Var
 Begin { Draw Menu }
    SMG$Begin_Display_Update (ScreenDisplay);
    SMG$Erase_Display (ScreenDisplay);
-   SMG$Put_Chars (ScreenDisplay,'Stone Quest '+Version_Number,5,32,1,1);
-   SMG$Put_Chars (ScreenDisplay,'----- ----- ----',6,32,1,1);
-   SMG$Put_Chars (ScreenDisplay,'Based on Sir-Tech''s Wizardry',7,26);
-   SMG$Put_Chars (ScreenDisplay,'By Jeffrey Getzin',8,31);
-   SMG$Put_Chars (ScreenDisplay,'Graphics designed by David Corn and Jeffrey Getzin',9,15);
+   SMG$Put_Chars (ScreenDisplay,
+       'Stone Quest '+Version_Number,5,32,1,1);
+   SMG$Put_Chars (ScreenDisplay,
+       '----- ----- ----',6,32,1,1);
+   SMG$Put_Chars (ScreenDisplay,
+       'Based on Sir-Tech''s Wizardry',7,26);
+   SMG$Put_Chars (ScreenDisplay,
+       'By Jeffrey Getzin',8,31);
+   SMG$Put_Chars (ScreenDisplay,
+       'Graphics designed by David Corn and Jeffrey Getzin',9,15);
    T:='Hit the HELP key at any time for on-line help';
    SMG$Put_Chars (ScreenDisplay,T,10,(40-(T.length div 2)));
    T:='S)tart Game, L)look at high scores''
@@ -1794,13 +1859,20 @@ Procedure Recover_Heading;
 Begin { Recover Heading }
    SMG$Begin_Display_Update (screendisplay);
    SMG$Erase_Display (screendisplay);
-   SMG$Put_Line (screendisplay,'Recover Characters');
-   SMG$Put_Line (screendisplay,'------------------');
-   SMG$Put_Line (screendisplay,'This process will attempt to recover characters lost through system crashes of');
-   SMG$Put_Line (screendisplay,'accidental ^C or ^Y.');
-   SMG$Put_Line (screendisplay,'');
-   SMG$Put_Line (screendisplay,'NOTE: This will age recovered characters 5 years');
-   SMG$Put_Line (screendisplay,'Continue?  (Y/N)');
+   SMG$Put_Line (screendisplay,
+       'Recover Characters');
+   SMG$Put_Line (screendisplay,
+       '------------------');
+   SMG$Put_Line (screendisplay,
+       'This process will attempt to recover characters lost through system crashes of');
+   SMG$Put_Line (screendisplay,
+       'accidental ^C or ^Y.');
+   SMG$Put_Line (screendisplay,
+       '');
+   SMG$Put_Line (screendisplay,
+       'NOTE: This will age recovered characters 5 years');
+   SMG$Put_Line (screendisplay,
+       'Continue?  (Y/N)');
    SMG$End_Display_Update (screendisplay);
 End;  { Recover Heading }
 
@@ -1852,10 +1924,14 @@ Var
    Temp: Line;
 
 Begin { Change Queue }
-   SMG$Put_Line (screendisplay,'');
-   SMG$Put_Line (screendisplay,'The current print queue is: '+Print_Queue);
-   SMG$Put_Line (screendisplay,'Enter the new print queue. ("-" sets default, [RETURN] exists)');
-   Cursor;  SMG$Read_String (Keyboard,Temp,Display_ID:=screendisplay,Prompt_String:='--->');  No_Cursor;
+   SMG$Put_Line (screendisplay,
+       '');
+   SMG$Put_Line (screendisplay,
+       'The current print queue is: '+Print_Queue);
+   SMG$Put_Line (screendisplay,
+       'Enter the new print queue. ("-" sets default, [RETURN] exists)');
+   Cursor;  SMG$Read_String (Keyboard,Temp,Display_ID:=screendisplay,
+                             Prompt_String:='--->');  No_Cursor;
    If Temp<>'' then
       If Temp='' then Print_Queue:='SYS$PRINT';
       Else Print_Queue:=Temp;
@@ -1870,13 +1946,22 @@ Procedure Change_Print_Queue (Var ScreenDisplay: Unsigned);
 Begin { Change Print Queue }
    SMG$Begin_Display_Update (screendisplay);
    SMG$Erase_Display (screendisplay);
-   SMG$Put_Line (screendisplay,'Change Print Queue');
-   SMG$Put_Line (screendisplay,'------------------');
-   SMG$Put_Line (screendisplay,'This process will change the print queue to which the screen is sent when a');
-   SMG$Put_Line (screendisplay,'^P is typed.  The default is SYS$PRINT.');
-   SMG$Put_Line (screendisplay,'');
-   SMG$Put_Line (screendisplay,'NOTE: Setting this to a non-existant queue will have unpredictable results. ');
-   SMG$Put_Line (screendisplay,'Continue? (Y/N)');
+   SMG$Put_Line (screendisplay,
+       'Change Print Queue');
+   SMG$Put_Line (screendisplay,
+       '------------------');
+   SMG$Put_Line (screendisplay,
+       'This process will change the print queue to which '
+       +'the screen is sent when a');
+   SMG$Put_Line (screendisplay,
+       '^P is typed.  The default is SYS$PRINT.');
+   SMG$Put_Line (screendisplay,
+       '');
+   SMG$Put_Line (screendisplay,
+       'NOTE: Setting this to a non-existant queue will have '
+       +'unpredictable results. ');
+   SMG$Put_Line (screendisplay,
+       'Continue? (Y/N)');
    SMG$End_Display_Update (screendisplay);
    If Yes_or_No='Y' then Change_Queue (ScreenDisplay);
 End;  { Change Print Queue }
@@ -1894,12 +1979,20 @@ Var
 Begin { Leave Feedback }
    SMG$Begin_Display_Update (screendisplay);
    SMG$Erase_Display (screendisplay);
-   SMG$Put_Line (screendisplay,'Leave Feedback to Author');
-   SMG$Put_Line (screendisplay,'------------------------');
-   SMG$Put_Line (screendisplay,'This process will allow you to leave a message to the author, if he is on the system. ');
-   SMG$Put_Line (screendisplay,'Enter up to 60 characters of text at the prompt.  [RETURN] alone aborts.');
-   SMG$Put_Chars (ScreenDisplay,'--->');
-   SMG$Put_Chars (ScreenDisplay,'____________________________________________________________',,,SMG$M_UNDERLINE);
+   SMG$Put_Line (screendisplay,
+       'Leave Feedback to Author');
+   SMG$Put_Line (screendisplay,
+       '------------------------');
+   SMG$Put_Line (screendisplay,
+       'This process will allow you to leave a message to the '
+       +'author, if he is on the system. ');
+   SMG$Put_Line (screendisplay,
+       'Enter up to 60 characters of text at the prompt.  '
+       +'[RETURN] alone aborts.');
+   SMG$Put_Chars (ScreenDisplay,
+       '--->');
+   SMG$Put_Chars (ScreenDisplay,
+       '____________________________________________________________',,,SMG$M_UNDERLINE);
    SMG$Set_Cursor_ABS (ScreenDisplay,,5);
    SMG$End_Display_Update (screendisplay);
    Cursor;
@@ -1950,15 +2043,25 @@ Begin { Player Utilities }
       Begin
          SMG$Begin_Display_Update (Utilitiesdisplay);
          SMG$Erase_Display (Utilitiesdisplay);
-         SMG$Put_Chars (Utilities,Display,'Player Utilities Menu',   ,6,27,,1);
-         SMG$Put_Chars (Utilities,Display,'------ --------- ----',   ,7,27,,1);
-         SMG$Put_Chars (Utilities,Display,' C)hange print queue'     ,8,27);
-         SMG$Put_Chars (Utilities,Display,' B)ells '+Toggle[Bells_On],9,27);
-         SMG$Put_Chars (Utilities,Display,' T)ermimal broadcast '+Toggle[Broadcast_On],10,27);
-         SMG$Put_Chars (Utilities,Display,' L)eave feedback'         ,11,27);
-         If (Not Game_Saved) and Main_Menu then SMG$Put_Chars (Utilitiesdisplay,' R)ecover lost characters',12,27);
-         SMG$Put_Chars (Utilities,Display,' E)xit'                       ,13,27);
-         SMG$Put_Chars (Utilities,Display,' Which?'                      ,15,27);
+         SMG$Put_Chars (Utilities,Display,
+             'Player Utilities Menu',   ,6,27,,1);
+         SMG$Put_Chars (Utilities,Display,
+             '------ --------- ----',   ,7,27,,1);
+         SMG$Put_Chars (Utilities,Display,
+             ' C)hange print queue'     ,8,27);
+         SMG$Put_Chars (Utilities,Display,
+             ' B)ells '+Toggle[Bells_On],9,27);
+         SMG$Put_Chars (Utilities,Display,
+             ' T)ermimal broadcast '+Toggle[Broadcast_On],10,27);
+         SMG$Put_Chars (Utilities,Display
+             ,' L)eave feedback'         ,11,27);
+         If (Not Game_Saved) and Main_Menu then
+             SMG$Put_Chars (Utilitiesdisplay,
+                 ' R)ecover lost characters',12,27);
+         SMG$Put_Chars (Utilities,Display,
+             ' E)xit'                       ,13,27);
+         SMG$Put_Chars (Utilities,Display,
+             ' Which?'                      ,15,27);
          SMG$End_Display_Update (Utilitiesdisplay);
          Response:=Make_Choice (['R','E','C','T','B','L']);
          Case Response of
@@ -2094,7 +2197,8 @@ Begin { Handle Key }
     Case Key_Stroke of
          'H': Begin
                Clear_High_Scores;
-               SMG$Put_Chars (ScreenDisplay,'* * * Scores Cleared * * *',23,22);
+               SMG$Put_Chars (ScreenDisplay,
+                   '* * * Scores Cleared * * *',23,22);
                Delay (1);
               End;
          'L': If Logging then Clear_Log;
@@ -2102,17 +2206,20 @@ Begin { Handle Key }
          'U': Player_Utilities (Pasteboard);
          'P': Pic_Edit (Pics);
          'F': Begin
-               SMG$Put_Chars (ScreenDisplay,'* * * Loading Maze Editor * * *',23,22);
+               SMG$Put_Chars (ScreenDisplay,
+                   '* * * Loading Maze Editor * * *',23,22);
                Edit_Maze  (MazeFile);
               End;
          'C': Edit_Character (Roster);
          'T': Edit_Treasures (Treasure);
          'S': Begin
-                 SMG$Put_Chars (ScreenDisplay,'* * * Loading Message Editor * * *',23,22);
+                 SMG$Put_Chars (ScreenDisplay,
+                     '* * * Loading Message Editor * * *',23,22);
                  Edit_Messages;
               End;
          'M': Begin
-                 SMG$Put_Chars (ScreenDisplay,'* * * Loading Monster Editor * * *',23,22);
+                 SMG$Put_Chars (ScreenDisplay,
+                     '* * * Loading Monster Editor * * *',23,22);
                  Edit_Monster;
               End;
          'I': Edit_Item;
@@ -2254,25 +2361,54 @@ Begin
   SMG$CREATE_VIRTUAL_DISPLAY (22,78,HelpMeDisplay,1);
   SMG$Erase_Display (HelpMeDisplay);
 
-  SMG$Put_Line (HelpMeDisplay, 'Options:');
-  SMG$Put_Line (HelpMeDisplay, '--------');
-  SMG$Put_Line (HelpMeDisplay, '    Start Game          = Begin playing.  If you have never played before,');
-  SMG$Put_Line (HelpMeDisplay, '                          this should be one of your first options.');
-  SMG$Put_Line (HelpMeDisplay, '    Quit                = Stop playing for now.  All characters and situations:');
-  SMG$Put_Line (HelpMeDisplay, '                          will be saved for the next time you play.');
-  SMG$Put_Line (HelpMeDisplay, '    Player Utilities    = Activate the player utilities.  The player utilities');
-  SMG$Put_Line (HelpMeDisplay, '                          allow such activities as recovering accidentally lost');
-  SMG$Put_Line (HelpMeDisplay, '                          characters, the changing of default print queues, and');
-  SMG$Put_Line (HelpMeDisplay, '                          the turning on and off of message trapping and bells.');
-  SMG$Put_Line (HelpMeDisplay, '    Look at High Scores = Allows you to see how you rank against the other');
-  SMG$Put_Line (HelpMeDisplay, '                          players of Stonequest.');
-  SMG$Put_Line (HelpMeDisplay, '    View Scenario       = The option will print a couple of pages of text');
-  SMG$Put_Line (HelpMeDisplay, '                          explaining the goal of the game. ');
-  SMG$Put_Line (HelpMeDisplay, '    Restore saved game  = Allows you to resume play at the point your previous-');
-  SMG$Put_Line (HelpMeDisplay, '                          ly saved.  This option will not appear unless you');
-  SMG$Put_Line (HelpMeDisplay, '                          have saved a game');
-  SMG$Put_Line (HelpMeDisplay, '', 4);
-  SMG$Put_Line (HelpMeDisplay, 'Press any key to continue...', 0);
+  SMG$Put_Line (HelpMeDisplay,
+      'Options:');
+  SMG$Put_Line (HelpMeDisplay,
+      '--------');
+  SMG$Put_Line (HelpMeDisplay,
+       '    Start Game          = Begin playing.  If you have never '
+       +'played before,');
+  SMG$Put_Line (HelpMeDisplay,
+      '                          this should be one of your first options.');
+  SMG$Put_Line (HelpMeDisplay,
+      '    Quit                = Stop playing for now.  All characters '
+      +'and situations:');
+  SMG$Put_Line (HelpMeDisplay,
+      '                          will be saved for the next time you play.');
+  SMG$Put_Line (HelpMeDisplay,
+      '    Player Utilities    = Activate the player utilities.  The'
+      +' player utilities');
+  SMG$Put_Line (HelpMeDisplay,
+      '                          allow such activities as recovering'
+      +' accidentally lost');
+  SMG$Put_Line (HelpMeDisplay,
+      '                          characters, the changing of default '
+      +'print queues, and');
+  SMG$Put_Line (HelpMeDisplay,
+      '                          the turning on and off of message '
+      +'trapping and bells.');
+  SMG$Put_Line (HelpMeDisplay,
+      '    Look at High Scores = Allows you to see how you rank '
+      +'against the other');
+  SMG$Put_Line (HelpMeDisplay,
+      '                          players of Stonequest.');
+  SMG$Put_Line (HelpMeDisplay,
+      '    View Scenario       = The option will print a couple '
+      +'of pages of text');
+  SMG$Put_Line (HelpMeDisplay,
+      '                          explaining the goal of the game. ');
+  SMG$Put_Line (HelpMeDisplay,
+      '    Restore saved game  = Allows you to resume play at the '
+      +'point your previous-');
+  SMG$Put_Line (HelpMeDisplay,
+      '                          ly saved.  This option will not '
+      +'appear unless you');
+  SMG$Put_Line (HelpMeDisplay,
+      '                          have saved a game');
+  SMG$Put_Line (HelpMeDisplay,
+      '', 4);
+  SMG$Put_Line (HelpMeDisplay,
+      'Press any key to continue...', 0);
   SMG$Paste_Virtual_Display (HelpMeDisplay,Pasteboard,2,2);
   Wait_Key;
   SMG$Unpaste_Virtual_Display (HelpMeDisplay,Pasteboard);
