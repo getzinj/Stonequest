@@ -1,0 +1,102 @@
+
+%LINK-W-ENTIDMTCH, PAS$ENVIRONMENT_TIME ident of 14-SEP-2023 23:08:14 for entity
+ SMGRTL
+        in module CASINO file SYS$SYSROOT:[JGETZIN]Casino.OBJ;1
+        does not match ident of 22-SEP-2023 20:52:13
+        in module CAMP file SYS$SYSROOT:[JGETZIN]Camp.OBJ;1
+%LINK-W-NUDFSYMS, 23 undefined symbols:
+%LINK-I-UDFSYM,         CLEAR_HIGH_SCORES
+%LINK-I-UDFSYM,         CLOSING_WARNING
+%LINK-I-UDFSYM,         EDIT_CHARACTER
+%LINK-I-UDFSYM,         EDIT_ITEM
+%LINK-I-UDFSYM,         EDIT_MAZE
+%LINK-I-UDFSYM,         EDIT_MESSAGES
+%LINK-I-UDFSYM,         EDIT_MONSTER
+%LINK-I-UDFSYM,         EDIT_PLAYERS_CHARACTERS
+%LINK-I-UDFSYM,         EDIT_TREASURES
+%LINK-I-UDFSYM,         FAC
+%LINK-I-UDFSYM,         HELP
+%LINK-I-UDFSYM,         KYRN
+%LINK-I-UDFSYM,         LEGAL_TIME
+%LINK-I-UDFSYM,         MADE_ROLL
+%LINK-I-UDFSYM,         MESSAGE_TRAP
+%LINK-I-UDFSYM,         MINUTES_UNTIL_CLOSING
+%LINK-I-UDFSYM,         PIC_EDIT
+%LINK-I-UDFSYM,         PLAY_SLOTS
+%LINK-I-UDFSYM,         PRINT_SCORES
+%LINK-I-UDFSYM,         SHELL_OUT
+%LINK-I-UDFSYM,         STRING
+%LINK-I-UDFSYM,         UPDATE_HIGH_SCORES
+%LINK-I-UDFSYM,         XP_NEEDED
+%LINK-W-USEUNDEF, undefined symbol STRING referenced
+        in psect $LINK$ offset %X00000060
+        in module CASINO file SYS$SYSROOT:[JGETZIN]Casino.OBJ;1
+%LINK-W-USEUNDEF, undefined symbol PLAY_SLOTS referenced
+        in psect $LINK$ offset %X00000080
+        in module CASINO file SYS$SYSROOT:[JGETZIN]Casino.OBJ;1
+%LINK-W-USEUNDEF, undefined symbol MINUTES_UNTIL_CLOSING referenced
+        in psect $LINK$ offset %X00000690
+        in module STONEQUEST file SYS$SYSROOT:[JGETZIN]StoneQuest.OBJ;1
+%LINK-W-USEUNDEF, undefined symbol CLOSING_WARNING referenced
+        in psect $LINK$ offset %X000006A0
+        in module STONEQUEST file SYS$SYSROOT:[JGETZIN]StoneQuest.OBJ;1
+%LINK-W-USEUNDEF, undefined symbol SHELL_OUT referenced
+        in psect $LINK$ offset %X000006B0
+        in module STONEQUEST file SYS$SYSROOT:[JGETZIN]StoneQuest.OBJ;1
+%LINK-W-USEUNDEF, undefined symbol HELP referenced
+        in psect $LINK$ offset %X000006C0
+        in module STONEQUEST file SYS$SYSROOT:[JGETZIN]StoneQuest.OBJ;1
+%LINK-W-USEUNDEF, undefined symbol UPDATE_HIGH_SCORES referenced
+        in psect $LINK$ offset %X000007A0
+        in module STONEQUEST file SYS$SYSROOT:[JGETZIN]StoneQuest.OBJ;1
+%LINK-W-USEUNDEF, undefined symbol LEGAL_TIME referenced
+        in psect $LINK$ offset %X000008B0
+        in module STONEQUEST file SYS$SYSROOT:[JGETZIN]StoneQuest.OBJ;1
+%LINK-W-USEUNDEF, undefined symbol PIC_EDIT referenced
+        in psect $LINK$ offset %X00000B10
+        in module STONEQUEST file SYS$SYSROOT:[JGETZIN]StoneQuest.OBJ;1
+%LINK-W-USEUNDEF, undefined symbol CLEAR_HIGH_SCORES referenced
+        in psect $LINK$ offset %X00000B20
+        in module STONEQUEST file SYS$SYSROOT:[JGETZIN]StoneQuest.OBJ;1
+%LINK-W-USEUNDEF, undefined symbol EDIT_MESSAGES referenced
+        in psect $LINK$ offset %X00000B30
+        in module STONEQUEST file SYS$SYSROOT:[JGETZIN]StoneQuest.OBJ;1
+%LINK-W-USEUNDEF, undefined symbol EDIT_CHARACTER referenced
+        in psect $LINK$ offset %X00000B40
+        in module STONEQUEST file SYS$SYSROOT:[JGETZIN]StoneQuest.OBJ;1
+%LINK-W-USEUNDEF, undefined symbol EDIT_ITEM referenced
+        in psect $LINK$ offset %X00000BE0
+        in module STONEQUEST file SYS$SYSROOT:[JGETZIN]StoneQuest.OBJ;1
+%LINK-W-USEUNDEF, undefined symbol PRINT_SCORES referenced
+        in psect $LINK$ offset %X00000C50
+        in module STONEQUEST file SYS$SYSROOT:[JGETZIN]StoneQuest.OBJ;1
+%LINK-W-USEUNDEF, undefined symbol KYRN referenced
+        in psect $LINK$ offset %X00000D50
+        in module STONEQUEST file SYS$SYSROOT:[JGETZIN]StoneQuest.OBJ;1
+%LINK-W-USEUNDEF, undefined symbol MESSAGE_TRAP referenced
+        in psect $LINK$ offset %X00000DB0
+        in module STONEQUEST file SYS$SYSROOT:[JGETZIN]StoneQuest.OBJ;1
+%LINK-W-USEUNDEF, undefined symbol EDIT_PLAYERS_CHARACTERS referenced
+        in psect $LINK$ offset %X00000DD0
+        in module STONEQUEST file SYS$SYSROOT:[JGETZIN]StoneQuest.OBJ;1
+%LINK-W-USEUNDEF, undefined symbol EDIT_MONSTER referenced
+        in psect $LINK$ offset %X00000E10
+        in module STONEQUEST file SYS$SYSROOT:[JGETZIN]StoneQuest.OBJ;1
+%LINK-W-USEUNDEF, undefined symbol EDIT_TREASURES referenced
+        in psect $LINK$ offset %X00000E60
+        in module STONEQUEST file SYS$SYSROOT:[JGETZIN]StoneQuest.OBJ;1
+%LINK-W-USEUNDEF, undefined symbol EDIT_MAZE referenced
+        in psect $LINK$ offset %X00000E70
+        in module STONEQUEST file SYS$SYSROOT:[JGETZIN]StoneQuest.OBJ;1
+%LINK-W-USEUNDEF, undefined symbol STRING referenced
+        in psect $LINK$ offset %X00000FC0
+        in module STONEQUEST file SYS$SYSROOT:[JGETZIN]StoneQuest.OBJ;1
+%LINK-W-USEUNDEF, undefined symbol MADE_ROLL referenced
+        in psect $LINK$ offset %X00001160
+        in module STONEQUEST file SYS$SYSROOT:[JGETZIN]StoneQuest.OBJ;1
+%LINK-W-USEUNDEF, undefined symbol XP_NEEDED referenced
+        in psect $LINK$ offset %X00001170
+        in module STONEQUEST file SYS$SYSROOT:[JGETZIN]StoneQuest.OBJ;1
+%LINK-W-USEUNDEF, undefined symbol FAC referenced
+        in psect $LINKAGE offset %X00000040
+        in module HANDLER file SYS$SYSROOT:[JGETZIN]Handler.OBJ;8
