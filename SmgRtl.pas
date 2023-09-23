@@ -809,6 +809,7 @@ FUNCTION smg$read_string
    VAR       word_terminator_code: $Word := %Immed 0;
              display_id: UNSIGNED := %Immed 0;
              initial_string: VARYING [$Len11] OF CHAR := %Immed 0;
+             rendition_set: UNSIGNED := %Immed 0;
              rendition_complement: UNSIGNED := %Immed 0;
    VAR       terminator_string: VARYING [$Len21] OF CHAR := %Immed 0 )
       : UNSIGNED;

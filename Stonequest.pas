@@ -1,5 +1,6 @@
 [Inherit('TYPES', 'SYS$LIBRARY:STARLET','LIBRTL','SMGRTL','STRRTL')]
-Program Stonequest (Input,Output,Char_File,Item_File,Monster_File,Message_File,TreasFile,MazeFile,SaveFile,PickFile,AmountFile,
+Program Stonequest (Input,Output,Char_File,Item_File,Monster_File,Message_File,TreasFile,
+                   MazeFile,SaveFile,PicFile,AmountFile,
                    ScoresFile,LogFile,HoursFile,PrintMazeFile);
 
 { This is Stonequest, a game.  But it's not just any game - far from it!  This
@@ -49,7 +50,7 @@ Type
 Var
 {*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Files~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*}
    PrintMazeFile:              [Global]Text;                { A pictoral representation of a level of levels }
-   HouseFile:                  [Global]Text;                { The stonequest schedule }
+   HoursFile:                  [Global]Text;                { The stonequest schedule }
    TreasFile:                  Treas_File;                  { Treasure Types }
    Monster_File:               Monst_File;                  { Monster records }
    Item_File:                  Equip_File;                  { Item records }
@@ -387,13 +388,14 @@ End;  { Random Number }
 
 {**********************************************************************************************************************************}
 
-[Asynchronous]Procedure Print_Pasteboard (Pasteboard: Unsigned);
+[Asynchronous]Procedure Print_Pasteboard (Var Arguments: AST_Arg_Type; Pasteboard: Unsigned);
 
 [Asynchronous,External]Procedure Printing_Message;External;
 
 begin { Print Pasteboard }
+{ 2023-09-22 JHG - Couldn't get al the volatile params working. Not worth it.
    SMG$PRINT_PASTEBOARD (Pasteboard,Print_Queue);
-   Printing_Message;
+   Printing_Message; }
 End;  { Print Pasteboard }
 
 {**********************************************************************************************************************************}
@@ -944,7 +946,8 @@ Procedure Log_Player_Out;
 { See above? }
 
 Begin { Log Player Out }
-   If Logging and (User_Name<>'JGETZIN') then Extend_LogFile (Time_And_Date_And_name+'OUT');
+   If Logging and (User_Name<>'JGETZIN') then
+      Extend_LogFile (Time_And_Date_And_name+'OUT');
 End;  { Log Player Out }
 
 {**********************************************************************************************************************************}
@@ -1002,7 +1005,8 @@ Begin { Read Roster }
          Else
             Begin { Read the characters and then close the file }
                For Loop:=1 to 20 do Read (Char_File,Roster[Loop],Error:=Continue);
-               If (Status(Char_File)<>PAS$K_EOF) then Read_Error_Window ('Character',STATUS(Char_File));
+               If (Status(Char_File)<>PAS$K_EOF) then
+                   Read_Error_Window ('Character',STATUS(Char_File));
                Close (Char_File);
              End;  { Read the characters and then close the file }
       End;  { File is there }
@@ -1034,7 +1038,8 @@ Begin { Get Level }
             Open (MazeFile, 'Stone_Maze:Maze'+Letter,Error:=CONTINUE,History:=UNKNOWN,Sharing:=READWRITE);
          Until (Status(MazeFile)<>PAS$K_FILALROPE);
 
-         If Status(MazeFile)<>PAS$K_SUCCESS then Read_Error_Window ('maze',Status(MazeFile));
+         If Status(MazeFile)<>PAS$K_SUCCESS then
+             Read_Error_Window ('maze',Status(MazeFile));
          Reset (MazeFile);
 
          { If the level is defined load it, otherwise return the current level }
@@ -1073,7 +1078,8 @@ Begin { Read Items }
    Repeat
       Open (Item_File,'Stone_Data:Items.dat;1',History:=OLD,Error:=CONTINUE,Sharing:=READWRITE)
    Until (Status(Item_File)<>PAS$K_FILALROPE);
-   If Status(Item_File)<>PAS$K_SUCCESS then Read_Error_Window ('items',Status(Item_File));
+   If Status(Item_File)<>PAS$K_SUCCESS then
+       Read_Error_Window ('items',Status(Item_File));
    Reset (Item_File);
 
    While Not EOF(Item_File) do
@@ -1150,7 +1156,8 @@ Begin { Read Monsters }
    Repeat
       Open (Monster_File,'Stone_Data:Monsters.dat;1',History:=OLD,Error:=CONTINUE,Sharing:=READWRITE)
    Until (Status(Monster_File)<>PAS$K_FILALROPE);
-   If Status(Monster_File)<>PAS$K_SUCCESS then Read_Error_Window ('monster',Status(Monster_File));
+   If Status(Monster_File)<>PAS$K_SUCCESS then
+       Read_Error_Window ('monster',Status(Monster_File));
    Reset (Monster_File); { Open the file }
 
    { Read in the monsters }
@@ -1232,7 +1239,8 @@ Begin { Read Messages }
    Repeat
       Open (Message_File,'Stone_Data:Messages.Dat;1',History:=OLD,Error:=CONTINUE,Sharing:=READWRITE);
    Until Status(Message_File)<>PAS$K_FILALROPE;
-   If Status(Message_File)<>PAS$K_SUCCESS then Read_Error_Window ('messages',Status(Message_File));
+   If Status(Message_File)<>PAS$K_SUCCESS then
+       Read_Error_Window ('messages',Status(Message_File));
    Reset (Message_File);
 
    { Read in the messages and close the file }
@@ -1261,7 +1269,8 @@ Begin { Read Treasures }
    Repeat
       Open (TreasFile,'Stone_Data:Messages.Dat;1',History:=OLD,Error:=CONTINUE,Sharing:=READWRITE);
    Until Status(TreasFile)<>PAS$K_FILALROPE;
-   If Status(TreasFile)<>PAS$K_SUCCESS then Read_Error_Window ('treasure',Status(TreasFile));
+   If Status(TreasFile)<>PAS$K_SUCCESS then
+       Read_Error_Window ('treasure',Status(TreasFile));
    Reset (TreasFile);
 
    { Read in the treasures and close the file }
@@ -1345,6 +1354,30 @@ Begin { Write Roster }
    If Error then Error_Window ('Character');        { Put a window declaring the error }
    ControlY;
 End;  { Write Roster }
+
+{**********************************************************************************************************************************}
+
+[Global]Procedure Save_Pictures;
+
+{ This procedure will write an updated set of pictures if the user is authorized to do so. }
+
+Var
+   Loop: Integer;
+
+Begin { Save Pictures }
+
+   { Wait until the file is available and then open it }
+
+   Repeat
+      Open (PicFile,'Stone_Data:Pictures.Dat',History:=OLD,Error:=CONTINUE,Sharing:=READONLY);
+   Until (Status(PicFile)=PAS$K_SUCCESS);
+   ReWrite (PicFile,Error:=Continue);
+
+   { Write the pictures and close the file }
+
+   For Loop:=1 to 150 do Write (PicFile,Pics[Loop]);
+   Close (PicFile);
+End;  { Save Pictures }
 
 {**********************************************************************************************************************************}
 
@@ -1465,7 +1498,9 @@ Begin { Print Roster }
    For Slot:=1 to 20 do
       If Roster[Slot].Status<>Deleted then  { If the slot is used ... }
         Begin { Print the occupant }
-{          SMG$Put_Chars (ScreenDisplay,String (Slot,2)+')  '); }
+{          SMG$Put_Chars (ScreenDisplay,
+                          String (Slot,2)
+                          +')  '); }
            SMG$Put_Chars (ScreenDisplay,Pad(Roster[Slot].Name,' ',21));
            SMG$Put_Chars (ScreenDisplay,AlignName[Roster[Slot].Alignment][1]
                           +'-');
@@ -1595,14 +1630,14 @@ End;  { Add Dot }
 
 {**********************************************************************************************************************************}
 
-[Asynchronous,Global]Procedure Out_of_Band_AST (Var Arguments: AST_Arg_Type);
+{ 2023-09-22 JHG - Couldn't get all the volatile parms working.  [Asynchronous,Global]}Procedure Out_of_Band_AST (Var Arguments: AST_Arg_Type);
 
 { This procedure handles any control characters typed by the users during
   the game }
 
 Begin { Out of Band AST }
    Case Arguments.Control_Key of
-         SMG$K_TRM_CTRLW,SMG$K_TRM_CTRLR:  SMG$Repaint_Screen (Arguments,Pasteboard);
+         SMG$K_TRM_CTRLW,SMG$K_TRM_CTRLR:  SMG$Repaint_Screen (Pasteboard); { 2023-09-22 JHG - Did not take Arguments as a parameter }
          SMG$K_TRM_CTRLP:                  Print_Pasteboard  (Arguments,Pasteboard);
          Otherwise ;
    End;
@@ -1790,7 +1825,7 @@ Begin { Initialize }
    Initialize_Globals;      Add_Dot(X);    { Initialize external variables }
    Broadcast_On:=True;      Add_Dot(X);
    Bells_On:=True;          Add_Dot(X);
-   Game_Sazed:=Saved_Game;  Add_Dot(X);    { Is there a saved game? }
+   Game_Saved:=Saved_Game;  Add_Dot(X);    { Is there a saved game? }
    Auto_Load:=False;        Add_Dot(X);
    Auto_Save:=False;        Add_Dot(X);
    Seed:=Get_Seed;          Add_Dot(X);    { Get a seed for the rand. #s }
@@ -1846,7 +1881,8 @@ Begin { View Scenario }
    Repeat
       Open (Message_File,'Stone_Data:Messages.dat;1',History:=OLD,Error:=CONTINUE,Sharing:=READWRITE)
    Until (Status(Message_File)<>PAS$K_FILALROPE);
-   If Status(Message_File)<>PAS$K_SUCCESS then Read_Error_Window ('messages',Status(Message_File));
+   If Status(Message_File)<>PAS$K_SUCCESS then
+       Read_Error_Window ('messages',Status(Message_File));
    Reset (Message_File);
 
    LineCount:=0;
@@ -1905,7 +1941,7 @@ Begin { Draw Menu }
        'Graphics designed by David Corn and Jeffrey Getzin',9,15);
    T:='Hit the HELP key at any time for on-line help';
    SMG$Put_Chars (ScreenDisplay,T,10,(40-(T.length div 2)));
-   T:='S)tart Game, L)look at high scores''
+   T:='S)tart Game, L)look at high scores';
    If Authorized then
       T:=T+', run U)tilities'
    Else
@@ -1972,9 +2008,12 @@ Begin  { Recover Character }
                   Any_Recovered:=True;  { We have recovered one }
                   Roster[Slot].Lock:=False;  { Recover him (or her) }
                   Roster[Slot].Age:=Roster[slot].Age+FiveYears;  { And age him }
-                  SMG$Put_Line (screendisplay,Roster[Slot].Name+': saved!');
+                  SMG$Put_Line (screendisplay,
+                                Roster[Slot].Name
+                                +': saved!');
                End;
-         If Not Any_Recovered then SMG$Put_Line (screendisplay,'Nobody.');
+         If Not Any_Recovered then
+             SMG$Put_Line (screendisplay,'Nobody.');
          SMG$Put_Chars (screendisplay,'Press a key',23,35);
          SMG$End_Display_Update (screendisplay);
          Wait_Key;
@@ -2090,7 +2129,7 @@ End;  { Leave Feedback }
 
 {**********************************************************************************************************************************}
 
-Procedure Player_Utilities (Var Pasteboard: Unsigned);
+Procedure Player_Utilities;
 
 { This procedure contains all sorts of goodies for the player of Stonequest! }
 
@@ -2110,24 +2149,24 @@ Begin { Player Utilities }
       Begin
          SMG$Begin_Display_Update (Utilitiesdisplay);
          SMG$Erase_Display (Utilitiesdisplay);
-         SMG$Put_Chars (Utilities,Display,
+         SMG$Put_Chars (UtilitiesDisplay,
              'Player Utilities Menu',   ,6,27,,1);
-         SMG$Put_Chars (Utilities,Display,
+         SMG$Put_Chars (UtilitiesDisplay,
              '------ --------- ----',   ,7,27,,1);
-         SMG$Put_Chars (Utilities,Display,
+         SMG$Put_Chars (UtilitiesDisplay,
              ' C)hange print queue'     ,8,27);
-         SMG$Put_Chars (Utilities,Display,
+         SMG$Put_Chars (UtilitiesDisplay,
              ' B)ells '+Toggle[Bells_On],9,27);
-         SMG$Put_Chars (Utilities,Display,
+         SMG$Put_Chars (UtilitiesDisplay,
              ' T)ermimal broadcast '+Toggle[Broadcast_On],10,27);
-         SMG$Put_Chars (Utilities,Display
+         SMG$Put_Chars (UtilitiesDisplay
              ,' L)eave feedback'         ,11,27);
          If (Not Game_Saved) and Main_Menu then
              SMG$Put_Chars (Utilitiesdisplay,
                  ' R)ecover lost characters',12,27);
-         SMG$Put_Chars (Utilities,Display,
+         SMG$Put_Chars (UtilitiesDisplay,
              ' E)xit'                       ,13,27);
-         SMG$Put_Chars (Utilities,Display,
+         SMG$Put_Chars (UtilitiesDisplay,
              ' Which?'                      ,15,27);
          SMG$End_Display_Update (Utilitiesdisplay);
          Response:=Make_Choice (['R','E','C','T','B','L']);
@@ -2158,7 +2197,7 @@ Begin { Clear Log }
 
    Repeat
       Open (LogFile,'Stone_Data:Stone_Log',History:=Unknown,Sharing:=READONLY,Error:=CONTINUE);
-   Until (Status(LogFile)=PAS$K_SUCCESS));
+   Until (Status(LogFile)=PAS$K_SUCCESS);
 
    { Rewrite it }
 
@@ -2183,7 +2222,7 @@ Const
 
 Var
    FirstTime: Boolean;
-   LineCount: Imteger;
+   LineCount: Integer;
    L: Line;
    Rendition: Unsigned;  { Rendition set for line }
 
@@ -2203,7 +2242,7 @@ Begin { View Log }
    SMG$Erase_Display (ScenarioDisplay);
    SMG$Home_Cursor (ScenarioDisplay);
 
-   { While there are still names on the list {
+   { While there are still names on the list }
 
    While Not EOF (LogFile) do
       Begin
@@ -2220,7 +2259,8 @@ Begin { View Log }
                 SMG$Set_Cursor_ABS (ScenarioDisplay,22,39-(L.Length div 2));
                 SMG$Put_Line (ScenarioDisplay,L,0,Rendition);
                 SMG$End_Display_Update (ScenarioDisplay);
-                If FirstTime then SMG$Paste_Virtual_Display (ScenarioDisplay,Pasteboard,2,2);
+                If FirstTime then
+                    SMG$Paste_Virtual_Display (ScenarioDisplay,Pasteboard,2,2);
                 FirstTime:=False;
                 Wait_Key;
                 SMG$Begin_Display_Update (ScenarioDisplay);
@@ -2249,9 +2289,9 @@ Var
 
 [External]Procedure Pic_Edit (Var Pics: Pic_List);external;
 [External]Procedure Edit_Maze (Var MazeFile: LevelFile);external;
-[External]Procedure Edit_Player_Characters;external;
+[External]Procedure Edit_Players_Characters;external;
 [External]Procedure Edit_Treasures(Var Treasure: List_of_Treasures);external;
-[External]Procedure Edit_Monsters;external;
+[External]Procedure Edit_Monster;external;
 [External]Procedure Edit_Item;external;
 [External]Procedure Edit_Character (Var Roster: Roster_Type);external;
 [External]Procedure Edit_messages;external;
@@ -2290,7 +2330,7 @@ Begin { Handle Key }
                  Edit_Monster;
               End;
          'I': Edit_Item;
-         'A': Edit_Players_Character;
+         'A': Edit_Players_Characters;
          'E': Exit:=True;
          Otherwise ;
     End;
@@ -2390,17 +2430,18 @@ Procedure Restore_Game;
 
 { This procedure begins restoration of a previously saved game }
 
-[External]Procedure Kryn (Var Roster: Roster_Type);external
+[External]Procedure Kyrn (Var Roster: Roster_Type);external;
 
 Begin { Restore Game }
    Auto_load:=True;
-   SMG$Put_Chars (ScreenDisplay,'* * * Resuming where you left off * * *',23,20);
+   SMG$Put_Chars (ScreenDisplay,
+                  '* * * Resuming where you left off * * *',23,20);
 
    Set_Up_Kyrn;
 
    Kyrn (Roster);
 
-   Exit_Kryn;  { For when the user exits Kryn after saving }
+   Exit_Kyrn;  { For when the user exits Kyrn after saving }
 End;  { Restore Game }
 
 {**********************************************************************************************************************************}
@@ -2524,7 +2565,7 @@ Var
 Begin { Save Messages }
    Repeat
       Open (Message_File,'Stone_Data:Messages.dat;1',History:=OLD,Error:=CONTINUE,Sharing:=READONLY)
-   Until (Status(Message_File))=PAS$K_SUCCESS);
+   Until (Status(Message_File)=PAS$K_SUCCESS);
    Rewrite (Message_File);
    For Loop:=1 to 999 do  Writeln (Message_File,Messages[Loop]);
    Close (Message_File);
@@ -2537,7 +2578,7 @@ Procedure Quit;
 { This procedure disables trapping of broadcast messages, returns the cursor to normal, and saves the data used in the game. }
 
 Var
-   l: Line;
+   T: Line;
    X: Integer;
 
 Begin { Quit }
@@ -2583,7 +2624,6 @@ End;  { Kill Save File }
 
 {**********************************************************************************************************************************}
 
-
 [Global]Function Can_Play: [Volatile]Boolean;
 
 { Can the user play at this particular time? }
@@ -2605,7 +2645,7 @@ End;  { Can Play }
   exiting for fast action. }
 
 Begin { Stonequest }
-  ShowHours:=False;  Main_Menu"=True;  In_Utilities:=False;
+  ShowHours:=False;  Main_Menu:=True;  In_Utilities:=False;
   Authorized:=(User_Name='JGETZIN') or (User_Name='DCORN');
 { If Not Authorized and Trap_Authorized_Error then Establish (Oh_No); }
   If Can_Play then
@@ -2618,7 +2658,7 @@ Begin { Stonequest }
                   Draw_Menu;                                    { Print the MAIN_MENU options }
                   Handle_Response (answer);                     { Get the user's choice }
                   Main_Menu:=True;
-               End;  { Legal hours }
+               End  { Legal hours }
             Else
                Begin { Not legal hours }
                   Answer:='Q';
