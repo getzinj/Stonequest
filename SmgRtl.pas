@@ -785,11 +785,13 @@ FUNCTION smg$read_from_display
 
 [ASYNCHRONOUS, UNBOUND]
 FUNCTION smg$read_keystroke
-  (          keyboard_id: UNSIGNED;
-   VAR       word_terminator_code: $Word;
-             prompt_string: VARYING [$len3] OF CHAR := %immed 0;
-             timeout: INTEGER := %immed 0;
-             display_id: UNSIGNED := %immed 0 )
+  (%Ref      keyboard_id: UNSIGNED;
+   %Ref      word_terminator_code: $Uword;
+   %Descr    prompt_string: VARYING [$len3] OF CHAR := %immed 0;
+   %Ref      timeout: INTEGER := %immed 0;
+   %Ref      display_id: UNSIGNED := %immed 0;
+   %Ref      rendition_set: UNSIGNED := %Immed 0;
+   %Ref      rendition_complement: UNSIGNED := %Immed 0)
       : UNSIGNED;
 
         EXTERNAL;

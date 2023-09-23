@@ -1,2 +1,2 @@
 $   define/nolog Stone_Data   sys$login
-$   run camp.exe
+$   run stonequest.exe
