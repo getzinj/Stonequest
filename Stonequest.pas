@@ -1267,7 +1267,7 @@ Begin { Read Treasures }
    { Wait until the file is available and then open it }
 
    Repeat
-      Open (TreasFile,'Stone_Data:Messages.Dat;1',History:=OLD,Error:=CONTINUE,Sharing:=READWRITE);
+      Open (TreasFile,'Stone_Data:Treasure.Dat;1',History:=OLD,Error:=CONTINUE,Sharing:=READWRITE);
    Until Status(TreasFile)<>PAS$K_FILALROPE;
    If Status(TreasFile)<>PAS$K_SUCCESS then
        Read_Error_Window ('treasure',Status(TreasFile));

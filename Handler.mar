@@ -7,7 +7,7 @@
 ;
          .TITLE  HANDLER - Condition handler for STONEQUEST
          .PSECT  HANDLER$DATA    RD, WRT, PIC, NOSHR, NOEXE, LONG
-PAC:     .ASCID  /STONEQUEST/
+FAC:     .ASCID  /STONEQUEST/
 STRING:  .ASCII  /**Warning: Error Encounter **/<13><10>
          .ASCII  /--Attempting to continue game--/<13><10>
          .ASCII  /--Suggest you SAVE and restore your characters/<13><10>
