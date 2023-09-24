@@ -680,7 +680,7 @@ FUNCTION smg$put_line
              line_advance: INTEGER := %Immed 0;
              rendition_set: UNSIGNED := %Immed 0;
              rendition_complement: UNSIGNED := %Immed 0;
-             flags: UNSIGNED := %Immed 0;
+             wrap_flag: UNSIGNED := %Immed 0;
              character_set: UNSIGNED := %Immed 0 )
       : UNSIGNED;
 
@@ -692,7 +692,7 @@ FUNCTION smg$put_line_highwide
              text: VARYING [$len2] OF CHAR;
              line_advance: INTEGER := %Immed 0;
              rendition_complement: UNSIGNED := %Immed 0;
-             flags: UNSIGNED := %Immed 0;
+             wrap_flag: UNSIGNED := %Immed 0;
              character_set: UNSIGNED := %Immed 0 )
       : UNSIGNED;
 
@@ -704,7 +704,7 @@ FUNCTION smg$put_line_highwide
 %Descr rendition_string: VARYING [$W2] OF CHAR := %Immed 0;
 %Descr rendition_complement: VARYING [$W3] OF CHAR := %Immed 0;
 %Ref line_advance: INTEGER := %Immed 0;
-%Ref flags: UNSIGNED := %Immed 0;
+%Ref wrap_flag: UNSIGNED := %Immed 0;
 %Ref direction: UNSIGNED := %Immed 0;
 %Ref character_set: UNSIGNED := %Immed 0 ): UNSIGNED; EXTERNAL;
 
