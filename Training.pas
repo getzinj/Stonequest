@@ -1,4 +1,4 @@
-[Inherit ('Types','SMGRTL','STRRTL')]Module TrainingGrounds;
+[Inherit ('Types','SYS$LIBRARY:STARLET','LIBRTL','SMGRTL','STRRTL')]Module TrainingGrounds;
 
 Type
    Race_Set  = Set of Race_Type;
@@ -19,15 +19,18 @@ Var
 
 Value
    Leave_Maze:=False;
+   Party_Size:=0;
 
 {******************************************************************************)
 [External]Function  Character_Exists (CharName: Name_Type; Var Spot: Integer):Boolean;external;
 [External]Procedure Print_Roster;External;
-[External]Function  Make_Choice (Choices: Char_Set; Time_Out: Integer:=-1; Time_Out_Char: Char:=' '): Char;External;
+[External]Function  Make_Choice (Choices: Char_Set; Time_Out: Integer:=-1;
+    Time_Out_Char: Char:=' '): Char;External;
 [External]Function  String (Num: Integer; Len: Integer:=0):Line;external;
 [External]Function  Roll_Die (Die_Type: Integer): [Volatile]Integer;External;
 [External]Function  Class_Choices (Character: Character_Type): Class_Set;external;
-[External]Function  Yes_or_No (Time_Out: Integer:=-1; Time_Out_Char: Char:=' '): [Volatile]Char;External;
+[External]Function  Yes_or_No (Time_Out: Integer:=-1;
+    Time_Out_Char: Char:=' '): [Volatile]Char;External;
 [External]Procedure Delay (Seconds: Real);External;
 [External]Procedure Update_High_Scores (Username: Line);external;
 [External]Procedure Wait_Key (Time_Out: Integer:=-1);External;
@@ -36,7 +39,7 @@ Value
 [External]Procedure Change_Score (Var Character: Character_Type; Score_Num, Inc: Integer);External;
 [External]Function  Made_Roll (Needed: Integer): [Volatile]Boolean;external;
 [External]Function  Compute_Hit_Die (Character: Character_Type): Integer;external;
-[External]Function  Regenerates (Character: Character_Type);external;
+[External]Function  Regenerates (Character: Character_Type):Integer;external;
 [External]Procedure Restore_Spells (Var Character: Character_Type);external;
 [External]Procedure Store_Character (Character: Character_Type);external;
 {******************************************************************************)
@@ -63,6 +66,29 @@ Begin { Update Class Choices }
       If Each in Possibilities then SMG$Put_Line (ClassChoiceDisplay,ClassName[Each]);
    SMG$End_Display_Update (ClassChoiceDisplay);
 End;  { Update Class Choices }
+
+{******************************************************************************)
+
+Function Random_Ability_Score: [Volatile]Integer;
+
+{ This function will return a random number between 3 to 18, with a bias around 10.5 }
+
+Var
+  Dice: Array [1..4] of Integer;
+  Die,Sum: Integer;
+
+Begin { Random Ability Score }
+   Sum:=0;  { The sum of the dice is zero so far }
+   For Die:=1 to 4 do
+      Begin
+         Dice[Die]:=Roll_Die(6);
+         Sum:=Sum+Dice[Die];  { Sum the dice }
+      End;
+
+ { Return the sum minus the lowest die }
+
+  Random_Ability_Score:=Sum-Min(Dice[1],Dice[2],Dice[3],Dice[4]);
+End;  { Random Ability Score }
 
 {******************************************************************************)
 
@@ -154,7 +180,7 @@ Begin { Race Adjustments }
                         Change_Score(Character,2,1);
                         Change_Score(Character,4,1);
                     End;
-        HfOrgre:    Begin
+        HfOgre:     Begin
                         Change_Score(Character,1,2);
                         Change_Score(Character,5,2);
                         Change_Score(Character,2,-2);
@@ -206,8 +232,8 @@ Begin { Race Choices }
      Ranger:           Temp:=Temp-[HfOrc,HfOgre,Gnome,Hobbit,Dwarven,HfElf,LizardMan];
      Wizard:           Temp:=Temp-[LizardMan,Centaur,Numenorean];
      Thief:            Temp:=Temp-[Elven,LizardMan,Centaur,Numenorean];
-     Assassin:         Temp:=Temp-[HfOrc,HfOrgre,Gnome,Hobbit,Dwarven,Numenorean,Drow];
-     Monk:             Temp:=Temp-[HfOrc,HfOrgre,Gnome,Hobbit,Dwarven,Elven,HfElf,LizardMan,Centaur,Numenorean];
+     Assassin:         Temp:=Temp-[HfOrc,HfOgre,Gnome,Hobbit,Dwarven,Numenorean,Drow];
+     Monk:             Temp:=Temp-[HfOrc,HfOgre,Gnome,Hobbit,Dwarven,Elven,HfElf,LizardMan,Centaur,Numenorean];
      AntiPaladin:      Temp:=Temp-[HfOrc,HfElf,Centaur,Human,Numenorean];
      Bard:             Temp:=[Elven,HfElf,Centaur,Human,Numenorean];
      Samurai:          Temp:=[Human,HfElf,Centaur];
@@ -251,7 +277,7 @@ Begin { Choose Race }
       If Choice_Loop in Possibilities then
          Begin
             Max_Num:=Max_Num+1;
-            Options:=Options+[CHR(Max_Num+64))];
+            Options:=Options+[CHR(Max_Num+64)];
             Choices[Max_Num]:=Choice_Loop;
             T:=T+
                 '     ['
@@ -389,7 +415,7 @@ Begin { Choose Class }
       If Choice_Loop in Possibilities then
          Begin
             Max_Num:=Max_Num+1;
-            Options:=Options+[CHR(Max_Num+64))];
+            Options:=Options+[CHR(Max_Num+64)];
             Choices[Max_Num]:=Choice_Loop;
             T:=T+
                 '     ['
@@ -442,9 +468,9 @@ Begin { Alignment Choices }
         Assassin:    Temp:=[Evil];
    End;
    Case Character.Race of
-        Numenorian: Alignment_Choices:=Temp*[Good,Neutral];
+        Numenorean: Alignment_Choices:=Temp*[Good,Neutral];
         Drow:       Alignment_Choices:=Temp*[Evil];
-        Otherwise:  Alignment_Choices:=Temp;
+        Otherwise   Alignment_Choices:=Temp;
    End;
 End;  { Alignment Choices }
 
@@ -481,7 +507,7 @@ Begin
          Begin
             Max_Num:=Max_Num+1;
             Possibilities[Max_Num]:=Lp;
-            Options:=Options+[CHR(Max_Num+64))];
+            Options:=Options+[CHR(Max_Num+64)];
             SMG$Set_Cursor_ABS (ScreenDisplay,,17);
             SMG$Put_Line (ScreenDisplay,
                 '['
@@ -576,7 +602,7 @@ Begin { Finish Character }
  { Character is first level, give him/her the appropriate hit points }
 
    Character.Level:=1;
-   Character.Curr_HP:=Comoute_Hit_Die(Character);
+   Character.Curr_HP:=Compute_Hit_Die(Character);
    Character.Max_HP:=Character.Curr_HP;
 
    Character.Status:=Healthy;
@@ -698,6 +724,118 @@ Begin { Create Character }
 End;  { Create Character }
 
 { TODO: Enter this code }
+{******************************************************************************)
+
+Procedure Print_Available_Characters;
+
+{ This procedure will print a list of available characters when the question mark is entered at the ---> prompt. }
+
+Begin { Print Available Characters }
+   SMG$Begin_Display_Update (ScreenDisplay);
+   Print_Roster;
+   SMG$Put_Chars (ScreenDisplay,
+       'Press any key',23,33,0,1);
+   SMG$End_Display_Update (ScreenDisplay);
+   Wait_Key
+End;  { Print Available Characters }
+
+{******************************************************************************)
+
+Procedure New_Character (New_Name: Line);
+
+{ This procedure is called when NEW_NAME is the name of a non-existent character.  It asks the player if he or she wants to make a
+  character with that name, and if so, does it }
+
+Var
+   Answer: Char;
+
+Begin { New Character }
+   If New_Name.Length>20 then New_Name:=Substr (New_Name,1,20);
+   SMG$Put_Line (ScreenDisplay, '');
+   SMG$Put_Chars (ScreenDisplay,
+       New_Name
+       +': '
+       +'that name doesn''t exist. Dost thou '
+       +'wish to create it?',0);
+   Answer:=Yes_or_No;
+   SMG$Put_Chars (ScreenDisplay,'');
+   If Answer='Y' then Create_Character (New_Name);
+End;  { New Character }
+
+{******************************************************************************)
+
+Function Get_Name: [Volatile]Line;
+
+{ This procedure will prompt for the name of a character, whether or not he/she exists }
+
+Var
+   NameTxt: Line;
+
+[External]Procedure Cursor;External;
+[External]Procedure No_Cursor;External;
+
+Begin { Get Name }
+  NameTxt:='';
+
+  SMG$Begin_Display_Update (ScreenDisplay);
+  SMG$Erase_Display (ScreenDisplay);
+  SMG$Put_Line (ScreenDisplay,
+      'Thou art at Cyntila''s Training Grounds.  Thou '
+      +'cant enter the name of an exist-');
+  SMG$Put_Line (ScreenDisplay,
+      'ing character, or a non-existant character if '
+      +'thou wishes to create one.  "?"');
+  SMG$Put_Line(ScreenDisplay,
+      'gives a list of existing characters.  [RETURN]'
+      +' exits.');
+  SMG$End_Display_Update (ScreenDisplay);
+
+  Cursor;
+  SMG$Read_String (Keyboard,NameTxt,Display_Id:=ScreenDisplay,
+      Prompt_String:='--->');
+  No_Cursor;
+
+  Get_Name:=NameTxt;
+End;  { Get Name }
+
+{******************************************************************************)
+
+Procedure Handle_Name (Var NameTxt: Line);
+
+{ This procedure handes the name that was entered.  If it's a "?" it will display a roster of available characters.  If it is the
+  name of an existing character, it will go to the Examine Character sub-menu, otherwise, it had to be the name of a new character,
+  and it will be made }
+
+Var
+   Slot: Integer;
+
+Begin { Handle Name }
+   SMG$Set_Cursor_ABS (ScreenDisplay,6,1);
+   If NameTxt='?' then
+      Print_Available_Characters
+   Else
+      If NameTxt<>'' then
+         If Character_Exists (NameTxt,Slot) then
+            { TODO: Uncomment this Examine_Character (Slot) }
+         Else
+            New_Character (NameTxt);
+End;  { Handle Name }
+
+{******************************************************************************)
+
+Procedure Initialize;
+
+{ This procedure will initialize the Training Grounds module.  All that is done is the creation of labelling of the Class Choice
+  Display, which is used for creation of characters }
+
+Begin { Initialize }
+  SMG$Create_Virtual_Display (13,11,ClassChoiceDisplay,1);
+  SMG$Label_Border (ClassChoiceDisplay,
+      ' Classes ',
+      SMG$K_TOP)
+End;  { Initialize }
+
+{******************************************************************************)
 
 [Global]Procedure Run_Training_Grounds;
 

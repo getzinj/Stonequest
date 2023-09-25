@@ -100,13 +100,34 @@ Begin { XP Needed }
    XP_Needed:=0;
 End;  { XP Needed }
 
+(******************************************************************************)
 
 [Global]Function Character_Exists (CharName: Name_Type; Var Spot: Integer): Boolean;
 
+{ This function does two things.  First of all, it verifies the existance of CHARNAME in the array ROSTER.   If the name DOES occurs
+  in ROSTER, the position it was found in is returned via the Var parameter, SPOT. }
+
+Var
+   Roster: [External]Roster_Type;
+   Slot: Integer;
+   Found: Boolean;
+
 Begin { Character Exists }
-   { TODO: Enter this code }
-   Character_Exists:=True;
+   Found:=False;                                                                { So far, we haven't found it }
+   If CharName<>'' then                                                         { If the name isn't the empty string }
+      For Slot:=1 to 20 do                                                      { For each slot in the roster... }
+         If Roster[Slot].Status<>Deleted then                                   { If the slot is used... }
+            Begin { Not deleted }
+               If (STR$Case_Blind_Compare(Roster[Slot].Name,CharName)=0) then   { If this is the name... }
+                  Begin { The Same }
+                     Found:=True;                                               { ...we've found it. }
+                     Spot:=Slot;                                                { Mark the position }
+                  End  { The Same }
+            End;  { Not deleted }
+   Character_Exists:=Found  { Return the function value }
 End;  { Character Exists }
+
+(******************************************************************************)
 
 [Global]Function Class_Choices (Character: Character_Type): Class_Set;
 
