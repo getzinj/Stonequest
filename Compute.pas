@@ -1,13 +1,56 @@
 [Inherit ('Types','SMGRTL','STRRTL')]Module Compute;
 
+Type
+   { TODO: Enter this code }
+
+   Score_List         = Array [1..7] of Ability_Score;
+
+Var
+   { TODO: Enter this code }
+
+  { MinScore is a matrix of Class x Abilities, which tells Stonequest what the minimum ability scores are for each class.  So, for
+    example, if MinScore[Cleric]:=(0 0 9 0 0 0 0), this would be that to be a cleric, a character would have to have a 9 or higher
+    in wisdom (wisdom's the third ability score) and that all the other scores have to be 0 or better, i.e., any valid ability score. }
+
+   MinScore:          Array [Class_Type,1..7] of Integer;
+   { TODO: Enter this code }
+
+Value
+   {                          S   I   W   D   C  CH   LU   }
+   MinScore[Cleric]       :=( 0,  0,  9,  0,  0,  0,  0);
+   MinScore[Fighter]      :=( 9,  0,  0,  0,  9,  0,  0);
+   MinScore[Barbarian]    :=(15,  0,  0,  0,  9,  0,  0);
+   MinScore[Paladin]      :=( 8,  9, 12,  0,  9, 17,  0);
+   MinScore[AntiPaladin]  :=( 8,  9, 12,  0,  9, 17,  0);
+   MinScore[Samurai]      :=(11,  0,  0, 13,  9, 15,  0);
+   MinScore[Ranger]       :=( 9, 11,  0,  0,  9,  0,  0);
+   MinScore[Wizard]       :=( 0,  9,  0, 10,  0,  0,  0);
+   MinScore[Thief]        :=( 0,  9,  0, 12,  0,  0,  0);
+   MinScore[Assassin]     :=(10,  0,  0, 12,  0,  0,  0);
+   MinScore[Monk]         :=(12, 11, 13, 12, 15,  0,  0);
+   MinScore[Ninja]        :=(12, 15, 13, 12, 17,  0,  0);
+   MinScore[Bard]         :=(15, 12,  0, 16, 10, 15,  0);
+
+(******************************************************************************)
+
 { TODO: Enter this code }
 
 [Global]Function String (Num: Integer; Len: Integer:=0): Line;
 
+{ This function will convert an Integer into a string }
+
+Var
+   Temp: Line;
+
 Begin { String }
-   { TODO: Enter this code }
-   String:='';
+   Temp:='';
+   WriteV (Temp,Num:Len);  { Write the integer onto the string }
+   String:=Temp;           { Return the string }
 End;  { String }
+
+(******************************************************************************)
+
+{ TODO: Enter this code }
 
 [Global]Procedure Find_Spell_Group (Spell: Spell_Name;  Character: Character_Type;  Var Class,Level: Integer);
 
@@ -129,11 +172,81 @@ End;  { Character Exists }
 
 (******************************************************************************)
 
+Function  Scores_Qualify (Scores: Score_List;  Class: Class_Type): Boolean;
+
+Var
+   x: Integer;
+   Sum_List: Score_List;
+   Made_It: Boolean;
+
+Begin { Scores Qualify }
+   Made_it:=True;
+   If Class<>AntiPaladin then
+      For X:=1 to 7 do
+         Begin
+            Sum_List[X]:=Scores[X]-MinScore[Class,X];
+            If Sum_List[X]<0 then Made_It:=False;
+         End
+   Else
+      Begin
+         For X:=1 to 5 do
+            Begin
+               Sum_List[X]:=Scores[X]-MinScore[Class,X];
+               If Sum_List[X]<0 then Made_It:=False;
+            End;
+         If Made_It then
+            Begin
+               Sum_List[7]:=Scores[7]-MinScore[Class,7];
+               If Sum_List[7]<0 then Made_It:=False;
+            End;
+         Made_It:=Made_It and ((Scores[6]<5) or (Scores[6]>16));
+      End;
+      Scores_Qualify:=Made_It;
+End;  { Scores Qualify }
+
+(******************************************************************************)
+
 [Global]Function Class_Choices (Character: Character_Type): Class_Set;
 
+Var
+   Possibilities: Set of Class_Type;
+   Class: Class_Type;
+
 Begin { Class Choices }
-   { TODO: Enter this code }
-   Class_Choices:=[];
+   Possibilities:=[];   { So far no possibilities }
+
+   { Add all classes made eligable by ability scores }
+
+   For Class:=Cleric to Barbarian do
+      If Scores_Qualify (Character.Abilities,Class) then
+         Possibilities:=Possibilities+[Class];
+
+   { Subtract all classes made impossible because of race }
+
+   Case Character.Race of
+      Drow:                    Possibilities:=Possibilities*[Cleric,Wizard,Thief,Assassin,AntiPaladin];
+      HfOrc,HfOgre:            Possibilities:=Possibilities*[Cleric,Monk,Fighter,Thief,Barbarian,Assassin];
+      Gnome,Hobbit,Dwarven:    Possibilities:=Possibilities*[Cleric,fighter,Thief,Assassin];
+      Elven:                   Possibilities:=Possibilities-[Ninja,Samurai,Barbarian,AntiPaladin];
+      HfElf:                   Possibilities:=Possibilities-[Barbarian,Paladin,AntiPaladin];
+      LizardMan:               Possibilities:=Possibilities*[Monk,Barbarian,Fighter,Cleric];
+      Centaur:                 Possibilities:=Possibilities*[Fighter,Cleric,Bard,Wizard,Samurai];
+      Numenorean:              Possibilities:=Possibilities*[Fighter,Bard,Wizard];
+      Otherwise ;
+   End;
+
+   { Subtract all classes made impossible because of alignment }
+
+   Case Character.Alignment of { if just making character, will be NoAlign }
+      Good:     Possibilities:=Possibilities-[AntiPaladin,Barbarian,Thief,Assassin,Ninja];
+      Neutral:  Possibilities:=Possibilities-[Paladin,Ranger,Cleric,Assassin,AntiPaladin];
+      Evil:     Possibilities:=Possibilities-[Paladin,Ranger,Barbarian];
+      Otherwise ;
+   End;
+
+   { The resulting set is the set of all class choices }
+
+   Class_Choices:=Possibilities;
 End;  { Class Choices }
 
 

@@ -22,4 +22,9 @@ TYPE
    %descr output: VARYING [$len4] OF CHAR) : UNSIGNED;
         EXTERNAL;
 
+[ASYNCHRONOUS, UNBOUND]FUNCTION STR$Case_Blind_Compare
+  (%descr string: VARYING [$len5] OF CHAR;
+   %descr compare_string: VARYING [$len6] OF CHAR) : UNSIGNED;
+        EXTERNAL;
+
 END.

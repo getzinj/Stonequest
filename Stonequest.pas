@@ -359,6 +359,8 @@ Value { We got a lot of 'em! }
 [External]Procedure Controly;External;
 [External]Function String(Num: Integer; Len: Integer:=0):Line;external;
 
+{**********************************************************************************************************************************}
+
 [Global]Function Roll_Die (Die_Type: Integer): [Volatile]Integer;
 
 [Asynchronous,External]Function MTH$RANDOM (%Ref Seed: Unsigned): Real;external;
