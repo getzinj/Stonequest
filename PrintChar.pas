@@ -3,7 +3,7 @@
 Const
     Success = '* * * Success! * * *';
     Failure = '* * * Failure * * *';
-    Done_It = '* * * Done! * * *'
+    Done_It = '* * * Done! * * *';
 
     Up_Arrow         = CHR(18);            Down_Arrow         = CHR(19);
     Left_Arrow       = CHR(20);            Right_Arrow        = CHR(21);
@@ -28,7 +28,7 @@ Var
    No_Magic:     Boolean;
    Camp_Spells:  Set of Spell_Name;
    SpellDisplay: Unsigned;
-   ScreenDisplay,keyboard,pastebaord,campdisplay,optionsdisplay,characterdisplay: [External]Unsigned;
+   ScreenDisplay,keyboard,pasteboard,campdisplay,optionsdisplay,characterdisplay: [External]Unsigned;
    CommandsDisplay,spellsdisplay,messagedisplay,monsterdisplay,viewdisplay,GraveDisplay: [External]Unsigned;
 
    Rounds_Left:                 [External]Array [Spell_Name] of Unsigned;
@@ -42,7 +42,166 @@ Var
    WizSpells,ClerSpells:        [External]Spell_List;
    Item_Name:                   [External]Array [Item_Type] of Varying [7] of char;
 
+(******************************************************************************)
 { TODO: Enter this code }
+[External]Function  String(Num: Integer;  Len: Integer:=0):Line;External;
+{ TODO: Enter this code }
+(******************************************************************************)
+{ TODO: Enter this code }
+
+Procedure Initialize;
+
+Begin { Initialize }
+   Camp_Spells:=[AnDe,Crlt,Lght,CrPs,CrSe,CoLi,CrVs,CrCr,Raze,heal,Ress,WoRe,PaHe,Loct,LtId,BgId,DuBl,Tele,Rein,DiPr,HgSh,Comp,CrPa,
+                 UnCu,Levi,ReFe,DetS];
+   No_Magic:=False;
+   If PosZ > 0 then No_Magic:=(Maze.Special_Table[Maze.Room[PosX,PosY].Contents].Special=AntiMagic);
+End;  { Initialize }
+
+{ TODO: Enter this code }
+(******************************************************************************)
+
+Function Scenarios_Won (P: Int_Set): Integer;
+
+Var
+   Temp,Loop: Integer;
+
+Begin { Scenarios Won }
+   Temp:=0;
+   For Loop:=0 to 999 do
+      If P[Loop] then Temp:=Temp+1;
+   Scenarios_Won:=Temp;
+End;  { Scenarios Won }
+
+(******************************************************************************)
+
+
+Function Print_Wins (Character: Character_Type): Line;
+
+{ Indicates how many scenarios this character has beaten }
+
+Var
+   Num,Loop: Integer;
+   T: Line;
+
+Begin { Print Wins }
+   T:='';
+   Num:=Scenarios_Won (Character.Scenarios_Won);
+   If Num>8 then
+      Begin
+         T:='';
+         For Loop:=1 to Num-8 do
+             T:=T+'*';
+      End;
+   Print_Wins:=T;
+End;  { Print Wins }
+
+(******************************************************************************)
+
+Procedure Print_Top_Line (Character: Character_Type);
+
+Var
+   ClassName:      [External]Array [Class_Type] of Varying [13] of char;
+   AlignName:      [External]Array [Align_Type] of Packed Array [1..7] of char;
+   RaceName:       [External]Array [Race_Type] of Packed Array [1..12] of char;
+   SexName:        [External]Array [Sex_Type] of Packed Array [1..11] of char;
+
+Begin { Print Top Line }
+   SMG$Put_Chars (ScreenDisplay,
+       'Name: '
+       +Pad(Character.Name,' ',21));
+   If Character.Sex=NoSex then
+      SMG$Put_Chars (ScreenDisplay,
+          ' ')
+   Else
+      SMG$Put_Chars (ScreenDisplay,
+          SexName[Character.Sex][1]
+          +'-');
+   If Character.Race=NoRace then
+      SMG$Put_Chars (ScreenDisplay,
+          '  ')
+   Else
+      SMG$Put_Chars (screenDisplay,
+          RaceName[Character.Race]
+          +' ');
+   If Character.Alignment=NoAlign then
+      SMG$Put_Chars (ScreenDisplay,
+          '  ')
+   Else
+      SMG$Put_Chars (ScreenDisplay,
+          AlignName[Character.Alignment][1]
+          +'-');
+   If Character.Class<>NoClass then
+      Begin
+         SMG$Put_Chars (ScreenDisplay,
+             ClassName[Character.Class] );
+         If Character.PreviousClass<>Noclass then
+            SMG$Put_Chars (ScreenDisplay,
+                '/'+
+                ClassName[Character.PreviousClass] )
+      End;
+   If Character.Psionics then
+      Begin
+         SMG$Put_Chars (ScreenDisplay,
+             '  (');
+         If Character.DetectTrap<>0 then
+            SMG$Put_Chars (ScreenDisplay,
+                'T');
+         If Character.DetectSecret<>0 then
+            SMG$Put_Chars (ScreenDisplay,
+                'S');
+         If Character.Regenerate<>0 then
+            SMG$Put_Chars (ScreenDisplay,
+                'R');
+         SMG$Put_Chars (ScreenDisplay,
+               ')');
+         SMG$Put_Line (ScreenDisplay,
+             '');
+      End;
+      SMG$Put_Line (ScreenDisplay,
+          '');
+      Case Scenarios_Won (Character.Scenarios_Won) of
+         0:        SMG$Put_Line (ScreenDisplay,
+                       '');
+         1:        SMG$Put_Line (ScreenDisplay,
+                       'Rank: Private');
+         2:        SMG$Put_Line (ScreenDisplay,
+                       'Rank: Corporal');
+         3:        SMG$Put_Line (ScreenDisplay,
+                       'Rank: Sargent');
+         4:        SMG$Put_Line (ScreenDisplay,
+                       'Rank: Lieutenant');
+         5:        SMG$Put_Line (ScreenDisplay,
+                       'Rank: Captain');
+         6:        SMG$Put_Line (ScreenDisplay,
+                       'Rank: Major');
+         7:        SMG$Put_Line (ScreenDisplay,
+                       'Rank: Lt. Colonel');
+         8:        SMG$Put_Line (ScreenDisplay,
+                       'Rank: Colonel');
+         Otherwise SMG$Put_Line (ScreenDisplay,
+                       'Rank: General ('
+                       +Print_Wins(Character)
+                       +')');
+      End;
+End;  { Print Top Line }
+
+(******************************************************************************)
+
+Procedure Print_Gold (Character: Character_Type);
+
+Begin { Print Gold }
+   If Character.Age>0 then
+      Begin
+         SMG$Put_Chars (ScreenDisplay,
+             'Gold:      ');
+         SMG$Put_Chars (ScreenDisplay,
+             String(Character.Gold,12));
+      End;
+   SMG$Put_Line (ScreenDisplay,
+       '');
+End;  { Print Gold }
+
 (******************************************************************************)
 
 Procedure Print_Experience (Character: Character_Type);
@@ -72,7 +231,7 @@ Begin { Print Level and Age }
         If Character.PreviousClass<>NoClass then
            SMG$Put_Chars (ScreenDisplay,
                '/'
-               +'String(Character.Previous_Lvl,3))
+               +String(Character.Previous_Lvl,3))
         Else
            SMG$Put_Chars (ScreenDisplay,
                '    ');
@@ -99,16 +258,31 @@ Begin { Print Hit Points and Armor Class }
              +String(Character.Max_HP,5));
          SMG$Put_Chars (ScreenDisplay,
              '  Armor Class: ');
-         SMG$Put_Cars (ScreenDisplay,String(10-Character.Armor_Class,3));
+         SMG$Put_Chars (ScreenDisplay,String(10-Character.Armor_Class,3));
       End;
    SMG$Put_Line (ScreenDisplay, '');
 End;  { Print Hit Points and Armor Class }
 
 (******************************************************************************)
 
+Procedure Print_Status (Character: Character_Type);
+
+Var
+   StatusName: [External]Array [Status_Type] of Varying [14] of char;
+
+Begin { Print Status }
+   If Character.Age>0 then
+      SMG$Put_Chars(ScreenDisplay,
+          'Status:  '
+          +StatusName[Character.Status]);
+End;  { Print Status }
+
+(******************************************************************************)
+
 Procedure Print_Abilities_and_Statistics (Character: Character_Type);
 
-Var: Ability: Integer;
+Var
+   Ability: Integer;
 
 Begin { Print Abilities and Statistics }
   For Ability:=1 to 7 do
@@ -117,7 +291,7 @@ Begin { Print Abilities and Statistics }
              AbilName[Ability]
              +': '
              +String(Character.Abilities[Ability],2));
-         SMG$Put_Cars (ScreenDisplay,
+         SMG$Put_Chars (ScreenDisplay,
              '           ');
          Case Ability of
             1: Print_Gold (Character);

@@ -1500,16 +1500,16 @@ Begin { Print Roster }
    For Slot:=1 to 20 do
       If Roster[Slot].Status<>Deleted then  { If the slot is used ... }
         Begin { Print the occupant }
-{          SMG$Put_Chars (ScreenDisplay,
+          SMG$Put_Chars (ScreenDisplay,
                           String (Slot,2)
-                          +')  '); }
+                          +')  ');
            SMG$Put_Chars (ScreenDisplay,Pad(Roster[Slot].Name,' ',21));
            SMG$Put_Chars (ScreenDisplay,AlignName[Roster[Slot].Alignment][1]
                           +'-');
            SMG$Put_Chars (ScreenDisplay,
                           Pad(ClassName[Roster[Slot].Class],' ',16));
            SMG$Put_Chars (ScreenDisplay,String (Roster[Slot].Level,3));
-           SMG$Put_Chars (ScreenDisplay,'        '
+           SMG$Put_Chars (ScreenDisplay,'           '
                           +StatusName[Roster[Slot].Status]);
         End  { Print the occupant }
       Else { Otherwise print a blank line }
