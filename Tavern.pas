@@ -1,4 +1,4 @@
-[Inherit ('Types','LIBRTL','SMGRTL')]Module Tavern;
+[Inherit ('Types','SYS$LIBRARY:STARLET','LIBRTL','SMGRTL')]Module Tavern;
 
 Const
    ZeroOrd=Ord('0');
@@ -38,7 +38,7 @@ Var
 [External]Function  Compute_AC (Character: Character_Type; PosZ: Integer:=0): Integer;external;
 [External]Function String(Num: Integer; Len: Integer:=0):Line;external;
 [External]Procedure Delay (Seconds: Real);External;
-[External]Procedure Print_Character_Line (CharNo: Integer; Party: Party_Type; Party_Size: Integer):External;
+[External]Procedure Print_Character_Line (CharNo: Integer; Party: Party_Type; Party_Size: Integer);External;
 [External]Procedure Store_Character (Character: Character_Type);External;
 [External]Procedure Backup_Party (Party: Party_Type;  Party_Size: Integer);External;
 (******************************************************************************)
@@ -145,7 +145,7 @@ Begin { Print Available Characters }
 
    Wait_Key;
 
-   SMG$Update_Virtual_Display (RosterDisplay,Pasteboard);
+   SMG$Unpaste_Virtual_Display (RosterDisplay,Pasteboard);
 End;  { Print Available Characters }
 
 (******************************************************************************)
@@ -156,7 +156,7 @@ Procedure Add_Character (Var Character: Character_Type; Var Party: Party_Type;  
 
 Begin { Add Character }
    Character.Armor_Class:=Compute_AC (Character);
-   Party.Size:=Party_Size+1;                               { Increase the party size }
+   Party_Size:=Party_Size+1;                               { Increase the party size }
    Party[Party_Size]:=Character;                           { Add the character }
    Character.Lock:=True;                                   { Lock out further copies of this character }
    Print_Character_Line (Party_Size,Party,Party_Size);     { Print the new line }
@@ -208,8 +208,263 @@ End;  { Too Many Characters }
 
 (******************************************************************************)
 
+Function In_Party (Character: Character_Type; Party: Party_Type; Party_Size: Integer): Boolean;
 
-{ TODO: Implement this. }
+Var
+  InParty: Boolean;
+  N: Integer;
+
+Begin
+  InParty:=False;
+  If Party_Size > 0 then
+     For N:=1 to Party_Size do
+        InParty:=InParty or (Character.Name=Party[n].Name);
+  In_Party:=InParty;
+End;
+
+
+(******************************************************************************)
+
+Procedure Already_in_Party;
+
+Begin { Already in Party }
+  SMG$Put_Line (BottomDisplay,
+      '* * * That character is already in thine party!!! * * *',
+      0);
+  Delay (2);
+End;  { Already in Party }
+
+(******************************************************************************)
+
+Procedure Try_to_add_Character (Var Character: Character_Type;  Var Party: Party_Type;  Var Party_Size: Integer);
+
+Begin
+   If Not Character.Lock then
+      If Party_Compatable (Character,Party,Party_Size) then
+         Add_Character (Character,Party,Party_Size)
+      Else
+         Incompatable_Alignments
+   Else
+      If In_Party (Character,Party,Party_Size) then
+         Already_in_Party
+      Else
+         Character_Is_Out
+End;
+
+(******************************************************************************)
+
+Procedure Attempt_to_Add_Character (Var Party: Party_Type; Var Party_Size: Integer);
+
+{ This procedure will allow the player to add a character.  If he/she types a question mark, a list will be shown.  Incompatable
+  and non-existant character names will be dealt with with an error message.  Return alone exits }
+
+Var
+  New_Name: Line;
+  FoundNo: Integer;
+
+Begin { Attempt to add Character }
+   Repeat
+      Begin
+         SMG$Set_Cursor_ABS (BottomDisplay,6,1);
+         SMG$Put_Line (BottomDisplay,
+             'Whom dost thou wish to add?  (? for list)');
+         Cursor;
+         SMG$Read_String (Keyboard,
+             New_Name,
+             Display_Id:=BottomDisplay,
+             Prompt_string:='--->');
+         No_Cursor;
+
+         If New_Name.length>20 then New_Name:=SubStr(New_Name,1,20);
+
+         { If it's a question mark, print list }
+
+         If New_Name='?' then
+            Print_Available_Characters (Party,Party_Size)
+         Else
+            If Character_Exists (New_Name,FoundNo) then
+               Try_to_add_Character (Roster[FoundNo],Party,Party_Size)
+            Else
+               If New_Name<>'' then Never_Heard_of_Him;
+      End;
+   Until New_Name<>'?'  { Repeat until a load is attempted }
+End;  { Attempt to add Character }
+
+(******************************************************************************)
+
+Procedure Add_Member (Var Party: Party_Type; Var Party_Size: Integer);
+
+{ This procedure allows the player to add a character to the PARTY }
+
+Begin { Add Member }
+   If Party_Size<6 then  { If there's room in the party }
+      Attempt_to_Add_Character (Party,Party_Size)
+   Else
+      Too_Many_Characters;  { Otherwise, complain a bit... }
+   SMG$Erase_Display (BottomDisplay);
+End;  { Add Member }
+
+(******************************************************************************)
+
+Procedure Remove_Member (Var Party: Party_Type;  Var Party_Size: Integer);
+
+{ This procedure allows a player to remove a member from the adventuring party }
+
+Var
+  Number,Loop: Integer;
+  Temp: Character_Type;
+
+Begin { Remove Member }
+
+   { Prompt for character's number }
+
+   SMG$Begin_Display_Update (BottomDisplay);
+   SMG$Erase_Display (BottomDisplay);
+   SMG$Set_Cursor_ABS (BottomDisplay,2,1);
+   SMG$Put_Line (BottomDisplay,
+       'Remove which character (1-'
+       +String(Party_Size)
+       +')?');
+   SMG$Put_Line (BottomDisplay,
+       '([RETURN] exits)  --->',
+       0);
+
+   { Get it }
+
+   Number:=Pick_Character_Number (Party_Size);
+
+   { If it's a valid number, remove that character }
+
+   If Number>0 then
+      Begin
+         Temp:=Party[Number];
+         If Number<>Party_Size then
+            For Loop:=Number to Party_Size-1 do
+               Party[Loop]:=Party[Loop+1];
+         Party_Size:=Party_Size-1;
+         Store_Character(Temp);
+        { Backup_Party (Party,Party_Size); }
+         For Loop:=Number to Party_Size+1 do Print_Character_Line(Loop,Party,Party_Size);
+
+         { Return the character to the roster }
+      End;
+End;  { Remove Character }
+
+(******************************************************************************)
+
+Procedure View_Character (Var Party: Party_Type; Var Party_Size: Integer;  Character_Num: Integer);
+
+{ This procedure allows a player to view his or her character.  This procedure simply calls PRINT_CHARACTER, after making some
+  preparations }
+
+Var
+  Dummy: Boolean;
+
+Begin { View Character }
+   Dummy:=False;
+   SMG$Begin_Pasteboard_Update (Pasteboard);
+
+   { End_Pasteboard_Update will be in Print_Character }
+
+   SMG$Paste_Virtual_Display (ScreenDisplay,Pasteboard,1,1);
+   Print_Character (Party,Party_Size,Party[Character_Num],Dummy,Automatic:=False);
+
+   Print_Character_Line (Character_Num,Party,Party_Size);
+
+   SMG$Erase_Display (BottomDisplay);
+   SMG$Unpaste_Virtual_Display (ScreenDisplay,Pasteboard);
+   SMG$Erase_Display (ScreenDisplay);
+End;  { View Character }
+
+(******************************************************************************)
+
+Procedure Print_Options (Var T: Line; InText: Line);
+
+{ This procedure is used to print a variable nuymber of options sequentially.  If the text to be printed exceeds the line, T, it
+  'flushes' the output by printing T, and then set t to be the new input }
+
+Begin { Print Options }
+  If T.Length+inText.Length>80 then
+     Begin
+        SMG$Put_Line (BottomDisplay, T);
+        T:='';
+     End;
+  T:=T+InText;
+End;  { Print Options }
+
+(******************************************************************************)
+
+Procedure Load_Party (Var Party: Party_Type; Var Party_Size: Integer);
+
+Begin { Load Party }
+  { TODO: Implement this. }
+End;  { Load Party }
+
+
+(******************************************************************************)
+
+Procedure Save_Party (Party: Party_Type; Party_Size: Integer);
+
+Begin { Save Party }
+  { TODO: Implement this. }
+End;  { Save Party }
+
+(******************************************************************************)
+
+Procedure Print_Choices (Var Choices: Char_Set; Party_Size: Integer);
+
+{ This procedure prints out the available options at the tarven, and stores the valid key-choices in the set CHOICES }
+
+Var
+   T: Line;
+
+Begin { Print Choices }
+   SMG$Begin_Display_Update (BottomDisplay);
+   SMG$Erase_Display (BottomDisplay);
+   SMG$Set_Cursor_ABS (BottomDisplay,2,1);
+   SMG$Put_Line (BottomDisplay,
+       'Welcome to the tavern of '
+       +'the Archmage, Dor!',2);
+   Choices:=['L','?'];
+   T:='Thou cants: ';
+   If Party_Size<6 then  { If there's room for more... }
+      Begin
+         Print_Options (T,
+            'A)dd a member, ');
+            Choices:=Choices+['A'];
+      End;
+   If Party_Size=0 then  { If no characters have been added yet... }
+      Begin
+         Print_Options (T,
+            'load P)arty, ');
+            Choices:=Choices+['P'];
+      End;
+   If Party_Size<0 then  { If there are characters in the party... }
+      Begin
+         Print_Options (T,
+            'R)emove a member, ');
+         Print_Options (T,
+            '#)inspect a member, ');
+         Print_Options (T,
+            'S)ave party,, ');
+         Choices:=Choices+['R','S'];
+         Choices:=Choices+['1'..CHR(Party_Size+ZeroOrd)];
+      End;
+   Print_Options (T,
+       'L)eave, or "?" for help');
+   SMG$Put_Line (BottomDisplay,T);
+   SMG$End_Display_Update (BottomDisplay);
+End;  { Print Choices }
+
+  { TODO: Implement this. }
+
+(******************************************************************************)
+
+Procedure Print_Help;
+
+Begin
+  { TODO: Implement this. }
+End;
 
 (******************************************************************************)
 
@@ -241,12 +496,13 @@ Begin { Run Tavern }
                 'A': Add_Member (Party,Party_Size);                            { Add a character to the party }
                 'R': Remove_Member (Party,Party_Size);                         { Remove a character }
                 'P': Load_Party (Party,Party_Size);                            { Load a saved party }
-                'S': Save_Party (Party,Party_Size }                            { Save a party }
+                'S': Save_Party (Party,Party_Size);                            { Save a party }
                 '?': Print_Help;                                               { Print a help screen }
-                'L'L  ;                                                        { Leave the Tavern }
+                'L':  ;                                                        { Leave the Tavern }
         End;
      End;
   Until Answer='L';
   Location:=InKyrn;  { Indicate that we are returning to Kyrn }
   SMG$Delete_Virtual_Display (RosterDisplay);  { Delete the created display }
+End;  { Run Tavern }
 End.  { Tavern }
