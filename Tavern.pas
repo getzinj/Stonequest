@@ -119,6 +119,100 @@ End;  { Print Avail }
 
 (******************************************************************************)
 
+Procedure Print_Available_Characters (Party: Party_Type;  Party_Size: Integer);
+
+{ This procedure will print a list of available and compatable characters }
+
+Begin { Print Available Characters }
+
+   { Print the characters to the display }
+
+   Print_Avail (Party, Party_Size);
+
+   { Prompt for a keypress }
+
+   SMG$Put_Chars (RosterDisplay,
+       'Press any key to continue',
+       21,28,,1);
+
+   { stuff }
+
+   SMG$Paste_Virtual_Display (RosterDisplay,Pasteboard,2,2);
+   SMG$Put_Chars (BottomDisplay,
+      ' ',7,5);
+
+   { Wait for a key, then unpaste the display }
+
+   Wait_Key;
+
+   SMG$Update_Virtual_Display (RosterDisplay,Pasteboard);
+End;  { Print Available Characters }
+
+(******************************************************************************)
+
+Procedure Add_Character (Var Character: Character_Type; Var Party: Party_Type;  Var Party_Size: Integer);
+
+{ This procedure will add CHARACTER to PARTY }
+
+Begin { Add Character }
+   Character.Armor_Class:=Compute_AC (Character);
+   Party.Size:=Party_Size+1;                               { Increase the party size }
+   Party[Party_Size]:=Character;                           { Add the character }
+   Character.Lock:=True;                                   { Lock out further copies of this character }
+   Print_Character_Line (Party_Size,Party,Party_Size);     { Print the new line }
+End;  { Add Character }
+
+(******************************************************************************)
+
+Procedure Incompatable_Alignments;
+
+Begin { incompatable alignments }
+  SMG$Put_Line (BottomDisplay,
+      '* * * Alignments are not compatable!! * * *',
+      0);
+  Delay (2);
+End;  { incompatable alignments }
+
+(******************************************************************************)
+
+Procedure Character_Is_Out;
+
+Begin { Character is Out }
+  SMG$Put_Line (BottomDisplay,
+      '* * * That character is out * * *',
+      0);
+  Delay (2);
+End;  { Character is Out }
+
+(******************************************************************************)
+
+Procedure Never_Heard_of_Him;
+
+Begin { Never Heard of Him }
+  SMG$Put_Line (BottomDisplay,
+      '* * * Who? * * *',
+      0);
+  Delay (2);
+End;  { Never Heard of Him }
+
+(******************************************************************************)
+
+Procedure Too_Many_Characters;
+
+Begin { Too Many Characters }
+  SMG$Put_Line (BottomDisplay,
+      '* * * Thou already has six characters!!! * * *',
+      0);
+  Delay (2);
+End;  { Too Many Characters }
+
+(******************************************************************************)
+
+
+{ TODO: Implement this. }
+
+(******************************************************************************)
+
 [Global]Procedure Run_Tavern (Var Party: Party_Type; Var Party_Size: Integer);
 
 Var
