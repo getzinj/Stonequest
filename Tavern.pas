@@ -43,7 +43,79 @@ Var
 [External]Procedure Backup_Party (Party: Party_Type;  Party_Size: Integer);External;
 (******************************************************************************)
 
-{ TODO: Enter this code }
+Function Party_Compatable (Character: Character_Type; Party: Party_Type;  Party_Size: Integer): Boolean;
+
+{ This function returns TRUE if CHARACTER is of an appropriate alignment to joing PARTY, and FALSE otherwise }
+
+Var
+   Member: Integer;
+   Alignment: Align_Type;
+
+Begin { Party Compatable }
+
+   { Copy the character's alignment }
+
+   Alignment:=Character.Alignment;
+
+   { If nobody's in the party, of course he/she can join }
+
+   Party_Compatable:=True;  { Let's assume compatable for the moment... }
+   If Party_Size<>0 then
+      For Member:=1 to Party_Size do
+         If ABS(ORD(Party[Member].Alignment)-ORD(Alignment))>1 then Party_Compatable:=False;
+End;  { Party Compatable }
+
+(******************************************************************************)
+
+Procedure Show_Available_Character (Character: Character_Type; Party: Party_Type; Party_Size: Integer);
+
+Begin
+   If (Character.Status<>Deleted) and (Character.Lock<>True) and Party_Compatable(Character,Party,Party_Size) then
+         Begin
+            SMG$Put_Chars (RosterDisplay,
+                '   '
+                +Pad(Character.Name,' ',20));
+            SMG$Put_Chars (RosterDisplay,
+                ' '
+                +AlignName[Character.Alignment][1]
+                +'-');
+            SMG$Put_Chars (RosterDisplay,
+                Pad(ClassName[Character.Class],' ',13));
+            SMG$Put_Chars (RosterDisplay,
+                '   '
+                +String(Character.Level,3));
+            SMG$Put_Chars (RosterDisplay,
+                '       '
+                +StatusName[Character.Status]);
+         End;
+End;
+
+(******************************************************************************)
+
+Procedure Print_Avail (Party: Party_Type; Party_Size: Integer);
+
+{ This procedure prints the stats for any character that can join PARTY from ROSTER }
+
+Var
+   Character: Integer;
+
+Begin { Print Avail }
+
+   { Initialize display }
+
+   SMG$Erase_Display (RosterDisplay);
+   SMG$Label_Border (RosterDisplay,
+       ' Available Characters ',
+       SMG$K_TOP);
+   SMG$Put_Line (RosterDisplay, '   Name       '
+       +'          Class '
+       +'           Level '
+       +'     Status');
+
+   { For each character in roster, print the stats if he or she can join }
+
+   For Character:=1 to 20 do Show_Available_Character (Roster[Character],Party,Party_Size);
+End;  { Print Avail }
 
 (******************************************************************************)
 
