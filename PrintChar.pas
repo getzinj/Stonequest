@@ -320,6 +320,16 @@ End;  { Print Top }
 
 (******************************************************************************)
 
+Procedure Print_The_Rest (Character: Character_Type; Var Choices: Char_Set;  Party: Party_Type;  Party_Size: Integer);
+
+Begin { Print the Rest }
+   Print_Spell_Points (Character);                      { Print out the remaining spell points }
+   Print_Equipment (Character);                         { Print out the equipment list }
+   Show_Options (Character,Choices,Party,Party_Size);   { Show the player's options }
+Ehd;  { Print the Rest }
+
+(******************************************************************************)
+
 Procedure Character_Fully_Made (Var Character: Character_Type;  Var Leave_Maze: Boolean;  Var Answer: Char;
                                     Direction: Direction_Type;  Automatic: Boolean;  Var Party: Party_Type;
                                 Var Party_Size: Integer);
@@ -331,7 +341,29 @@ Var
    Choices: Char_Set;
 
 Begin { Character fully made }
-   { TODO: Enter this code }
+   Print_The_Rest (Character,Choices,Party,Party_Size);
+   if Answer=' '' then
+      SMG$End_Pasteboard_Update(Pasteboard)              { End updating from main }
+   Else
+      SMG$End_Display_Update (ScreenDisplay);
+
+          { End updating from this procedure }
+
+   Answer:=Make_Choice (Choices);                           { Get the option }
+   Case Answer of
+      'I': Identify_Object (Character);                                        { Bards can identify objects }
+      'U': Use_Item (Character,Leave_Maze,Direction,Party,Party_Size);         { Cast a spell from an item }
+      'T': Trade_Stuff (Character,Party,Party_Size);                           { Trade money and items within the party }
+      'E': Equip_Character (Character);                                        { Determine which equip. is used }
+      'D': Drop_Item (Character);                                              { Drop an item }
+      'R': Print_Books (Character);                                            { Print what spells are known }
+      'S': Cast_Camp_Spell (Character,Leave_Maze,Direction,Party,Party_Size);  { Case a spell }
+      'L': ;                                                                   { Leave }
+   End;
+
+       { Then begin updating for the next pass }
+
+   If Not((Answer='L') or Automatic or Leave_Maze) then SMG$Begin_Display_Update (ScreenDisplay);l
 End;  { Character fully made }
 
 (******************************************************************************)
@@ -352,7 +384,7 @@ Begin { Print Character }
         SMG$Put_Line (ScreenDisplay,'');
         If Not Automatic then Character_Fully_Made (Character,Leave_Maze,Answer,Direction,Automatic,Party,Party_Size)
         Else SMG$End_Pasteboard_Update (Pasteboard);
-     End;  { Reoeat }
+     End;  { Repeat }
   Until (Answer='L') or Automatic or Leave_Maze;
 End;  { Print Character }
 End.  { Print Character }

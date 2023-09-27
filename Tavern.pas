@@ -367,7 +367,9 @@ Begin { View Character }
    { End_Pasteboard_Update will be in Print_Character }
 
    SMG$Paste_Virtual_Display (ScreenDisplay,Pasteboard,1,1);
-   Print_Character (Party,Party_Size,Party[Character_Num],Dummy,Automatic:=False);
+   Print_Character (Party,Party_Size,Party[Character_Num],
+       Leave_Maze:=Dummy,
+       Automatic:=False);
 
    Print_Character_Line (Character_Num,Party,Party_Size);
 
