@@ -24,8 +24,6 @@ Program Stonequest (Input,Output,Char_File,Item_File,Monster_File,Message_File,T
   This game is dedicated to the memory of my late grandmother, Jenny Mayer on this day, 10/13/1988 }
 
 Const
-   Logging               = True;  { Should users and errors be logged? }
-
    Up_Arrow          = CHR(18);         Down_Arrow      = CHR(19);
    Left_Arrow        = CHR(20);         Right_Arrow     = CHR(21);
 
@@ -42,7 +40,6 @@ Type
    Spell_List          = Packed Array [1..9] of Set of Spell_Name;
    Signed_Word         = [Word]-32767..32767;
    Unsigned_Word       = [Word]0..65535;
-   LevelFile           = File of Level;
    Time_Type           = Packed Array [1..11] of char;
    Party_File_Type     = File of Name_Type;
    SpName_Type         = Cler_Spell..Wiz_Spell;
@@ -62,7 +59,7 @@ Var
    PicFile:                    Picture_File_Type;           { Pictures }
    AmountFile:                 [Global]Number_File;         { Item amounts }
    ScoresFile:                 [Global]Score_File;          { High scores }
-   LogFile:                    Packed file of Line;         { Player log }
+   LogFile:                    [Global]Packed file of Line;         { Player log }
 {*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Tables~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*}
    Roster:                     [Global]Roster_Type;         { All characters }
    Treasure:                   [Global]List_of_Treasures;   { All treasure types }
@@ -87,8 +84,8 @@ Var
 {*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~General~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*}
   Experience_Needed:      [Global]Array [Class_Type,1..50] of Real;
   Trap_Authorized_Error:  [Global]Boolean;
-  Main_Menu,In_Utilities: Boolean;
-  DataModified:           Boolean;
+  Main_Menu,In_Utilities: [Global]Boolean;
+  DataModified:           [Global]Boolean;
   ShowHours:              Boolean;
   Keypresses:             Integer;
   Print_Queue:            [Global,Volatile]Line;
@@ -118,9 +115,10 @@ Var
   Party_Spell,Person_Spell,Caster_Spell,All_Monsters_Spell,Group_Spell,Area_Spell: [Global]Set of Spell_Name;
 
   Version_Number:         [Global]Line;
+  Logging:                [Global]Boolean;  { Should users and errors be logged? }
 
 Value { We got a lot of 'em! }
-
+    Logging:=True;
     Version_Number:='V2.0';       { Current revision number }
     Trap_Authorized_Error:=True;  { Don't trap errors is user is authorized }
     DataModified:=False;          { Initially, data has not been modified }
@@ -358,7 +356,7 @@ Value { We got a lot of 'em! }
 [External]Procedure No_Controly;External;
 [External]Procedure Controly;External;
 [External]Function String(Num: Integer; Len: Integer:=0):Line;external;
-
+[External]Procedure Player_Utilities(Var Pasteboard: Unsigned);External;
 {**********************************************************************************************************************************}
 
 [Global]Function Roll_Die (Die_Type: Integer): [Volatile]Integer;
@@ -400,8 +398,6 @@ begin { Print Pasteboard }
    Printing_Message; }
 End;  { Print Pasteboard }
 
-{**********************************************************************************************************************************}
-Procedure Player_Utilities (Var Pasteboard: Unsigned);Forward;
 {**********************************************************************************************************************************}
 
 Procedure Special_Keys (Key_Code: Unsigned_Word);
@@ -698,7 +694,7 @@ End;  { Delete Virtual Devices }
 
 {**********************************************************************************************************************************}
 
-Procedure Extend_LogFile (Out_Message: Line);
+[Global]Procedure Extend_LogFile (Out_Message: Line);
 
 { This procedure writes the supplied line to the logfile }
 
@@ -1956,426 +1952,8 @@ Begin { Draw Menu }
    SMG$End_Display_Update (ScreenDisplay);
 End;  { Draw Menu }
 
-{**********************************************************************************************************************************}
-
-Procedure Recover_Heading;
-
-Begin { Recover Heading }
-   SMG$Begin_Display_Update (screendisplay);
-   SMG$Erase_Display (screendisplay);
-   SMG$Put_Line (screendisplay,
-       'Recover Characters');
-   SMG$Put_Line (screendisplay,
-       '------------------');
-   SMG$Put_Line (screendisplay,
-       'This process will attempt to recover characters '
-       +'lost through system crashes of');
-   SMG$Put_Line (screendisplay,
-       'accidental ^C or ^Y.');
-   SMG$Put_Line (screendisplay,
-       '');
-   SMG$Put_Line (screendisplay,
-       'NOTE: This will age recovered characters 5 years');
-   SMG$Put_Line (screendisplay,
-       'Continue?  (Y/N)');
-   SMG$End_Display_Update (screendisplay);
-End;  { Recover Heading }
-
-{**********************************************************************************************************************************}
-
-Procedure Recover_Character (Var ScreenDisplay: Unsigned);
-
-{ This procedure will recover accidentally lost characters, aging them five
-  years each, to prevent repeat cheaters! }
-
-Const
-   FiveYears = 365*5; { The # of days in 5 years }
-
-Var
-   Slot: Integer;
-   Any_Recovered: Boolean;
-
-Begin  { Recover Character }
-   Any_Recovered:=False; { So far, nobody recovered }
-   Recover_Heading;
-   If YES_OR_NO='Y' then
-      Begin
-         SMG$Begin_Display_Update (screendisplay);
-         SMG$Erase_Display (screendisplay);
-         SMG$Put_Line (screendisplay,'Recovering:');
-         SMG$Put_Line (screendisplay,'-----------');
-         For Slot:=1 to 20 do  { For each character }
-            If Roster[Slot].lock then  { If this character was lost... }
-               Begin
-                  Any_Recovered:=True;  { We have recovered one }
-                  Roster[Slot].Lock:=False;  { Recover him (or her) }
-                  Roster[Slot].Age:=Roster[slot].Age+FiveYears;  { And age him }
-                  SMG$Put_Line (screendisplay,
-                                Roster[Slot].Name
-                                +': saved!');
-               End;
-         If Not Any_Recovered then
-             SMG$Put_Line (screendisplay,'Nobody.');
-         SMG$Put_Chars (screendisplay,'Press a key',23,35);
-         SMG$End_Display_Update (screendisplay);
-         Wait_Key;
-      End;
-End;   { Recover Character }
-
-{**********************************************************************************************************************************}
-
-Procedure Change_Queue (Var ScreenDisplay: Unsigned);
-
-{ This procedure allows the user to change the current print queue }
-
-Var
-   Temp: Line;
-
-Begin { Change Queue }
-   SMG$Put_Line (screendisplay,
-       '');
-   SMG$Put_Line (screendisplay,
-       'The current print queue is: '+Print_Queue);
-   SMG$Put_Line (screendisplay,
-       'Enter the new print queue. ("-" sets default, [RETURN] exists)');
-   Cursor;  SMG$Read_String (Keyboard,Temp,Display_ID:=screendisplay,
-                             Prompt_String:='--->');  No_Cursor;
-   If Temp<>'' then
-      If Temp='' then Print_Queue:='SYS$PRINT'
-      Else Print_Queue:=Temp;
-End;  { Change Queue }
-
-{**********************************************************************************************************************************}
-
-Procedure Change_Print_Queue (Var ScreenDisplay: Unsigned);
-
-{ This procedure allows the user to change the print queue }
-
-Begin { Change Print Queue }
-   SMG$Begin_Display_Update (screendisplay);
-   SMG$Erase_Display (screendisplay);
-   SMG$Put_Line (screendisplay,
-       'Change Print Queue');
-   SMG$Put_Line (screendisplay,
-       '------------------');
-   SMG$Put_Line (screendisplay,
-       'This process will change the print queue to which '
-       +'the screen is sent when a');
-   SMG$Put_Line (screendisplay,
-       '^P is typed.  The default is SYS$PRINT.');
-   SMG$Put_Line (screendisplay,
-       '');
-   SMG$Put_Line (screendisplay,
-       'NOTE: Setting this to a non-existant queue will have '
-       +'unpredictable results. ');
-   SMG$Put_Line (screendisplay,
-       'Continue? (Y/N)');
-   SMG$End_Display_Update (screendisplay);
-   If Yes_or_No='Y' then Change_Queue (ScreenDisplay);
-End;  { Change Print Queue }
-
-{**********************************************************************************************************************************}
-
-Procedure Leave_Feedback (Var ScreenDisplay: Unsigned);
-
-{ This procedure allows the user to leave feedback to the author, i.e. me,
-  or any other person who is operating Stonequest, i.e. you }
-
-Var
-   Response: Varying [1024] of Char;
-
-Begin { Leave Feedback }
-   SMG$Begin_Display_Update (screendisplay);
-   SMG$Erase_Display (screendisplay);
-   SMG$Put_Line (screendisplay,
-       'Leave Feedback to Author');
-   SMG$Put_Line (screendisplay,
-       '------------------------');
-   SMG$Put_Line (screendisplay,
-       'This process will allow you to leave a message to the '
-       +'author, if he is on the system. ');
-   SMG$Put_Line (screendisplay,
-       'Enter up to 60 characters of text at the prompt.  '
-       +'[RETURN] alone aborts.');
-   SMG$Put_Chars (ScreenDisplay,
-       '--->');
-   SMG$Put_Chars (ScreenDisplay,
-       '____________________________________________________________',,,SMG$M_UNDERLINE);
-   SMG$Set_Cursor_ABS (ScreenDisplay,,5);
-   SMG$End_Display_Update (screendisplay);
-   Cursor;
-   SMG$Read_String (Keyboard,Response,Display_ID:=ScreenDisplay,Rendition_Set:=SMG$M_Underline);
-   No_Cursor;
-   If Response.Length>60 then Response:=Substr(Response,1,60);
-   If Response.Length>0 then
-      Begin
-         SMG$Put_Line (ScreenDisplay,Response);
-         SMG$Put_Chars (ScreenDisplay,'Enter above line as feedback?');
-         Cursor;
-         If Yes_or_No='Y' then
-            Begin
-               SMG$Put_Line (ScreenDisplay,'');
-               Extend_Logfile (User_Name+' '+Response);
-               SMG$Put_Line (ScreenDisplay,'Feedback entered.');
-               Delay(2);
-            End
-         Else
-            Begin
-               SMG$Put_Line (ScreenDisplay,'');
-               SMG$Put_Line (ScreenDisplay,'Aborted.');
-               Delay(2);
-            End;
-         No_Cursor;
-      End;
-End;  { Leave Feedback }
-
-{**********************************************************************************************************************************}
-
-Procedure Player_Utilities;
-
-{ This procedure contains all sorts of goodies for the player of Stonequest! }
-
-Var
-   UtilitiesDisplay: Unsigned;
-   Response: Char;
-   Toggle: Array [Boolean] of Line;
-
-Begin { Player Utilities }
-   In_Utilities:=True;
-   SMG$Create_Virtual_Display (24,80,UtilitiesDisplay,0);
-   SMG$Erase_Display (UtilitiesDisplay);
-   SMG$Paste_Virtual_Display (UtilitiesDisplay,Pasteboard,1,1);
-
-   Toggle[TRUE]:='on';   Toggle[False]:='off';
-   Repeat
-      Begin
-         SMG$Begin_Display_Update (Utilitiesdisplay);
-         SMG$Erase_Display (Utilitiesdisplay);
-         SMG$Put_Chars (UtilitiesDisplay,
-             'Player Utilities Menu',   ,6,27,,1);
-         SMG$Put_Chars (UtilitiesDisplay,
-             '------ --------- ----',   ,7,27,,1);
-         SMG$Put_Chars (UtilitiesDisplay,
-             ' C)hange print queue'     ,8,27);
-         SMG$Put_Chars (UtilitiesDisplay,
-             ' B)ells '+Toggle[Bells_On],9,27);
-         SMG$Put_Chars (UtilitiesDisplay,
-             ' T)ermimal broadcast '+Toggle[Broadcast_On],10,27);
-         SMG$Put_Chars (UtilitiesDisplay
-             ,' L)eave feedback'         ,11,27);
-         If (Not Game_Saved) and Main_Menu then
-             SMG$Put_Chars (Utilitiesdisplay,
-                 ' R)ecover lost characters',12,27);
-         SMG$Put_Chars (UtilitiesDisplay,
-             ' E)xit'                       ,13,27);
-         SMG$Put_Chars (UtilitiesDisplay,
-             ' Which?'                      ,15,27);
-         SMG$End_Display_Update (Utilitiesdisplay);
-         Response:=Make_Choice (['R','E','C','T','B','L']);
-         Case Response of
-            'L': Leave_Feedback (UtilitiesDisplay);
-            'B': Bells_On:=Not Bells_On;
-            'T': Broadcast_On:=Not Broadcast_On;
-            'C': Change_Print_Queue (UtilitiesDisplay);
-            'R': If (Not Game_Saved) and Main_Menu then Recover_Character (UtilitiesDisplay);
-            Otherwise ;
-         End;
-      End;
-   Until (Response='E');
-   SMG$Unpaste_Virtual_Display (UtilitiesDisplay,Pasteboard);
-   SMG$Delete_Virtual_Display (UtilitiesDisplay);
-   In_Utilities:=False;
-End;  { Player Utilities }
-
-{**********************************************************************************************************************************}
-
-Procedure Clear_Log;
-
-{ This procedure clears the log file }
-
-Begin { Clear Log }
-
-   { Open the file }
-
-   Repeat
-      Open (LogFile,'Stone_Data:Stone_Log',History:=Unknown,Sharing:=READONLY,Error:=CONTINUE);
-   Until (Status(LogFile)=PAS$K_SUCCESS);
-
-   { Rewrite it }
-
-   Rewrite (LogFile,Error:=Continue);
-   Write (LogFile,'',Error:=Continue);
-   Close (LogFile,Error:=Continue);
-
-   { Notify user that log has been cleared }
-
-   SMG$Put_Chars (ScreenDisplay,'* * * User-log Cleared * * *',23,22);
-   Delay(1);
-End;  { Clear Log }
-
-{**********************************************************************************************************************************}
-
-Procedure View_log;
-
-{ This procedure allows the user to view the log }
-
-Const
-   Length=20;                     { Maximum number of lines allowed }
-
-Var
-   FirstTime: Boolean;
-   LineCount: Integer;
-   L: Line;
-   Rendition: Unsigned;  { Rendition set for line }
-
-Begin { View Log }
-
-   { Open the file }
-
-   Repeat
-      Open (LogFile,'Stone_Data:Stone_Log',History:=UNKNOWN,Sharing:=Readwrite,Error:=CONTINUE)
-   Until (Status(LogFile)=PAS$K_SUCCESS);
-   Reset (LogFile,Error:=Continue);
-   FirstTime:=True;
-
-   LineCount:=0;
-   SMG$Erase_Display (ScenarioDisplay);
-   SMG$Begin_Display_Update (ScenarioDisplay);
-   SMG$Erase_Display (ScenarioDisplay);
-   SMG$Home_Cursor (ScenarioDisplay);
-
-   { While there are still names on the list }
-
-   While Not EOF (LogFile) do
-      Begin
-
-         { Read a name and print it }
-
-         Read (LogFile,L,Error:=Continue);
-         SMG$Put_Line (ScenarioDisplay,L);
-         LineCount:=LineCount+1;
-         If LineCount=Length then
-            Begin
-                LineCount:=0;
-                Rendition:=1;  L:='Press a key for more';
-                SMG$Set_Cursor_ABS (ScenarioDisplay,22,39-(L.Length div 2));
-                SMG$Put_Line (ScenarioDisplay,L,0,Rendition);
-                SMG$End_Display_Update (ScenarioDisplay);
-                If FirstTime then
-                    SMG$Paste_Virtual_Display (ScenarioDisplay,Pasteboard,2,2);
-                FirstTime:=False;
-                Wait_Key;
-                SMG$Begin_Display_Update (ScenarioDisplay);
-                SMG$Erase_Display (ScenarioDisplay);
-            End;
-      End;
-   L:='Press a key to continue';
-   SMG$Put_Chars (ScenarioDisplay,L,22,39-(L.Length div 2),1,1);
-   If FirstTime then
-      SMG$Paste_Virtual_Display (ScenarioDisplay,Pasteboard,2, 2);
-   Wait_Key;
-   SMG$Unpaste_Virtual_Display (ScenarioDisplay,Pasteboard);
-   Close (LogFile,Error:=Continue);
-End;  { View Log }
-
-{**********************************************************************************************************************************}
-
-Procedure Handle_Key (Var Exit: Boolean;              Var Pics: Pic_List;                   Var MazeFile: LevelFile;
-                      Var Roster: Roster_Type;        Var Treasure: List_of_Treasures;      Var Item_list: List_of_Items);
-
-{ This procedure gets and handles a key and runs the selected utility }
-
-Var
-   Key_Stroke: Char;
-   Choices: Char_Set;
-
-[External]Procedure Pic_Edit (Var Pics: Pic_List);external;
-[External]Procedure Edit_Maze (Var MazeFile: LevelFile);external;
-[External]Procedure Edit_Players_Characters;external;
-[External]Procedure Edit_Treasures(Var Treasure: List_of_Treasures);external;
-[External]Procedure Edit_Monster;external;
-[External]Procedure Edit_Item;external;
-[External]Procedure Edit_Character (Var Roster: Roster_Type);external;
-[External]Procedure Edit_messages;external;
-[External]Procedure Clear_High_Scores;external;
-
-Begin { Handle Key }
-    Choices:=['U','H','A','V','T','S','M','I','E','C','F','P','L'];
-    If User_Name<>'JGETZIN' then Choices:=['F','E'];
-    Key_Stroke:=Make_Choice (Choices);
-    Case Key_Stroke of
-         'H': Begin
-               Clear_High_Scores;
-               SMG$Put_Chars (ScreenDisplay,
-                   '* * * Scores Cleared * * *',23,22);
-               Delay (1);
-              End;
-         'L': If Logging then Clear_Log;
-         'V': If Logging then View_Log;
-         'U': Player_Utilities (Pasteboard);
-         'P': Pic_Edit (Pics);
-         'F': Begin
-               SMG$Put_Chars (ScreenDisplay,
-                   '* * * Loading Maze Editor * * *',23,22);
-               Edit_Maze  (MazeFile);
-              End;
-         'C': Edit_Character (Roster);
-         'T': Edit_Treasures (Treasure);
-         'S': Begin
-                 SMG$Put_Chars (ScreenDisplay,
-                     '* * * Loading Message Editor * * *',23,22);
-                 Edit_Messages;
-              End;
-         'M': Begin
-                 SMG$Put_Chars (ScreenDisplay,
-                     '* * * Loading Monster Editor * * *',23,22);
-                 Edit_Monster;
-              End;
-         'I': Edit_Item;
-         'A': Edit_Players_Characters;
-         'E': Exit:=True;
-         Otherwise ;
-    End;
-End;  { Handle Key }
-
-{**********************************************************************************************************************************}
-
-Procedure Utilities (Var Pics: Pic_List;  Var MazeFile: LevelFile;  Var Roster: Roster_Type;
-                     Var Treasure: List_of_Treasures;  Var Item_List: List_of_Items);
-
-{ This procedure runs the main utility menu }
-
-Var
-   Done: Boolean;
-
-Begin { Utilities }
-   DataModified:=True;
-   Repeat
-        Begin
-           Done:=False;
-           SMG$Begin_Display_Update (ScreenDisplay);
-           SMG$Erase_Display (ScreenDisplay);
-           SMG$Put_Chars (ScreenDisplay,'Utilities Main Menu',5,28,,1);
-           SMG$Put_Chars (ScreenDisplay,'-------- ---- ----',6,28,,1);
-           SMG$Put_Chars (ScreenDisplay,' A)lter player''s characters',7,28);
-           SMG$Put_Chars (ScreenDisplay,' C)haracter edit',8,28);
-           SMG$Put_Chars (ScreenDisplay,' F)loorplan edit',9,28);
-           SMG$Put_Chars (ScreenDisplay,' H)igh Score Clear',10,28);
-           SMG$Put_Chars (ScreenDisplay,' I)tem edit',11,28);
-           SMG$Put_Chars (ScreenDisplay,' M)onster edit',12,28);
-           SMG$Put_Chars (ScreenDisplay,' P)icture edit',13,28);
-           SMG$Put_Chars (ScreenDisplay,' S)cenario message edit',14,28);
-           SMG$Put_Chars (ScreenDisplay,' T)reasure edit',15,28);
-           SMG$Put_Chars (ScreenDisplay,' V)iew Userlog',16,28);
-           SMG$Put_Chars (ScreenDisplay,' L)og clear',17,28);
-           SMG$Put_Chars (ScreenDisplay,' E)xit',19,28);
-           SMG$Put_Chars (ScreenDisplay,' U)tilities (player)',18,28);
-           SMG$Put_Chars (ScreenDisplay,' Which?',20,28);
-           SMG$End_Display_Update (ScreenDisplay);
-           Handle_Key (Done,Pics,MazeFile,Roster,Treasure,Item_List);
-        End;
-   Until Done
-End;  { Utilities }
+[External]Procedure Utilities (Var Pics: Pic_List;  Var MazeFile: LevelFile;  Var Roster: Roster_Type;
+                     Var Treasure: List_of_Treasures;  Var Item_List: List_of_Items);External;
 
 {**********************************************************************************************************************************}
 

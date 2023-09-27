@@ -78,6 +78,10 @@ $      write sys$output "Compiling View.pas"
 $      pas View
 $      write sys$output "Compiling Windows.pas"
 $      pas Windows
+$      write sys$output "Compiling AdminUtils.pas"
+$      pas AdminUtils
+$      write sys$output "Compiling PlayerUtils.pas"
+$      pas PlayerUtils
 $      write sys$output "Assembling Handler.mar"
 $      mac Handler
 
@@ -92,7 +96,7 @@ $      Link Camp,Casino,Character,CharacterAttacks,Church,Compute,Craps,-
        GiveTreasure,Help,Hours,Inn,Io,Items,-
        Kyrn,LibRtl,Maze,Messages,Monster,MonsterAttack,PicEdit,PickPocket,-
        PlaceStack,PrintChar,Scores,Shell_Out,Slots,SmgRtl,Stonequest,-
-       Store,StrRtl,Tavern,Training,Treasure,-
+       AdminUtils,PlayerUtils,Store,StrRtl,Tavern,Training,Treasure,-
        Types,View,Windows,Handler /EXE=StoneQuest.exe
 
 $      write sys$output "Purging old EXE files..."

@@ -2,9 +2,6 @@
 
 { TODO: Enter this code }
 
-Type
-   LevelFile = File of Level;
-
 { TODO: Enter this code }
 
 [Global]Procedure Edit_Maze (Var MazeFile: LevelFile);

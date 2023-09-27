@@ -126,9 +126,13 @@ Type
 
   { The spells in Stonequest }
 
-  Spell_Name     =(NoSp,CrLt,CsLt,Lght,Levi,Prot,Dspl,CrPs,AnDe,CrSe,CsSe,CoLi,TiSt,CrVs,CsVs,Sile,Wrth,CrCr,CsCr,Raze,Slay,GrWr
-                   Heal,ReDo,Harm,DiPr,HoWr,Ress,Dest,WoRe,PaHe,DiWr,RaDe,DiDe,Deus,MaMs,Shld,Loct,Fear,LtId,ChTr,FiBl,
-                   LiBt,BiSh,GrSh,DuBl,UnCu,Comp,CoCd,Tele,Bani,CrPa,DeSp,BgId,HgSh,Besk,Slep,MgFi,Rein,Kill,Holo,ReFe,DetS);
+  Spell_Name     =(NoSp,CrLt,CsLt,Lght,Levi,Prot,Dspl,CrPs,AnDe,
+                   CrSe,CsSe,CoLi,TiSt,CrVs,CsVs,Sile,Wrth,CrCr,
+                   CsCr,Raze,Slay,GrWr,Heal,ReDo,Harm,DiPr,HoWr,
+                   Ress,Dest,WoRe,PaHe,DiWr,RaDe,DiDe,Deus,MaMs,
+                   Shld,Loct,Fear,LtId,ChTr,FiBl,LiBt,BiSh,GrSh,
+                   DuBl,UnCu,Comp,CoCd,Tele,Bani,CrPa,DeSp,BgId,
+                   HgSh,Besk,Slep,MgFi,Rein,Kill,Holo,ReFe,DetS);
 
   { Classes a character can be }
 
@@ -464,6 +468,7 @@ Type
   Equip_File        = File of Item_Record;
   Monst_File        = File of Monster_Record;
   Treas_File        = File of Treasure_Table;
+  LevelFile         = File of Level;
 
   Spell_Duration_List  = Array [Spell_Name] of Unsigned;
   Party_Size_Type = 0..6;
@@ -541,72 +546,140 @@ Var
    Pas_Errors: [Global]Array [-1..128] of Line;
 
 Value
-    Pas_Errors[PAS$K_EOF        ]:='End of file encountered';
-    Pas_Errors[PAS$K_SUCCESS    ]:='';
-    Pas_Errors[PAS$K_SUCCESS    ]:='';
-    Pas_Errors[PAS$K_FILALROPE  ]:='File is already opened';
-    Pas_Errors[PAS$K_ERRDUROPE  ]:='Error occured while opening';
-    Pas_Errors[PAS$K_FILNOTFOU  ]:='File not found';
-    Pas_Errors[PAS$K_INVFILSYN  ]:='Invalid file syntax';
-    Pas_Errors[PAS$K_ACCMETINC  ]:='';
-    Pas_Errors[PAS$K_RECLENINC  ]:='';
-    Pas_Errors[PAS$K_RECTYPINC  ]:='';
-    Pas_Errors[PAS$K_ORGSPEINC  ]:='';
-    Pas_Errors[PAS$K_INVKEYDEF  ]:='';
-    Pas_Errors[PAS$K_KEYDEFINC  ]:='';
-    Pas_Errors[PAS$K_KEYNOTDEF  ]:='';
-    Pas_Errors[PAS$K_INVRECLEN  ]:='Invalid record length';
-    Pas_Errors[PAS$K_TEXREGSEG  ]:='';
-    Pas_Errors[PAS$K_FILNAMREG  ]:='';
-    Pas_Errors[PAS$K_FILALRCLO  ]:='File already closed';
-    Pas_Errors[PAS$K_ERRDURCLO  ]:='Error during close';
-    Pas_Errors[PAS$K_AMBVALENU  ]:='';
-    Pas_Errors[PAS$K_INVSYNENU  ]:='';
-    Pas_Errors[PAS$K_INVSYNINT  ]:='';
-    Pas_Errors[PAS$K_INVSYNREA  ]:='';
-    Pas_Errors[PAS$K_INVSYNUNS  ]:='';
-    Pas_Errors[PAS$K_NOTVALTYP  ]:='';
-    Pas_Errors[PAS$K_ERRDURPRO  ]:='';
-    Pas_Errors[PAS$K_INVSYNBIN  ]:='';
-    Pas_Errors[PAS$K_INVSYNHEX  ]:='';
-    Pas_Errors[PAS$K_INVSYNOCT  ]:='';
-    Pas_Errors[PAS$K_ERRDURWRI  ]:='';
-    Pas_Errors[PAS$K_INVFIESPE  ]:='';
-    Pas_Errors[PAS$K_LINTOOLON  ]:='';
-    Pas_Errors[PAS$K_NEGWIDDIG  ]:='';
-    Pas_Errors[PAS$K_WRIINVENU  ]:='';
-    Pas_Errors[PAS$K_KEYVALINC  ]:='';
-    Pas_Errors[PAS$K_KEYDUPNOT  ]:='';
-    Pas_Errors[PAS$K_KEYCHANOT  ]:='';
-    Pas_Errors[PAS$K_CURCOMUND  ]:='';
-    Pas_Errors[PAS$K_FAIGETLOC  ]:='';
-    Pas_Errors[PAS$K_DELNOTALL  ]:='';
-    Pas_Errors[PAS$K_ERRDURDEL  ]:='Error during delete';
-    Pas_Errors[PAS$K_ERRDURFIN  ]:='Error during find';
-    Pas_Errors[PAS$K_ERRDURGET  ]:='Error during get';
-    Pas_Errors[PAS$K_ERRDURPUT  ]:='Error during put';
-    Pas_Errors[PAS$K_ERRDURRES  ]:='Error during reset';
-    Pas_Errors[PAS$K_ERRDURREW  ]:='Error during rewrite';
-    Pas_Errors[PAS$K_ERRDURTRU  ]:='';
-    Pas_Errors[PAS$K_ERRDURUNL  ]:='Error during unlock';
-    Pas_Errors[PAS$K_ERRDURUPD  ]:='Error during update';
-    Pas_Errors[PAS$K_FILNOTDIR  ]:='File not opened for direct access';
-    Pas_Errors[PAS$K_FILNOTGEN  ]:='File is not in generation mode';
-    Pas_Errors[PAS$K_FILNOTINS  ]:='';
-    Pas_Errors[PAS$K_FILNOTKEY  ]:='';
-    Pas_Errors[PAS$K_FILNOTOPE  ]:='File not open';
-    Pas_Errors[PAS$K_FILNOTSEQ  ]:='File not sequential';
-    Pas_Errors[PAS$K_FILNOTTEX  ]:='';
-    Pas_Errors[PAS$K_GENNOTALL  ]:='';
-    Pas_Errors[PAS$K_GETAFTEOF  ]:='';
-    Pas_Errors[PAS$K_INSNOTALL  ]:='';
-    Pas_Errors[PAS$K_INSVIRMEM  ]:='';
-    Pas_Errors[PAS$K_INVARGPAS  ]:='';
-    Pas_Errors[PAS$K_LINVALEXC  ]:='';
-    Pas_Errors[PAS$K_REWNOTALL  ]:='';
-    Pas_Errors[PAS$K_RESNOTALL  ]:='';
-    Pas_Errors[PAS$K_TRUNOTALL  ]:='';
-    Pas_Errors[PAS$K_UPDNOTALL  ]:='';
-    Pas_Errors[PAS$K_ERRDUREXT  ]:='Error during extend';
-    Pas_Errors[PAS$K_EXTNOTALL  ]:='';
+    Pas_Errors[
+  PAS$K_EOF        ]:='End of file encountered';
+    Pas_Errors[
+  PAS$K_SUCCESS    ]:='';
+    Pas_Errors[
+  PAS$K_SUCCESS    ]:='';
+    Pas_Errors[
+  PAS$K_FILALROPE  ]:='File is already opened';
+    Pas_Errors[
+  PAS$K_ERRDUROPE  ]:='Error occured while opening';
+    Pas_Errors[
+  PAS$K_FILNOTFOU  ]:='File not found';
+    Pas_Errors[
+  PAS$K_INVFILSYN  ]:='Invalid file syntax';
+    Pas_Errors[
+  PAS$K_ACCMETINC  ]:='';
+    Pas_Errors[
+  PAS$K_RECLENINC  ]:='';
+    Pas_Errors[
+  PAS$K_RECTYPINC  ]:='';
+    Pas_Errors[
+  PAS$K_ORGSPEINC  ]:='';
+    Pas_Errors[
+  PAS$K_INVKEYDEF  ]:='';
+    Pas_Errors[
+  PAS$K_KEYDEFINC  ]:='';
+    Pas_Errors[
+  PAS$K_KEYNOTDEF  ]:='';
+    Pas_Errors[
+  PAS$K_INVRECLEN  ]:='Invalid record length';
+    Pas_Errors[
+  PAS$K_TEXREGSEG  ]:='';
+    Pas_Errors[
+  PAS$K_FILNAMREG  ]:='';
+    Pas_Errors[
+  PAS$K_FILALRCLO  ]:='File already closed';
+    Pas_Errors[
+  PAS$K_ERRDURCLO  ]:='Error during close';
+    Pas_Errors[
+  PAS$K_AMBVALENU  ]:='';
+    Pas_Errors[
+  PAS$K_INVSYNENU  ]:='';
+    Pas_Errors[
+  PAS$K_INVSYNINT  ]:='';
+    Pas_Errors[
+  PAS$K_INVSYNREA  ]:='';
+    Pas_Errors[
+  PAS$K_INVSYNUNS  ]:='';
+    Pas_Errors[
+  PAS$K_NOTVALTYP  ]:='';
+    Pas_Errors[
+  PAS$K_ERRDURPRO  ]:='';
+    Pas_Errors[
+  PAS$K_INVSYNBIN  ]:='';
+    Pas_Errors[
+  PAS$K_INVSYNHEX  ]:='';
+    Pas_Errors[
+  PAS$K_INVSYNOCT  ]:='';
+    Pas_Errors[
+  PAS$K_ERRDURWRI  ]:='';
+    Pas_Errors[
+  PAS$K_INVFIESPE  ]:='';
+    Pas_Errors[
+  PAS$K_LINTOOLON  ]:='';
+    Pas_Errors[
+  PAS$K_NEGWIDDIG  ]:='';
+    Pas_Errors[
+  PAS$K_WRIINVENU  ]:='';
+    Pas_Errors[
+  PAS$K_KEYVALINC  ]:='';
+    Pas_Errors[
+  PAS$K_KEYDUPNOT  ]:='';
+    Pas_Errors[
+  PAS$K_KEYCHANOT  ]:='';
+    Pas_Errors[
+  PAS$K_CURCOMUND  ]:='';
+    Pas_Errors[
+  PAS$K_FAIGETLOC  ]:='';
+    Pas_Errors[
+  PAS$K_DELNOTALL  ]:='';
+    Pas_Errors[
+  PAS$K_ERRDURDEL  ]:='Error during delete';
+    Pas_Errors[
+  PAS$K_ERRDURFIN  ]:='Error during find';
+    Pas_Errors[
+  PAS$K_ERRDURGET  ]:='Error during get';
+    Pas_Errors[
+  PAS$K_ERRDURPUT  ]:='Error during put';
+    Pas_Errors[
+  PAS$K_ERRDURRES  ]:='Error during reset';
+    Pas_Errors[
+  PAS$K_ERRDURREW  ]:='Error during rewrite';
+    Pas_Errors[
+  PAS$K_ERRDURTRU  ]:='';
+    Pas_Errors[
+  PAS$K_ERRDURUNL  ]:='Error during unlock';
+    Pas_Errors[
+  PAS$K_ERRDURUPD  ]:='Error during update';
+    Pas_Errors[
+  PAS$K_FILNOTDIR  ]:='File not opened for direct access';
+    Pas_Errors[
+  PAS$K_FILNOTGEN  ]:='File is not in generation mode';
+    Pas_Errors[
+  PAS$K_FILNOTINS  ]:='';
+    Pas_Errors[
+  PAS$K_FILNOTKEY  ]:='';
+    Pas_Errors[
+  PAS$K_FILNOTOPE  ]:='File not open';
+    Pas_Errors[
+  PAS$K_FILNOTSEQ  ]:='File not sequential';
+    Pas_Errors[
+  PAS$K_FILNOTTEX  ]:='';
+    Pas_Errors[
+  PAS$K_GENNOTALL  ]:='';
+    Pas_Errors[
+  PAS$K_GETAFTEOF  ]:='';
+    Pas_Errors[
+  PAS$K_INSNOTALL  ]:='';
+    Pas_Errors[
+  PAS$K_INSVIRMEM  ]:='';
+    Pas_Errors[
+  PAS$K_INVARGPAS  ]:='';
+    Pas_Errors[
+  PAS$K_LINVALEXC  ]:='';
+    Pas_Errors[
+  PAS$K_REWNOTALL  ]:='';
+    Pas_Errors[
+  PAS$K_RESNOTALL  ]:='';
+    Pas_Errors[
+  PAS$K_TRUNOTALL  ]:='';
+    Pas_Errors[
+  PAS$K_UPDNOTALL  ]:='';
+    Pas_Errors[
+  PAS$K_ERRDUREXT  ]:='Error during extend';
+    Pas_Errors[
+  PAS$K_EXTNOTALL  ]:='';
 End.
