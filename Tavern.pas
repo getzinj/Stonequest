@@ -397,17 +397,102 @@ End;  { Print Options }
 
 Procedure Load_Party (Var Party: Party_Type; Var Party_Size: Integer);
 
-Begin { Load Party }
-  { TODO: Implement this. }
-End;  { Load Party }
+{ This procedure loads a party from the file STONE_PARTY.DAT }
 
+Var
+   TempName: Line;
+   Loaded: Boolean;
+   Position: Integer;
+
+Begin { Load Party }
+   Party_Size:=0;  Loaded:=False;
+
+   { Open file }
+
+   Open (PartyFile,
+       'SYS$LOGIN:Stone_Party.Dat',History:=OLD,error:=Continue);
+
+   { If it exists... }
+
+   If Status(PartyFile)=PAS$K_SUCCESS then
+      Begin
+
+         { Open it }
+
+         Reset (PartyFile,Error:=Continue);
+
+         { And while there are names... }
+
+         While Not EOF(PartyFile) do
+            Begin
+
+               { Read a name and add him/her to the party }
+
+               Read (PartyFile,TempName);
+               If Character_Exists (TempName,Position) then           { if it exists }
+                  If Party_Compatable (Roster[Position],Party,Party_Size) then       { and compatable }
+                     If Not Roster[Position].Lock then  { If the character's not out }
+                        Begin { All conditions met }
+                           Add_Character (Roster[Position],Party,Party_Size);
+                           Loaded:=True;    { Yes, we have loaded at least one }
+                        End;    { All conditions met }
+            End;
+         Close (PartyFile); { Close the open file }
+      End;
+   If Loaded then  { if we loaded at least one character... }
+      SMG$Put_Chars (BottomDisplay,
+          '* * * Loaded * * *',12,31)
+   Else
+      SMG$Put_Chars (BottomDisplay,
+         '* * * No party loaded * * *',
+         12, 26);
+   Delay (1);
+End;  { Load Party }
 
 (******************************************************************************)
 
 Procedure Save_Party (Party: Party_Type; Party_Size: Integer);
 
+{ This procedure saves the current party to the disk file STONE_PARTY.DAT }
+
+Var
+   Character: Integer;
+   Error: Boolean;
+
 Begin { Save Party }
-  { TODO: Implement this. }
+   Error:=False;
+
+   { Open the save file }
+
+   No_ControlY;
+   Open (PartyFile,'SYS$LOGIN:Stone_Party.dat',History:=UNKNOWN,Error:=Continue);
+   Error:=(Status(PartyFile)<>PAS$K_SUCCESS);
+
+   Rewrite (PartyFile,Error:=Continue);
+   Error:=Error or ((Status(PartyFile)<>PAS$K_SUCCESS) and (Status(PartyFile)<>PAS$K_EOF));
+
+   { Write the character's name }
+
+   For Character:=1 to Party_Size do
+      Begin
+         Write (PartyFile,Party[Character].Name,Error:=Continue);
+         Error:=Error or ((Status(PartyFile)<>PAS$K_SUCCESS) and (Status(PartyFile)<>PAS$K_EOF));
+      End;
+
+   { Close the file and indicate success }
+
+   Close (PartyFile,Error:=Continue);
+   Error:=Error or ((Status(PartyFile)<>PAS$K_SUCCESS) and (Status(PartyFile)<>PAS$K_EOF));
+   ControlY;
+
+   If Not Error then
+      SMG$Put_Chars (BottomDisplay,
+          '* * * The party roster (but '
+          +'not the characters themselves) '
+          +'has been Saved * * *',
+          12,1)
+   Else
+      Error_Window ('Party');
 End;  { Save Party }
 
 (******************************************************************************)
@@ -457,14 +542,60 @@ Begin { Print Choices }
    SMG$End_Display_Update (BottomDisplay);
 End;  { Print Choices }
 
-  { TODO: Implement this. }
-
 (******************************************************************************)
 
 Procedure Print_Help;
 
+Var
+   HelpMeDisplay: Unsigned;
+
 Begin
-  { TODO: Implement this. }
+   SMG$Create_Virtual_Display (22,78,HelpMeDisplay,1);
+   SMG$Erase_Display (HelpMeDisplay);
+   SMG$Put_Line (HelpMeDisplay,
+       'Options:');
+   SMG$Put_Line (HelpMeDisplay,
+       ' 1-6    = This option allows '
+       +'you to access your character '
+       +'sheet, and');
+   SMG$Put_Line (HelpMeDisplay,
+       '          perform such options'
+       +' as putting on or taking off '
+       +'equipment,');
+   SMG$Put_Line (HelpMeDisplay,
+       '          trading items, and '
+       +'reading spellbooks.');
+   SMG$Put_Line (HelpMeDisplay,
+       ' Add    = Allows you to add a'
+       +' previously created character'
+       +' to the current');
+   SMG$Put_Line (HelpMeDisplay,
+       '          party.');
+   SMG$Put_Line (HelpMeDisplay,
+       ' Remove = Allows you to remove '
+       +'a previously A)dded character');
+   SMG$Put_Line (HelpMeDisplay,
+       ' Save   = Allows you to save a '
+       +'default party. Subsequent L)oads'
+       +' will then');
+   SMG$Put_Line (HelpMeDisplay,
+       '          load the current party.  '
+       +'Note that this doesn''t back up '
+       +'the char-');
+   SMG$Put_Line (HelpMeDisplay,
+       '          acter file, it only '
+       +'keeps track of who''s in the '
+       +'default party.');
+   SMG$Put_Line (HelpMeDisplay,
+       ' Leave  = Allows you to leave '
+       +'the tavern and go to the main '
+       +'streets of Kyrn',10);
+   SMG$Put_Line (HelpMeDisplay,
+      'Press any key to continue...');
+   SMG$Paste_Virtual_Display (HelpMeDisplay,Pasteboard,2,2);
+   Wait_Key;
+   SMG$Unpaste_Virtual_Display (HelpMeDisplay,Pasteboard);
+   SMG$Delete_Virtual_Display (HelpMeDisplay);
 End;
 
 (******************************************************************************)

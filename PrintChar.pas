@@ -75,7 +75,6 @@ End;  { Scenarios Won }
 
 (******************************************************************************)
 
-
 Function Print_Wins (Character: Character_Type): Line;
 
 { Indicates how many scenarios this character has beaten }
