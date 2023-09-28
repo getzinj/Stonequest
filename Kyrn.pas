@@ -174,7 +174,7 @@ Begin
                         +Pad(Party[CharNo].Name,' ',20));
          SMG$Put_Chars (TopDisplay,'  '
                         +String(Party[CharNo].Level,3));
-         SMG$Put_Chars (TopDisplay,'     '
+         SMG$Put_Chars (TopDisplay,'    '
                         +AlignName[Party[CharNo].Alignment][1]);
          SMG$Put_Chars (TopDisplay,'-'
                         +Pad(ClassName[Party[CharNo].Class],' ',13));

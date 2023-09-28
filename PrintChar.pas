@@ -316,7 +316,222 @@ Begin { Print Top }
   SMG$End_Display_Update (ScreenDisplay);
 End;  { Print Top }
 
-{ TODO: Enter this code }
+(******************************************************************************)
+
+Procedure Trade_Gold (Var Character: Character_Type; TradeTo: Integer;  Var Party: Party_Type;  Party_Size: Integer);
+
+Var
+   Amount: Integer;
+
+Begin { Trade Gold }
+   SMG$Begin_Display_Update (ScreenDisplay);
+   SMG$Erase_Display (ScreenDisplay,19,1);
+   SMG$Put_Line (ScreenDisplay,
+       'Trade how much gold?');
+   SMG$Put_Chars (ScreenDisplay,
+        '--->');
+   SMG$End_Display_Update (ScreenDisplay);
+   Cursor;
+   Get_Num (Amount,ScreenDisplay);
+   No_Cursor;
+   If Character.Gold<Amount then
+      Begin
+         SMG$Put_Line (ScreenDisplay,
+             'Thou don''t have that much!',0);
+             Delay(4);
+      End
+   Else
+      Begin
+         Character.Gold:=Character.Gold-Amount;
+         Party[TradeTo].Gold:=Party[TradeTo].Gold+Amount;
+         Print_Top (Character);
+      End;
+   SMG$Erase_Line (ScreenDisplay,20);
+End;  { Trade Gold }
+
+(******************************************************************************)
+
+Procedure Give_Character_Item (Var Giver,Receiver: Character_Type;  Item_number: Integer);
+
+Begin { Give Character Item }
+   Receiver.No_of_items:=Receiver.No_of_items+1;
+   Receiver.Item[Receiver.No_of_Items]:=Giver.Item[Item_Number];
+   Get_Rid_of_Item (Giver, Item_Number);
+End;  { Give Character Item }
+
+(******************************************************************************)
+
+Procedure Trade_Equipment (Var Character: Character_Type; TradeTo: Integer; Var Party: Party_Type);
+
+Var
+  Item_Number: Integer;
+
+Begin { Trade Equipment }
+   Item_Number:=0;
+   Repeat
+      Begin
+         Item_Number:=Choose_Item (Character,
+            'Trade');
+         If Item_Number>0 then
+            If Character.Item[Item_Number].Cursed then
+               Begin
+                  SMG$Put_Line (ScreenDisplay,
+                     'That item is cursed!');
+                  Ring_Bell (ScreenDisplay, 2);
+                  Delay(2);
+               End
+            Else
+               If Character.Item[Item_Number].Equipted then
+                  Begin
+                     SMG$Put_Line (ScreenDisplay,
+                        'That item is equipped.');
+                     Ring_Bell (ScreenDisplay);
+                     Delay(2);
+                  End
+               Else
+                  Give_Character_Item (Character.Party[Tradeto],Item_Number);
+      End;
+   Until Item_Number=0;
+End;  { Trade Equipment }
+
+(******************************************************************************)
+
+Procedure Trade_Stuff (Var Character: Character_Type;  Var Party: Party_Type;  Party_Size: Integer);
+
+Var
+   Number: Integer;
+
+Begin { Trade Stuff }
+   Number:=Choose_Character(
+      'Trade with whom?',
+      Party,
+      Party_Size,
+      False,
+      True);
+   Begin_Display_Update (ScreenDisplay);
+   SMG$Erase_Display (ScreenDisplay,19,1);
+   Print_Equipment (Character);
+   SMG$End_Display_Update (ScreenDisplay);
+   If Number<>0 then
+      Begin
+         If Character.Gold>0 then Trade_Gold (Character,Number,Party,Party_Size);
+         If (Character.No_of_items>0) and (Party[Number].No_of_Items<8) then Trade_Equipment (Character,Number,Party);
+      End;
+End;  { Trade Stuff }
+
+(******************************************************************************)
+
+Procedure Item_Is_Used (Var Character: Character_Type;  Item_Num: Integer; Var Leave_Maze: Boolean;
+                        Direction: Direction_Type;  Var Party: Party_Type;  Var Party_Size: Integer);
+
+Var
+   Item: Item_Record;
+
+Begin { Item Is Used }
+   Item:=Item_List[Character.Item[Item_Num].Item_Num];
+   If Not No_Magic then
+      If Item.Spell_Cast<>NoSp then
+         Handle_Spell (Character,Item.Spell_Cast,0,0,Leave_Maze,Direction,Party,Party_Size,Item_Spell:=True)
+      Else
+         Special_Occurance (Character,Item.Special_Occurance_No)
+   Else
+      Begin
+         SMG$Put_Line (ScreenDisplay,
+             '* * * The spell fizzeled out! * * *');
+         Delay(2);
+      End;
+   If Made_Roll (Item.Percentage_Breaks) then Item_Breaks (Character,Character.Item[Item_Num]);
+End;  { Item Is Used }
+
+
+(******************************************************************************)
+
+Procedure Use_Item (Var Character: Character_Type;  Var Leave_Maze: Boolean;  Direction: Direction_Type;
+                    Var Party: Party_Type;  Var Party_Size: Integer);
+
+{ This procedure allows a character to use a magical item to cast a spell }
+
+Var
+   Answer:   Char;
+   Choices:  Set of Char;
+   Num:      Integer;
+   Item:     Item_Record;
+
+Begin { Use Item }
+   SMG$Begin_Display_Update (ScreenDisplay);
+   SMG$Erase_Display (ScreenDisplay,19,1);
+   SMG$Put_Line (ScreenDisplay,
+       'Use which item? (1-'
+       +String(Character.No_of_items,1)
+       +', 0 exits)',0);
+   SMG$End_Display_Update (ScreenDisplay);
+
+   Choices:=['0'..CHR(Character.No_of_Items+ZeroOrd)];
+   Answer:=Make_Choice(Choices);
+   If Num<>0 then
+     If Not Can_Use (Character,Character.Item[Num]) then
+        Begin
+           SMG$Put_Line (ScreenDisplay,
+               '* * * Powerless * * *',
+               0);
+           Delay(2);
+        End
+     Else
+        Begin
+           Item:=Item_List[Character.Item[Num].Item_Num];
+           If Not(Item.Spell_Cast in Camp_Spells) and (Item.Special_Occurance_No=0) then
+              Begin
+                 SMG$Put_Line (ScreenDisplay,
+                     'Thou canst not use that here! * * *', 0);
+                 Delay(2);
+              End
+           Else
+              Item_is_used (Character,Num,Leave_Maze,Direction,Party,Party_Size);
+        End;
+End;  { Use Item }
+
+(******************************************************************************)
+
+Procedure Show_Options (Character: Character_Type; Var Choices: Char_Set;  Party: Party_Type;  Party_Size: Integer);
+
+Var
+   T: Line;
+
+Begin { Show Options }
+  Choices:=[];
+  T:='Thou may: ';
+  If (Location<>TrainingGrounds) then
+     Begin
+        If (Character.No_of_items>0) then
+           Begin
+              T:=T+'E)quip, D)rop item, ';
+              Choices:=Choices+['E','D'];
+           End;
+        If Can_Trade (Character,Party_Size) then
+           Begin
+              T:=T+'T)rade stuff, ';
+              Choices:=Choices+['T'];
+           End;
+     End;
+  If (Character.Status in [Healthy,Poisoned]) then
+     Begin
+        If (Location=TheMaze) then
+           Begin
+              T:=T+'U)se an item, cast a S)pell, ');
+              Choices:=Choices+['U','S'];
+              If Can_Identify (Character) then
+                 Begin
+                    T:=T+'I)dentify object, ';
+                    Choices:=Choices+['I'];
+                 End;
+           End;
+           T:=T+'R)ead spell books, ';
+           Choices:=Choices+['R'];
+     End;
+  T:=T+'L)eave';
+  SMG$Put_Line (ScreenDisplay,T,0,Wrap_Flag:=SMG$M_WRAP_WORD);
+  Choices:=Choices+['L'];
+End;  { Show Options }
 
 (******************************************************************************)
 
