@@ -43,9 +43,32 @@ Var
    Item_Name:                   [External]Array [Item_Type] of Varying [7] of char;
 
 (******************************************************************************)
-{ TODO: Enter this code }
+[External]Function Spell_Duration (Spell: Spell_Name; Caster_Level: Integer):Integer;External;
+[External]Procedure Ring_Bell (Display_Id: Unsigned; Number_of_Times: Integer:=1);External;
+[External]Procedure Special_Occurance (Var Character: Character_Type; Number: Integer);External;
+[External]Procedure Delay (Seconds: Real);External;
+[External]Function Get_Level (Level_Number: Integer; Maze: Level; PosZ: Vertical_Type:=0): [Volatile]Level;External;
+[External]Procedure Change_Score (Var Character: Character_Type; Score_Num, Inc: Integer);External;
+[External]Procedure No_Cursor;External;
+[External]Procedure Cursor;External;
 [External]Function  String(Num: Integer;  Len: Integer:=0):Line;External;
-{ TODO: Enter this code }
+[External]Function Make_Choice (Choices: Char_Set;  Time_Out:  Integer:=-1;
+    Time_Out_Char: Char:=' '): Char;External;
+[External]Function Yes_or_No (Time_Out: Integer:=-1;
+    Time_Out_Char: Char:=' '): [Volatile]Char;External;
+[External]Function Zero_Through_Six (Var Number: Integer; Time_Out: Integer:=-1;
+    Time_Out_Char: Char:='0'): Char;External;
+[External]Procedure Race_Adjustments (Var Character: Character_Type; Race: Race_Type);External;
+[External]Procedure Wait_Key (Time_Out: Integer:=-1);External;
+[External]Procedure Get_Num (Var Number: Integer; Display: Unsigned);External;
+[External]Function Roll_Die (Die_Type: Integer): [Volatile]Integer;External;
+[External]Function Random_Number (Die: Die_Type): [Volatile]Integer;External;
+[External]Function  Made_Roll (Needed: Integer): [Volatile]Boolean;external;
+[External]Function  Compute_AC (Character: Character_Type; PosZ: Integer:=0): Integer;external;
+[External]Function  Regenerates (Character: Character_Type):Integer;external;
+[External]Function Alive (Character: Character_Type): Boolean;External;
+[External]Procedure Find_Spell_Group (Spell: Spell_Name;  Character: Character_Type;  Var Class,Level: Integer);External;
+[External]Function Caster_Level (Cls: Integer; Character: Character_Type): Integer;External;
 (******************************************************************************)
 { TODO: Enter this code }
 
@@ -59,6 +82,60 @@ Begin { Initialize }
 End;  { Initialize }
 
 { TODO: Enter this code }
+
+Procedure Print_Equipment (Character: Character_Type);
+
+Begin
+   { TODO: Enter this code }
+End;
+
+{ TODO: Enter this code }
+
+Function Choose_Item (Character: Character_Type; Action: Line): [Volatile]Integer;
+
+Begin
+   { TODO: Enter this code }
+   Choose_Item:=0;
+End;
+
+
+Function Choose_Character (Txt: Line; Party: Party_Type;  Party_Size: Integer; HP: Boolean:=False;
+                           Items: Boolean:=False): [Volatile]Integer;
+
+Begin
+   { TODO: Enter this code }
+End;
+
+{ TODO: Enter this code }
+
+
+Procedure Get_Rid_Of_Item (Var Character: Character_Type; Which_Item: Integer);
+
+Begin
+  { TODO: Enter this code }
+End;
+
+Procedure Drop_Item (Var Character: Character_Type);
+
+Begin
+  { TODO: Enter this code }
+End;
+
+
+Procedure Item_Breaks (Character: Character_Type; Var Equipment: Equipment_Type);
+
+Begin
+  { TODO: Enter this code }
+End;
+
+
+Procedure Handle_Spell (Var Character: Character_Type; Spell: Spell_Name;  Class,Spell_Level: Integer;  Var Leave_Maze: Boolean;
+                        Direction: Direction_Type;  Var Party: Party_Type;  Var Party_Size: Integer;  Item_Spell: Boolean:=False);
+
+Begin
+  { TODO: Enter this code }
+End;
+
 (******************************************************************************)
 
 Function Scenarios_Won (P: Int_Set): Integer;
@@ -388,7 +465,7 @@ Begin { Trade Equipment }
                      Delay(2);
                   End
                Else
-                  Give_Character_Item (Character.Party[Tradeto],Item_Number);
+                  Give_Character_Item (Character,Party[Tradeto],Item_Number);
       End;
    Until Item_Number=0;
 End;  { Trade Equipment }
@@ -407,7 +484,7 @@ Begin { Trade Stuff }
       Party_Size,
       False,
       True);
-   Begin_Display_Update (ScreenDisplay);
+   SMG$Begin_Display_Update (ScreenDisplay);
    SMG$Erase_Display (ScreenDisplay,19,1);
    Print_Equipment (Character);
    SMG$End_Display_Update (ScreenDisplay);
@@ -441,7 +518,6 @@ Begin { Item Is Used }
       End;
    If Made_Roll (Item.Percentage_Breaks) then Item_Breaks (Character,Character.Item[Item_Num]);
 End;  { Item Is Used }
-
 
 (******************************************************************************)
 
@@ -540,7 +616,7 @@ Begin { Print the Rest }
    Print_Spell_Points (Character);                      { Print out the remaining spell points }
    Print_Equipment (Character);                         { Print out the equipment list }
    Show_Options (Character,Choices,Party,Party_Size);   { Show the player's options }
-Ehd;  { Print the Rest }
+End;  { Print the Rest }
 
 (******************************************************************************)
 
@@ -556,7 +632,7 @@ Var
 
 Begin { Character fully made }
    Print_The_Rest (Character,Choices,Party,Party_Size);
-   if Answer=' '' then
+   if Answer=' ' then
       SMG$End_Pasteboard_Update(Pasteboard)              { End updating from main }
    Else
       SMG$End_Display_Update (ScreenDisplay);
@@ -577,7 +653,7 @@ Begin { Character fully made }
 
        { Then begin updating for the next pass }
 
-   If Not((Answer='L') or Automatic or Leave_Maze) then SMG$Begin_Display_Update (ScreenDisplay);l
+   If Not((Answer='L') or Automatic or Leave_Maze) then SMG$Begin_Display_Update (ScreenDisplay);
 End;  { Character fully made }
 
 (******************************************************************************)
