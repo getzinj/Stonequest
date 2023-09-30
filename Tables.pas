@@ -5,18 +5,18 @@ Type
    Spell_List          = Packed Array [1..9] of Set of Spell_Name;
 
 Var
-   TrapName:                   [Global]Array [Trap_Type]            of Varying[20] of Char;
-   Item_Name:                  [Global]Array [Item_Type]            of Varying[7] of char;
-   Spell:                      [Global]Array [Spell_Name]         of Varying[4] of Char;
-   Long_Spell:                 [Global]Array [Spell_Name]           of Varying [25] of Char;
-   StatusName:                 [Global]Array [Status_Type]          of Varying [14] of char;
-   ClassName:                  [Global]Array [Class_Type]           of Varying [13] of char;
-   AlignName:                  [Global]Array [Align_Type]           of Packed Array  [1..7] of char;
-   RaceName:                   [Global]Array [Race_Type]            of Packed Array [1..12] of char;
-   SexName:                    [Global]Array [Sex_Type]             of Packed Array [1..11] of char;
-   AbilName:                   [Global]Array [1..7]                 of Packed Array [1..12] of char;
-   Party_Spell,Person_Spell,Caster_Spell,All_Monsters_Spell,Group_Spell,Area_Spell: [Global]Set of Spell_Name;
-   WizSpells,ClerSpells:       [Global]Spell_List;
+   TrapName:                   [Global,Readonly]Array [Trap_Type]            of Varying[20] of Char;
+   Item_Name:                  [Global,Readonly]Array [Item_Type]            of Varying[7] of char;
+   Spell:                      [Global,Readonly]Array [Spell_Name]         of Varying[4] of Char;
+   Long_Spell:                 [Global,Readonly]Array [Spell_Name]           of Varying [25] of Char;
+   StatusName:                 [Global,Readonly]Array [Status_Type]          of Varying [14] of char;
+   ClassName:                  [Global,Readonly]Array [Class_Type]           of Varying [13] of char;
+   AlignName:                  [Global,Readonly]Array [Align_Type]           of Packed Array  [1..7] of char;
+   RaceName:                   [Global,Readonly]Array [Race_Type]            of Packed Array [1..12] of char;
+   SexName:                    [Global,Readonly]Array [Sex_Type]             of Packed Array [1..11] of char;
+   AbilName:                   [Global,Readonly]Array [1..7]                 of Packed Array [1..12] of char;
+   Party_Spell,Person_Spell,Caster_Spell,All_Monsters_Spell,Group_Spell,Area_Spell: [Global,Readonly]Set of Spell_Name;
+   WizSpells,ClerSpells:       [Global,Readonly]Spell_List;
 
 
 Value { We got a lot of 'em! }

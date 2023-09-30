@@ -42,6 +42,8 @@ $      write sys$output "Compiling Io.pas"
 $      pas Io
 $      write sys$output "Compiling Items.pas"
 $      pas Items
+$      write sys$output "Compiling Keyboard.pas"
+$      pas Keyboard
 $      write sys$output "Compiling Kyrn.pas"
 $      pas Kyrn
 $      write sys$output "Compiling Maze.pas"
@@ -60,6 +62,8 @@ $      write sys$output "Compiling PlaceStack.pas"
 $      pas PlaceStack
 $      write sys$output "Compiling PrintChar.pas"
 $      pas PrintChar
+$      write sys$output "Compiling Random.pas"
+$      pas Random
 $      write sys$output "Compiling Scores.pas"
 $      pas Scores
 $      write sys$output "Compiling Shell_Out.pas"
@@ -94,7 +98,7 @@ $      write sys$output "Linking ..."
 $!
 $!
 $      Link Camp,Casino,Character,CharacterAttacks,Church,Compute,Craps,-
-       Demo,EditMaze,Encounter,Experience,-
+       Demo,EditMaze,Encounter,Experience,Keyboard,Random,-
        GiveTreasure,Help,Hours,Inn,Io,Items,Tables,-
        Kyrn,LibRtl,Maze,Messages,Monster,MonsterAttack,PicEdit,PickPocket,-
        PlaceStack,PrintChar,Scores,Shell_Out,Slots,SmgRtl,Stonequest,-
@@ -105,3 +109,4 @@ $      write sys$output "Purging old EXE files..."
 $      purge *.exe
 $!
 $      write sys$output "Done!"
+$!
