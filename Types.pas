@@ -545,6 +545,7 @@ Type
 Var
    Pas_Errors: [Global]Array [-1..128] of Line;
 
+{
 Value
     Pas_Errors[
   PAS$K_EOF        ]:='End of file encountered';
@@ -681,5 +682,5 @@ Value
     Pas_Errors[
   PAS$K_ERRDUREXT  ]:='Error during extend';
     Pas_Errors[
-  PAS$K_EXTNOTALL  ]:='';
+  PAS$K_EXTNOTALL  ]:='';}
 End.
