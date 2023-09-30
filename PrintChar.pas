@@ -1,4 +1,4 @@
-[Inherit ('Types','LIBRTL','SMGRTL','STRRTL')]Module PrintCharacter;
+[Inherit ('SYS$LIBRARY:STARLET','Types','LIBRTL','SMGRTL','STRRTL')]Module PrintCharacter;
 
 Const
     Success = '* * * Success! * * *';
@@ -70,7 +70,39 @@ Var
 [External]Procedure Find_Spell_Group (Spell: Spell_Name;  Character: Character_Type;  Var Class,Level: Integer);External;
 [External]Function Caster_Level (Cls: Integer; Character: Character_Type): Integer;External;
 (******************************************************************************)
-{ TODO: Enter this code }
+
+Function Can_Use (Character: Character_Type; Stats: Equipment_Type): Boolean;
+
+Var
+   Temp: Boolean;
+   Item: Item_Record;
+
+Begin { Can Use }
+  Item:=Item_List[Stats.Item_Num];
+  Temp:=Stats.Equipted or (Item.kind=Scroll);
+  Temp:=Temp and ((Item.Spell_Cast<>NoSp) or (Item.Special_Occurance_No>0));
+  Temp:=Temp and ((Item.Alignment=NoAlign) or (Item.Alignment=Character.Alignment));
+  Temp:=Temp and ((Character.Class in Item.Usable_By) or (Character.PreviousClass in Item.Usable_By));
+  Can_Use:=Temp;
+End;  { Can Use }
+
+(******************************************************************************)
+
+Function Can_Identify (Character: Character_Type): Boolean;
+
+Begin { Can Identify }
+  Can_Identify:=((Character.Class=Bard) or (Character.PreviousClass=Bard)) and (Character.No_of_Items>0);
+End;  { Can Identify }
+
+(******************************************************************************)
+
+Function Can_Trade (Character: Character_Type;  Party_Size: Integer): Boolean;
+
+Begin { Can Trade }
+  Can_Trade:=(Party_Size > 1) and ((Character.No_Of_Items>0) or (Character.Gold>0));
+End;  { Can Trade }
+
+(******************************************************************************)
 
 Procedure Initialize;
 
@@ -80,6 +112,17 @@ Begin { Initialize }
    No_Magic:=False;
    If PosZ > 0 then No_Magic:=(Maze.Special_Table[Maze.Room[PosX,PosY].Contents].Special=AntiMagic);
 End;  { Initialize }
+
+(******************************************************************************)
+
+{ TODO: Enter this code }
+
+Procedure Cast_Camp_Spell (Var Character: Character_Type; Var Leave_Maze: Boolean;  Direction: Direction_Type;
+                          Var Party: Party_Type;  Var Party_Size: Integer);
+
+Begin
+   { TODO: Enter this code }
+End;
 
 { TODO: Enter this code }
 
@@ -98,15 +141,31 @@ Begin
    Choose_Item:=0;
 End;
 
+{ TODO: Enter this code }
 
 Function Choose_Character (Txt: Line; Party: Party_Type;  Party_Size: Integer; HP: Boolean:=False;
                            Items: Boolean:=False): [Volatile]Integer;
 
 Begin
    { TODO: Enter this code }
+   Choose_Character:=0;
 End;
 
 { TODO: Enter this code }
+
+
+Procedure Equip_Character (Var Character: Character_Type);
+
+Begin
+   { TODO: Enter this code }
+End;
+
+
+Procedure Identify_Object (Var Character: Character_Type);
+
+Begin
+   { TODO: Enter this code }
+End;
 
 
 Procedure Get_Rid_Of_Item (Var Character: Character_Type; Which_Item: Integer);
@@ -171,6 +230,28 @@ Begin { Print Wins }
       End;
    Print_Wins:=T;
 End;  { Print Wins }
+
+
+(******************************************************************************)
+
+{ TODO: Enter this code }
+
+Procedure Print_Spell_Points (Character: Character_Type);
+
+Begin
+  { TODO: Enter this code }
+End;
+
+{ TODO: Enter this code }
+
+Procedure Print_Books (Character: Character_Type);
+
+Begin
+  { TODO: Enter this code }
+End;
+
+
+{ TODO: Enter this code }
 
 (******************************************************************************)
 
@@ -543,6 +624,7 @@ Begin { Use Item }
 
    Choices:=['0'..CHR(Character.No_of_Items+ZeroOrd)];
    Answer:=Make_Choice(Choices);
+   Num:=Ord(Answer)-ZeroOrd;
    If Num<>0 then
      If Not Can_Use (Character,Character.Item[Num]) then
         Begin
@@ -592,7 +674,7 @@ Begin { Show Options }
      Begin
         If (Location=TheMaze) then
            Begin
-              T:=T+'U)se an item, cast a S)pell, ');
+              T:=T+'U)se an item, cast a S)pell, ';
               Choices:=Choices+['U','S'];
               If Can_Identify (Character) then
                  Begin

@@ -213,7 +213,7 @@ Type
                    End;
 
   Equipment_Type = record
-                      Item: Item_Record;                        { The item itself }
+                      Item_Num: Item_Number_Type;                        { The item itself }
                       Ident,Equipted,Usable,Cursed: Boolean;    { Identified? Equipted? Usable? Cursed? }
                    End;
 
