@@ -68,6 +68,8 @@ $      write sys$output "Compiling Slots.pas"
 $      pas Slots
 $      write sys$output "Compiling Store.pas"
 $      pas Store
+$      write sys$output "Compiling Tables.pas"
+$      pas Tables
 $      write sys$output "Compiling Tavern.pas"
 $      pas Tavern
 $      write sys$output "Compiling Training.pas"
@@ -93,7 +95,7 @@ $!
 $!
 $      Link Camp,Casino,Character,CharacterAttacks,Church,Compute,Craps,-
        Demo,EditMaze,Encounter,Experience,-
-       GiveTreasure,Help,Hours,Inn,Io,Items,-
+       GiveTreasure,Help,Hours,Inn,Io,Items,Tables,-
        Kyrn,LibRtl,Maze,Messages,Monster,MonsterAttack,PicEdit,PickPocket,-
        PlaceStack,PrintChar,Scores,Shell_Out,Slots,SmgRtl,Stonequest,-
        AdminUtils,PlayerUtils,Store,StrRtl,Tavern,Training,Treasure,-
