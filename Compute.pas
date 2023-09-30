@@ -1,19 +1,42 @@
 [Inherit ('Types','SMGRTL','STRRTL')]Module Compute;
 
-Type
-   { TODO: Enter this code }
+Const
+   Cler_Spell = 1;
+   Wiz_Spell  = 2;
 
+Type
+   Spell_List         = Packed Array [1..9] of Set of Spell_Name;
+   SpellPoints_Type   = Packed Array [1..2,1..9] of [Byte]0..9;
    Score_List         = Array [1..7] of Ability_Score;
 
 Var
-   { TODO: Enter this code }
+   WizSpells,ClerSpells:       [External]Spell_List;
+   Spell:                      [External]Array [Spell_Name] of Varying [4] of Char;
+   Item_List:                  [External]List_of_items;
 
   { MinScore is a matrix of Class x Abilities, which tells Stonequest what the minimum ability scores are for each class.  So, for
     example, if MinScore[Cleric]:=(0 0 9 0 0 0 0), this would be that to be a cleric, a character would have to have a 9 or higher
     in wisdom (wisdom's the third ability score) and that all the other scores have to be 0 or better, i.e., any valid ability score. }
 
    MinScore:          Array [Class_Type,1..7] of Integer;
-   { TODO: Enter this code }
+
+  { Experience is a matrix of Class x Level, which is used by Stonequest to compute the experience needed for each level of a
+    class.  The function, XP_NEEDED, is a doubly recursive function, and as most computer scientists will tell you, doubly recursive
+    functions get VERY SLOW as they reach higher numbers.  One of the problems is that it makes many unnecessary calls. For
+    example:
+
+    XP_Needed (Fighter,6) = n*XP_Needed (Fighter,5)-XP_Needed(Fighter,4);
+    XP_Needed (Fighter,5) = n*XP_Needed (Fighter,4)-XP_Needed(Fighter,3);
+
+    As you notice, XP_N (Fighter,6) and XP_N (Fighter, 5) BOTH make calls to XP_N (Fighter, 4).  This is an example where the same
+    value is computed more than once, which makes the function unnecessaril slow.
+
+    WHAT EXPERIENCE_NEEDED deos, is keep track of all compute XP_NEEDEDs, so that whenever we need a value, we check the matrix
+    first to see if we've already computed it.  If we have, we return that value, and tell all those recursive calls to go to
+    Hell!  }
+
+  Experience_Needed: [External]Array [Class_Type,1..50] of Real;
+
 
 Value
    {                          S   I   W   D   C  CH   LU   }
@@ -32,8 +55,9 @@ Value
    MinScore[Bard]         :=(15, 12,  0, 16, 10, 15,  0);
 
 (******************************************************************************)
-
-{ TODO: Enter this code }
+[External]Procedure Plane_Difference (Var Plus: Integer; PosZ: Integer);External;
+[External]Function Roll_Die (Die_Type: Integer): [Volatile]Integer;External;
+(******************************************************************************)
 
 [Global]Function String (Num: Integer; Len: Integer:=0): Line;
 
@@ -50,7 +74,24 @@ End;  { String }
 
 (******************************************************************************)
 
-{ TODO: Enter this code }
+Function Get_Spell_Level (Spell: Spell_Name; Spells: Spell_List): Integer;
+
+{ This function returns the level of SPELL in the list of spells, SPELLS. If SPELL is not in SPELLS, the number 10 is returned
+  as the function result. }
+
+Var
+   Level: Integer;
+
+Begin { Get Spell Level }
+   Level:=10;
+   Repeat
+      Level:=Level-1;
+   Until (Spell in Spells[Level]) or (Level=1);
+   If Not (Spell in Spells[1]) and (Level=1) then Level:=10;
+   Get_Spell_Level:=Level;
+End;  { Get Spell Level }
+
+(******************************************************************************)
 
 [Global]Procedure Find_Spell_Group (Spell: Spell_Name;  Character: Character_Type;  Var Class,Level: Integer);
 
@@ -125,22 +166,80 @@ Begin { Regenerates }
    Regenerates:=0;
 End;  { Regenerates }
 
+(******************************************************************************)
 
+Function Base_XP (Class: Class_Type): Real;
+
+{ This function returns the amount of experience a character of class, CLASS needs to go up to 2nd level from 1st }
+
+Begin { Base XP }
+   Case Class of
+      Thief:                           Base_XP:=1051;
+      Cleric,Assassin:                 Base_XP:=1300;
+      Fighter,Bard:                    Base_XP:=1800;
+      Ranger,Monk,Ninja:               Base_XP:=2051;
+      Barbarian:                       Base_XP:=2100;
+      Wizard:                          Base_XP:=2300;
+      Paladin,AntiPaladin,Samurai:     Base_XP:=2551;
+      Otherwise                        Base_XP:=0;
+   End;
+End;  { Base XP }
+
+(******************************************************************************)
 [Global]Function XP_Needed (Class: Class_Type; Level: Integer):Real;Forward;
+(******************************************************************************)
 
 [Global]Function XP_Needed_Aux (Class: Class_Type; Level: Integer): Real;
 
-Begin { XP Needed Aux }
-   { TODO: Enter this code }
-   XP_Needed_Aux:=0;
-End;  { XP Needed Aux }
+{ This function recursively determines how much experience is required to be a Level, LEVEL, Class, CLASS character }
+
+Const
+   Level_Factor = 49/25;  { Change this constant with care, as even slight adjustments will have radical effects on the
+                            amount of experience required }
+
+Var
+  L1,L2: Real;
+
+Begin { XP Needed Auxiliary }
+   If Level<2 then   { This should be called for level=0,1 but if it is... }
+        XP_Needed_Aux:=0
+   Else
+      If Level=2 then  { The experience needed for level 2 is a constant }
+         XP_Needed_Aux:=Base_XP (Class)
+      Else
+         If Level>13 then
+            Begin { Greater than 13th level }
+               L1:=XP_Needed(Class,Level-1);
+               L2:=XP_Needed(Class,Level-2);
+               XP_Needed_Aux:=L1+(L1-L2);
+            End   { Greater than 13th level }
+         Else
+            XP_Needed_Aux:=Level_Factor*XP_Needed(Class,Level-1);
+End;  { XP Needed Auxiliary }
 
 
-Function XP_Needed;
+(******************************************************************************)
+
+Function XP_Needed {Class: Class_Type; Level: Integer): Real};
+
+{ This function will compute the experience points needs to be a LEVELth level character, of class CLASS.  See VAR documentation
+  regarding EXPERIENCE_NEEDED.  }
+
+Var
+  XP: Real;
 
 Begin { XP Needed }
-   { TODO: Enter this code }
-   XP_Needed:=0;
+   If (Level<50) and (Level>1) then  { If it COULD be in the table... }
+      If Experience_Needed [Class,Level]>0 then  { ...and it IS there... }
+         XP:=Experience_Needed [Class,Level]     { ...return the value }
+      Else
+         Begin { If it's not in the table }
+            XP:=XP_Needed_Aux (Class,Level);      { If not there, compute it }
+            Experience_Needed [Class,Level]:=XP;  { and store it for later use! }
+         End   { If it's not in the table }
+   Else
+      XP:=XP_Needed_Aux (Class,Level);   { If it can't be there, compute it! }
+   XP_Needed:=XP;
 End;  { XP Needed }
 
 (******************************************************************************)
@@ -172,7 +271,7 @@ End;  { Character Exists }
 
 (******************************************************************************)
 
-Function  Scores_Qualify (Scores: Score_List;  Class: Class_Type): Boolean;
+Function Scores_Qualify (Scores: Score_List;  Class: Class_Type): Boolean;
 
 Var
    x: Integer;
@@ -249,19 +348,29 @@ Begin { Class Choices }
    Class_Choices:=Possibilities;
 End;  { Class Choices }
 
+(******************************************************************************)
 
 [Global]Function Made_Roll (Needed: Integer): [Volatile]Boolean;
 
+{ This function is used to determine percentages. So, if NEEDED is the parameter, there is a NEEDED% chance the function will be
+  TRUE, and the rest of the time the function will be FALSE. }
+
 Begin { Made Roll }
-   { TODO: Enter this code }
-   Made_Roll:=True;
+   Made_Roll:=Roll_die(100)<=Needed
 End;  { Made Roll }
 
+(******************************************************************************)
 
 [Global]Function Spell_Duration (Spell: Spell_Name; Caster_Level: Integer):Integer;
 
 Begin { Spell Duration }
-   { TODO: Enter this code }
-   Spell_Duration:=0;
+   Case Spell of
+      DiPr,HgSh: Spell_Duration:=(5 * Caster_Level);
+      Comp,Dets: Spell_Duration:=(2 * Caster_Level);
+      Lght,Levi: Spell_Duration:=(10* Caster_Level);
+      Coli:      Spell_Duration:=(Maxint - 22000);  { To prevent overflow }
+      Wore:      Spell_Duration:=1;
+      Otherwise  Spell_Duration:=1;
+   End;
 End;  { Spell Duration }
 End.  { Compute }
