@@ -23,26 +23,26 @@ Var
 
 {**********************************************************************************************************************************}
 
-Procedure Recover_Heading;
+Procedure Recover_Heading (Var ScreenDisplay: Unsigned);
 
 Begin { Recover Heading }
    SMG$Begin_Display_Update (screendisplay);
    SMG$Erase_Display (screendisplay);
    SMG$Put_Line (screendisplay,
-       'Recover Characters',1);
+       'Recover Characters');
    SMG$Put_Line (screendisplay,
-       '------------------',2);
+       '------------------');
    SMG$Put_Line (screendisplay,
        'This process will attempt to recover characters '
-       +'lost through system crashes of',3);
+       +'lost through system crashes of');
    SMG$Put_Line (screendisplay,
-       'accidental ^C or ^Y.',4);
+       'accidental ^C or ^Y.');
    SMG$Put_Line (screendisplay,
-       '',5);
+       '');
    SMG$Put_Line (screendisplay,
-       'NOTE: This will age recovered characters 5 years',7);
+       'NOTE: This will age recovered characters 5 years');
    SMG$Put_Line (screendisplay,
-       'Continue?  (Y/N)',7);
+       'Continue?  (Y/N)');
    SMG$End_Display_Update (screendisplay);
 End;  { Recover Heading }
 
@@ -62,7 +62,7 @@ Var
 
 Begin  { Recover Character }
    Any_Recovered:=False; { So far, nobody recovered }
-   Recover_Heading;
+   Recover_Heading(ScreenDisplay);
    If YES_OR_NO='Y' then
       Begin
          SMG$Begin_Display_Update (screendisplay);

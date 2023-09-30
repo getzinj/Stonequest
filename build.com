@@ -84,13 +84,13 @@ $      write sys$output "Compiling PlayerUtils.pas"
 $      pas PlayerUtils
 $      write sys$output "Assembling Handler.mar"
 $      mac Handler
-
+$!
 $      write sys$output "Purging old OBJ files..."
 $      purge *.obj
-
+$!
 $      write sys$output "Linking ..."
-
-
+$!
+$!
 $      Link Camp,Casino,Character,CharacterAttacks,Church,Compute,Craps,-
        Demo,EditMaze,Encounter,Experience,-
        GiveTreasure,Help,Hours,Inn,Io,Items,-
@@ -98,8 +98,8 @@ $      Link Camp,Casino,Character,CharacterAttacks,Church,Compute,Craps,-
        PlaceStack,PrintChar,Scores,Shell_Out,Slots,SmgRtl,Stonequest,-
        AdminUtils,PlayerUtils,Store,StrRtl,Tavern,Training,Treasure,-
        Types,View,Windows,Handler /EXE=StoneQuest.exe
-
+$!
 $      write sys$output "Purging old EXE files..."
 $      purge *.exe
-
+$!
 $      write sys$output "Done!"

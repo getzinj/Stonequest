@@ -24,6 +24,8 @@ Program Stonequest (Input,Output,Char_File,Item_File,Monster_File,Message_File,T
   This game is dedicated to the memory of my late grandmother, Jenny Mayer on this day, 10/13/1988 }
 
 Const
+   Owner_Account = 'SYSTEM';
+
    Up_Arrow          = CHR(18);         Down_Arrow      = CHR(19);
    Left_Arrow        = CHR(20);         Right_Arrow     = CHR(21);
 
@@ -934,7 +936,7 @@ Procedure Log_Player_In;
 { This procedure records the time and date the user logged into the logfile. }
 
 Begin { Log Player In }
-   If Logging and (User_Name<>'JGETZIN') then Extend_LogFile (Time_And_Date_And_name+'IN');
+   If Logging and (User_Name<>Owner_Account) then Extend_LogFile (Time_And_Date_And_name+'IN');
 End;  { Log Player In }
 
 {**********************************************************************************************************************************}
@@ -944,7 +946,7 @@ Procedure Log_Player_Out;
 { See above? }
 
 Begin { Log Player Out }
-   If Logging and (User_Name<>'JGETZIN') then
+   If Logging and (User_Name<>Owner_Account) then
       Extend_LogFile (Time_And_Date_And_name+'OUT');
 End;  { Log Player Out }
 
@@ -1810,7 +1812,7 @@ Var
    X: Integer;
 
 Begin { Initialize }
-   If Not (Authorized or (User_name='JGETZIN1')) then $SETPRI (Pri:=4,PrvPri:=Start_Priority);
+   If Not (Authorized or (User_name=Owner_Account)) then $SETPRI (Pri:=4,PrvPri:=Start_Priority);
    Log_Player_In;
    X:=47;                                  { Initialize X for ADD_DOT }
    Cursor_Mode:=True;                      { The cursor is on at the moment }
@@ -2179,7 +2181,7 @@ Begin { Quit }
    Write_Roster;                                   Add_Dot (X);
    No_ControlY;  { Control-Y is turned on again in Write Roster, so turn it off! }
    Log_Player_Out;
-   If (User_Name='JGETZIN') and DataModified then { Only I can save! Hahaha! }
+   If (User_Name=Owner_Account) and DataModified then { Only I can save! Hahaha! }
       Begin
          Save_Items;                               Add_Dot (X);
          Save_Pictures;                            Add_Dot (X);
@@ -2226,7 +2228,7 @@ End;  { Can Play }
 
 Begin { Stonequest }
   ShowHours:=False;  Main_Menu:=True;  In_Utilities:=False;
-  Authorized:=(User_Name='JGETZIN') or (User_Name='DCORN');
+  Authorized:=(User_Name=Owner_Account) or (User_Name='DCORN');
 { If Not Authorized and Trap_Authorized_Error then Establish (Oh_No); }
   If Can_Play then
      Begin

@@ -95,10 +95,71 @@ End;  { Get Spell Level }
 
 [Global]Procedure Find_Spell_Group (Spell: Spell_Name;  Character: Character_Type;  Var Class,Level: Integer);
 
+{ This procedure will locate the position (Class and Level) of SPELL, and return it via the VAR parameters, CLAS and LEVEL.  If the
+  spell is not found, or it is not in the character's spell book, level 10 is returned. }
+
+Var
+   Wizard_Level,Cleric_Level: 1..10;  { 10 being non existant }
+   Wiz_Point,Cler_Points: 0..9;
+
 Begin { Find Spell Group }
-   { TODO: Enter this code }
+   Wizard_Level:=10;  Cleric_Level:=10;  { So far, it can't be casted }
+
+        { Search for the spell level in wizard spells }
+
+   If (Spell in Character.Wizard_Spells) then Wizard_Level:=Get_Spell_Level (Spell,WizSpells);
+
+        { Search for the spell level in Cleric spells }
+
+   If (Spell in Character.Cleric_Spells) then Cleric_Level:=Get_Spell_Level (Spell,ClerSpells);
+
+   If Cleric_Level<10 then
+      If (Character.SpellPoints[Cler_Spell,Cleric_Level]<1) and (Wizard_level<10) then
+        Cleric_Level:=10;  { No cleric points to cast it }
+
+   If Wizard_Level<10 then
+      If (Character.SpellPoints[Wiz_Spell,Wizard_Level]<1) and (Cleric_level<10) then
+        Wizard_Level:=10;  { No wizard points to cast it }
+
+   { Find out which of the possible spell-types to use }
+
+   If Min(Cleric_Level,Wizard_Level)<10 then
+      Begin { If can cast from at least one }
+         If Cleric_Level<Wizard_Level then
+            Begin { If the cleric spell is lower level than the wizard }
+               Level:=Cleric_Level;
+               Class:=Cler_Spell;
+            End   { If the cleric spell is lower level than the wizard }
+         Else
+            If Wizard_Level<Cleric_Level then
+               Begin { If the wizard spell is lower level than the cleric }
+                  Level:=Wizard_Level;
+                  Class:=Wiz_Spell;
+               End   { If the wizard spell is lower level than the cleric }
+            Else
+               Begin { Otherwise take the one with the most spell points }
+                  Wiz_Points  := Character.SpellPoints[Wiz_Spell,Wizard_Level];
+                  Cler_Points := Character.SpellPoints[Cler_Spell,Cleric_Level];
+                  If Cler_Points>Wiz_Points then
+                     Begin
+                        Level:=Cleric_Level;
+                        Class:=Cler_Spell;
+                     End
+                  Else
+                     Begin
+                        Level:=Wizard_Level;
+                        Class:=Wiz_Spell;
+                     End
+               End   { Otherwise take the one with the most spell points }
+      End
+   Else  { Otherwise... }
+      Begin { Can't be casted }
+         Level:=10;
+         Class:=0;
+      End;  { Can't be casted }
 End;  { Find Spell Group }
 
+(******************************************************************************)
 
 [Global]Function Caster_Level (Cls: Integer; Character: Character_Type): Integer;
 
@@ -143,27 +204,143 @@ Begin { Compute AC }
    Compute_AC:=0;
 End;  { Compute AC }
 
+(******************************************************************************)
+
+Function Con_Adjustment (Class: Class_Type; Constitution: Integer): Integer;
+
+Var
+   Con_Adjustment1: Integer;
+
+Begin { Con Adjustment }
+   Case Constitution of
+            3: Con_Adjustment1:=-2;
+         4..6: Con_Adjustment1:=-1;
+        7..14: Con_Adjustment1:=0;
+           15: Con_Adjustment1:=1;
+           16: Con_Adjustment1:=2;
+           17: Con_Adjustment1:=3;
+           18: Con_Adjustment1:=4;
+        19,20: Con_Adjustment1:=5;
+     21,22,23: Con_Adjustment1:=6;
+        24,25: Con_Adjustment1:=7;
+           15: Con_Adjustment1:=0;
+   End;
+
+   { Only fighters can get more than +2 on their dice for constitution }
+
+   If Not (Class in [Fighter,Paladin,Ranger,AntiPaladin,Samurai,Barabarian,Monk]) then
+      If Con_Adjustment1>2 then Con_Adjustment1:=2;
+
+   Con_Adjustment:=Con_Adjustment1;
+End;  { Con Adjustment }
+
+(******************************************************************************)
+
 [Global]Function Compute_Hit_Die (Character: Character_Type): [Volatile]Integer;
 
+{ This function computed how many hit points a character gains (or loses) for his current level, class, and constitution }
+
+Var
+  Base_HP,Die_Type: Integer;
+
 Begin { Compute Hit Die }
-   { TODO: Enter this code }
-   Compute_Hit_Die:=0;
+
+   { Compute the base hit point change as a function of the character's class }
+
+   Case Character.Class of
+      Barbarian:                       Die_Type:=12;
+      Fighter,Paladin,AntiPaladin:     Die_Type:=10;
+      Cleric,Ranger,Samurai,Monk:      Die_Type:=8;
+      Thief,Assassin,Bard,Ninja:       Die_Type:=6;
+      Wizard:                          Die_Type:=4;
+      Otherwise                        Die_Type:=1;
+   End;
+
+   Base_HP:=Roll_Die(Die_Type);
+
+   { If the class is Ranger, Monk, or Samurai, the character gets another hit die at first level }
+
+   If (Character.Class in [Ranger,Samurai,Monk]) and (Character.Level=1) then Base_Hp:=Base_HP+Roll_Die(Die_Type);
+
+   { After 15th level, the number of hit points gained or lost is constant the class }
+
+   If Character.Level>15 then
+      Case Character.Class of
+          Fighter,Paladin,AntiPaladin:  Base_HP:=3;
+          Wizard:                       Base_HP:=1;
+          Otherwise                     Base_HP:=2;
+      End;
+
+   { Add the constitution bonus }
+
+   Base_HP:=Base_HP+Con_Adjustment (Character.Class,Character.Abilities[5]);
+
+   { Add the second die's worth to the hit points }
+
+   If (Character.Class in [Ranger,Samurai,Monk]) and (Character.Level=1) then
+      Base_HP:=Base_HP+Con_Adjustment(Character.Class,Character.Abilities[5]);
+
+   { If, with all these adjustments, the HPs turn out to be less than one, make it equal to one }
+
+   If Base_HP<1 then Base_HP:=1;
+
+   { Return the result }
+
+   Compute_Hit_Die:=Base_HP;
 End;  { Compute Hit Die }
 
+(******************************************************************************)
 
 [Global]Function Alive (Character: Character_Type): Boolean;
 
+{ This function returns TRUE if the character is alive, and false if the character is dead.  If the character is undead, he or she
+  is treated as alive for the sake of this function.  }
+
 Begin { Alive }
-   { TODO: Enter this code }
-   Alive:=true;
+   Alive:=Not (Character.Status in [Ashes,Dead,Deleted])
 End;  { Alive }
 
+(******************************************************************************)
 
 [Global]Function Regenerates (Character: Character_Type; PosZ: Integer:=0): Integer;
 
+{ This function will compute how many hit points CHARACTER will regenerate }
+
+Var
+   Temp,Regen,Loop: Integer;
+
 Begin { Regenerates }
-   { TODO: Enter this code }
-   Regenerates:=0;
+
+   { An extremely high constitution can cause regeneration }
+
+   Case Character.Abilities[5] of
+        23:       Regen:=1;
+        24:       Regen:=2;
+        25:       Regen:=3;
+        Otherwise Regen:=0;
+   End;
+   If Character.Psionics then Regen:=Regen+Character.Regenerate;
+
+   { A poisoned character LOSES hit points... }
+
+   If Character.Status=Poisoned then Regen:=Regen-1;
+
+   { Magic items can affect regeneration }
+
+   If Character.No_of_Items>0 then
+      For Loop:=1 to Character.No_Of_Items do
+         If Character.Item[Loop].Equipted then
+            Begin
+               Temp:=Item_List[Character.Item[Loop].Item_Num].Regenerates;
+               Place_Difference (Temp,PosZ);
+               Regen:=Regen+Temp;
+            End;
+
+   { Return function result }
+
+   If Character.Status=Asleep then Regen:=Regen+1;
+   If Not Alive(Character) then Regen:=0;
+   Regenerates:=Regen;
 End;  { Regenerates }
 
 (******************************************************************************)

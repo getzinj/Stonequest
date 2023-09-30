@@ -1,6 +1,8 @@
 [Inherit('TYPES', 'SYS$LIBRARY:STARLET','LIBRTL','SMGRTL','STRRTL')]
 Module AdminUtils;
 
+Const
+   Owner_Account = 'SYSTEM';
 
 Var
    DataModified:           [External]Boolean;
@@ -132,7 +134,7 @@ Var
 
 Begin { Handle Key }
     Choices:=['U','H','A','V','T','S','M','I','E','C','F','P','L'];
-    If User_Name<>'JGETZIN' then Choices:=['F','E'];
+    If User_Name<>Owner_Account then Choices:=['F','E'];
     Key_Stroke:=Make_Choice (Choices);
     Case Key_Stroke of
          'H': Begin
