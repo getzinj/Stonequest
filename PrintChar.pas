@@ -115,6 +115,178 @@ End;  { Initialize }
 
 (******************************************************************************)
 
+Function Center_Text (Txt: Line;  Line_Length: Integer:=80): Integer;
+
+Var Half: Integer;
+    Indent: Integer;
+
+Begin { Center Text }
+   Indent:=Txt.Length div 2;
+   Half:=Line_Length Div 2;
+   Center_Text:=Half-Indent;
+End;  { Center Text }
+
+(******************************************************************************)
+
+{ TODO: Enter this code }
+
+(******************************************************************************)
+
+Procedure Print_Item (Character: Character_Type; Position: Integer);
+
+Var
+   Item: Item_Record;
+   Temp: Equipment_Type;
+
+Begin
+  If Position Mod 2=1 then SMG$Erase_Line(ScreenDisplay);
+  SMG$Put_Chars (ScreenDisplay,
+      String(Position,1)
+      +')');
+      If Position<=Character.No_of_Items then
+         Begin
+            Temp:=Character.Item[Position];
+            Item:=Item_List[Temp, Item_num];
+            If (Temp.Equipted) and (Temp.Cursed) then
+               SMG$Put_Chars (ScreenDisplay,
+                   '-')
+            Else
+               If Temp.Equipted then
+                  SMG$Put_Chars (ScreenDisplay,
+                      '*')
+               Else
+                  If Not((Character.class in Item.usable_by) or (Character.PreviousClass in Item.Usable_By)) or
+                        ((Character.Alignment<>Item.Alignment) and (Item.Alignment<>NoAlign)) then
+                     SMG$Put_Char (ScreenDisplay,
+                        '#')
+                  Else
+                     SMG$Put_Char (ScreenDisplay,
+                         ' ');
+           If Temp.Ident then
+              SMG$Put_Chars (ScreenDisplay,
+                  Pad(Item.True_Name,
+                      ' ',20)
+           Else
+              SMG$Put_Chars (ScreenDisplay,
+                  Pad(Item.Name,
+                      ' ',20);
+         End;
+  If (Position Mod 2)=0 then SMG$Put_Line (
+     ScreenDisplay, '')
+  Else                 SMG$Set_Cursor_ABS (
+     ScreenDisplay,,32);
+End;
+
+(******************************************************************************)
+
+Procedure Print_Equipment (Character: Character_Type);
+
+Var
+  Eq: Integer;
+
+Begin { Print Equipment {
+  SMG$Begin_Display_Update (ScreenDisplay);
+  SMG$Set_Cursor_ABS (ScreenDisplay,14,5);
+  SMG$Put_Line (ScreenDisplay,
+      '* = Equipped,  - = Cu'
+      +'rsed,  ? = Unknown, '
+      +' # = Unusable');
+  For Eq:=1 to 8 do Print_It em (Character,Eq);
+  SMG$End_Display_Update (ScreenDisplay);
+End;  { Print Equipment {
+
+(******************************************************************************)
+
+Function Choose_Item (Character: Character_Type; Action: Line): [Volatile]Integer;
+
+Var
+  Choices: Char_Set;
+  Answer: Char;
+
+Begin { Choose Item }
+   If Character.No_of_items>0 then
+     Begin
+        SMG$Begin_Display_Update (ScreenDisplay);
+        SMG$Erase_Display (ScreenDisplay,19,1);
+        Print_Equipment (Character);
+        SMG$Put_Line (ScreenDisplay,
+            Action
+            +' which item? (1-'
+            +String(Character.No_of_items,1)
+            +', [RETURN] exits)', 0);
+        Choices:=['1'..CHR(Character.No_of_Items+ZeroOrd),CHR(13)];
+        Answer:=Make_Choice(Chocies);
+        If Answer=CHR(13) then Answer:='0';
+        Choose_Item:=Ord(Answer)-ZeroOrd;
+     End
+   Else
+     Choose_Item:=0;
+End; { Choose Item }
+
+
+(******************************************************************************)
+
+Function Choose_Character (Txt: Line; Party: Party_Type;  Party_Size: Integer; HP: Boolean:=False;
+                           Items: Boolean:=False): [Volatile]Integer;
+
+Var
+   StatusName: [External]Array [Status_Type] of Varying [14] of char;
+   Character,Temp: Integer;
+   Options: Char_Set;
+   Answer: Char;
+
+Begin { Choose Character }
+   Temp:=0;
+   SMG$Begin_Display_Update (ScreenDisplay);
+   SMG$Erase_Display (ScreenDisplay,14,1);
+   SMG$Set_Cursor_ABS (ScreenDisplay,15,1);
+   Options:=['1'..CHR(Party_Size+48)]+[CHR(13)];
+   For Character:=1 to Party_size do
+     Begin
+        SMG$Put_Chars (ScreenDisplay,
+            CHR(Character+48)
+            +') '
+            +Pad(Party[Character].Name, ' ',20));
+        If HP then
+           Begin
+              SMG$Put_Chars (ScreenDisplay,
+                 '  '
+                 +String(Party[Character].Curr_HP,4)
+                 +'/'
+                 +String(Party[Character].Max_HP,4));
+              SMG$Put_Chars (ScreenDisplay,
+                 '  '
+                 +StatusName[Party[Character].Status][1]);
+              SMG$Put_Chars (ScreenDisplay,
+                 StatusName[Party[Character].Status][2]);
+           End;
+        If Items and not HP then SMG$Put_Chars (ScreenDisplay,
+            ' ('
+            +String(Party[Character].No_of_Items)
+            +' items )  ');
+        If (Character mod 2)=0 then
+           SMG$Put_Line (ScreenDisplay,
+              '')
+        Else
+           Begin
+              SMG$Put_Chars (ScreenDisplay,
+                  ' ');
+              If Not (Items of HP) then SMG$Put_Chars (ScreenDisplay,
+                  Pad('',' ',13));
+           End;
+     End;
+  SMG$Put_Line (ScreenDisplay,
+     '');
+  SMG$Put_Chars (ScreenDisplay,Txt,19,1);
+  SMG$End_Display_Update (ScreenDisplay);
+  Answer:=Make_Choice (Options);
+  If Answer=CHR(13) then Temp:=0
+  Else                   Temp:=Ord(Answer)-48;
+  Choose_Character:=Temp;
+End;  { Choose Character }
+
+(******************************************************************************)
+
 { TODO: Enter this code }
 
 Procedure Cast_Camp_Spell (Var Character: Character_Type; Var Leave_Maze: Boolean;  Direction: Direction_Type;
@@ -126,30 +298,7 @@ End;
 
 { TODO: Enter this code }
 
-Procedure Print_Equipment (Character: Character_Type);
-
-Begin
-   { TODO: Enter this code }
-End;
-
-{ TODO: Enter this code }
-
-Function Choose_Item (Character: Character_Type; Action: Line): [Volatile]Integer;
-
-Begin
-   { TODO: Enter this code }
-   Choose_Item:=0;
-End;
-
-{ TODO: Enter this code }
-
-Function Choose_Character (Txt: Line; Party: Party_Type;  Party_Size: Integer; HP: Boolean:=False;
-                           Items: Boolean:=False): [Volatile]Integer;
-
-Begin
-   { TODO: Enter this code }
-   Choose_Character:=0;
-End;
+(******************************************************************************)
 
 { TODO: Enter this code }
 
