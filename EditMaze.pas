@@ -38,37 +38,35 @@ Value
    Level_Loaded:=0;
    Need_to_Load:=True;   Need_to_Save:=False;   Need_to_Load_Monsters:=True;
 
-SPKind_Name[NothingSpecial]    := 'Nothing';
-SPKind_Name[Msg]               := 'Message';
-SPKind_Name[Msg_Item_Given]    := 'Msg/Item';
-SPKind_Name[Msg_Pool]          := 'Msg/Pool';
-SPKind_Name[Msg_Hidden_Item]   := 'Msg/Hddn item';
-SPKind_Name[Msg_Need_Item]     := 'Msg/need_item';
-SPKind_Name[Msg_Lower_AC]      := 'Msg/Lower AC';
-SPKind_Name[Msg_Raise_AC]      := 'Msg/Raise AC';
-SPKind_Name[Msg_Goto_Castle]   := 'Msg/goto_castle';
-SPKind_Name[Msg_Encounter]     := 'Msg/encounter';
-SPKind_Name[Riddle]            := 'Riddle';
-SPKind_Name[Fee]               := 'Fee';
-SPKind_Name[Msg_Trade_Item]    := 'Trade items';
-SPKind_Name[Msg_Picture]       := 'Msg/Picture';
-SPKind_Name[Unknown]           := 'Unknown';
-
-
-Special_Kind[Nothing]          := 'Nothing';
-Special_Kind[Stairs]           := 'Stairs';
-Special_Kind[Pit]              := 'Pit';
-Special_Kind[Chute]            := 'Chute';
-Special_Kind[Rotate]           := 'Rotate';
-Special_Kind[Darkness]         := 'Darkness';
-Special_Kind[Teleport]         := 'Teleport';
-Special_Kind[Damage]           := 'Damage';
-Special_Kind[Elevator]         := 'Elevator';
-Special_Kind[Rock]             := 'Rock';
-Special_Kind[Antimagic]        := 'AntiMagic';
-Special_Kind[SPFeature]        := 'Special Feature';
-Special_Kind[An_Encounter]     := 'Encounter';
-Special_Kind[Cliff]            := 'Cliff';
+SPKind_Name[NothingSpecial]     := 'Nothing';
+SPKind_Name[Msg]                := 'Message';
+SPKind_Name[Msg_Item_Given]     := 'Msg/Item';
+SPKind_Name[Msg_Pool]           := 'Msg/Pool';
+SPKind_Name[Msg_Hidden_Item]    := 'Msg/Hddn item';
+SPKind_Name[Msg_Need_Item]      := 'Msg/need_item';
+SPKind_Name[Msg_Lower_AC]       := 'Msg/Lower AC';
+SPKind_Name[Msg_Raise_AC]       := 'Msg/Raise AC';
+SPKind_Name[Msg_Goto_Castle]    := 'Msg/goto_castle';
+SPKind_Name[Msg_Encounter]      := 'Msg/encounter';
+SPKind_Name[Riddle]             := 'Riddle';
+SPKind_Name[Fee]                := 'Fee';
+SPKind_Name[Msg_Trade_Item]     := 'Trade items';
+SPKind_Name[Msg_Picture]        := 'Msg/Picture';
+SPKind_Name[Unknown]            := 'Unknown';
+Special_Kind_Name[Nothing]      := 'Nothing';
+Special_Kind_Name[Stairs]       := 'Stairs';
+Special_Kind_Name[Pit]          := 'Pit';
+Special_Kind_Name[Chute]        := 'Chute';
+Special_Kind_Name[Rotate]       := 'Rotate';
+Special_Kind_Name[Darkness]     := 'Darkness';
+Special_Kind_Name[Teleport]     := 'Teleport';
+Special_Kind_Name[Damage]       := 'Damage';
+Special_Kind_Name[Elevator]     := 'Elevator';
+Special_Kind_Name[Rock]         := 'Rock';
+Special_Kind_Name[Antimagic]    := 'AntiMagic';
+Special_Kind_Name[SPFeature]    := 'Special Feature';
+Special_Kind_Name[An_Encounter] := 'Encounter';
+Special_Kind_Name[Cliff]        := 'Cliff';
 
 (******************************************************************************)
 [External]Procedure Delay (Seconds: Real);External;
@@ -87,7 +85,7 @@ Procedure Print_Level;
 { This procedure will print the name of the current level on the screen }
 
 Begin { Print Level }
-   If Level_Loaded>0 then SMG$_Put_Chars (ScreenDisplay,
+   If Level_Loaded>0 then SMG$Put_Chars (ScreenDisplay,
        'Current Level:  '
        +String(Level_Loaded),1,1)
 End;  { Print Level }
@@ -206,7 +204,7 @@ Begin { Load Level }
    SMG$Erase_Display (ScreenDisplay);
    Print_Level;
    Print_Load_Choices;
-   SMG$End_Display_Update();
+   SMG$End_Display_Update(ScreenDisplay);
 
   { Make and handle choice }
 
@@ -454,6 +452,179 @@ Begin
 ENd;
 
       { TODO: Enter this code }
+
+(******************************************************************************)
+
+Function Top_Row (Spot: Room_Record): Line;
+
+Var
+  T: Line;
+
+Begin
+   T:='';
+   If (Spot.North<>Passage) or (Spot.West<>Passage) then
+       T:=T+Wall_Char;
+   Else
+       T:=T+' ';
+
+   Case Spot.North of
+      Passage:      T:=T+' ';
+      Transparent:  T:=T+Transparent_Char;  { w }
+      Walk_Through: T:=T+Walk_Through_Char;  { ~ }
+      Wall:         T:=T+Wall_Char;  { - }
+      Door:         T:=T+Door_Char;  { ^ }
+      Secret:       T:=T+Secret_Char;
+      Otherwise     T:=T+Space_Char;
+   End;
+
+   If (Spot.North<>Passage) or (Spot.East<>Passage) then
+       T:=T+Wall_Char;
+   Else
+       T:=T+' ';
+   Top_Row:=T;
+End;
+
+      { TODO: Enter this code }
+
+(******************************************************************************)
+
+Procedure Floor_Plan_Edit (Var Maze: Floor_Type);
+
+{ This procedure allows the user to edit the physical floor plant.  Also, the user can elect to enter the Feature edit mode, or the
+  room-corridor edit mode }
+
+Const
+    Command_Line = 'Arrows, '
+        +'F)eat, P)ass, R)m,'
+        +' X=Wlk-thr, T)ran'
+        +'s, D)oor, W)all, '
+        +'S)ecr, E)xit';
+
+Var
+  Answer: Char;
+  TopY,CursorX,CursorY: Integer;
+
+Begin { Floor Plan Edit }
+  TopY:=1;  CursorX:=1;  CursorY:=1;  { Initialize positional pointers }
+  Repeat
+     Begin { Repeat }
+
+        { Print the floor plan on the screen }
+
+        SMG$Begin_Display_Update (ScreenDisplay);
+        SMG$Erase_Display (ScreenDisplay);
+        SMG$Put_Chars (ScreenDisplay,Command_Line,1,1,1,1);
+        SMG$Set_Cursor_ABS (ScreenDisplay,2,1);
+        Print_Screen (Maze,CursorX,CursorY,1,TopY);
+        SMG$Put_Chars (ScreenDisplay,
+            'X:'
+            +String(CursorX,2)
+            +' Y: '
+            +String(CursorY,2)
+            +' Z: '
+            +String(Level_Loaded,2),2,66);
+        SMG$End_Display_Update (ScreenDisplay);
+
+        { Get user response }
+
+        Answer:=Make_Choice (['X',Down_Arrow,Up_Arrow,Left_Arrow,'T',Right_Arrow,'P','S','D','W','F','E','R']);
+        Case Answer of
+                    'E': ;
+                    'F': Special_Placement (Maze,CursorX,CursorY,TopY);
+                    'R': Room_or_Corridor (Maze,CursorX,CursorY,TopY);
+                    'T': Change_Room (Maze[CursorX,CursorY],Transparent);  { Add transparenmt }
+                    'W': Change_Room (Maze[CursorX,CursorY],Wall);  { Add wall }
+                    'D': Change_Room (Maze[CursorX,CursorY],Door);  { Add door }
+                    'S': Change_Room (Maze[CursorX,CursorY],Secret);  { Add sec. door }
+                    'P': Change_Room (Maze[CursorX,CursorY],Passage);  { Add passage }
+                    'X': Change_Room (Maze[CursorX,CursorY],Walk_Through);
+             Left_Arrow: Move_Left (CursorX,CursorY,TopY);
+            Right_Arrow: Move_Right (CursorX,CursorY,TopY);
+               Up_Arrow: Move_Up (CursorY,TopY);
+             Down_Arrow: Move_Down (CursorY,TopY);
+        End;
+     End;  { Repeat }
+  Until answer='E'; { Until the user wants to E)xit this menu }
+End;  { Floor Plan Edit }
+
+(******************************************************************************)
+
+Procedure Edit_Level (Var Floor: Level);
+
+{ This procedure allows the user to edit the current level, FLOOR }
+
+Var
+   Answer: Char;
+
+Begin { Edit Level }
+  Repeat
+     Begin { Repeat }
+        SMG$Begin_Display_Update (ScreenDisplay);
+        SMG$Erase_Display (ScreenDisplay);
+        Print_Level;
+        SMG$Put_Chars (ScreenDisplay,'Edit Level',5,28,,1);
+        SMG$Put_Chars (ScreenDisplay,'---- -----',6,28,,1);
+        SMG$Put_Chars (ScreenDisplay,' E)ncounter Table edit',7,28);
+        SMG$Put_Chars (ScreenDisplay,' S)pecial Table edit',8,28);
+        SMG$Put_Chars (ScreenDisplay,' F)loorplan edit',9,28);
+        SMG$Put_Chars (ScreenDisplay,' L)eave this menu',10,28);
+        SMG$Put_Chars (ScreenDisplay,' Which?',12,28);
+        SMG$End_Display_Update (ScreenDisplay);
+        Answer:=Make_Choice (['F','S','E','L']);
+        Case Answer of
+               'F': Floor_Plan_Edit (Floor.Room);
+               'S': Special_Edit (Floor.Special_Table);
+               'E': Encounter_Edit (Floor.Monsters);
+               'L': ;
+        End;
+        If Answer<>'L' then Need_to_Save:=True;
+     End;  { Repeat }
+  Until Answer='L';  { Until the user wants to L)eave this }
+End;  { Edit Level }
+
+(******************************************************************************)
+
+Procedure Print_Main_Menu;
+
+Begin
+   SMG$Put_Chars (ScreenDisplay,'Maze Editor   ',5,33,,1);
+   SMG$Put_Chars (ScreenDisplay,'---- ------   ',6,33,,1);
+   SMG$Put_Chars (ScreenDisplay,' L)oad a level',7,33);
+   SMG$Put_Chars (ScreenDisplay,' S)ave current level',8,33);
+   SMG$Put_Chars (ScreenDisplay,' E)dit current level',9,33);
+   SMG$Put_Chars (ScreenDisplay,' P)rint current level to file',10,33);
+   SMG$Put_Chars (ScreenDisplay,' Q)uit editor',11,33);
+   SMG$Put_Chars (ScreenDisplay,' Which?',12,33);
+   SMG$End_Display_Update (ScreenDisplay);
+End;
+
+(******************************************************************************)
+
+Procedure Ask_to_Load_Level;
+
+Begin
+  If (Need_to_Save) then
+     Begin
+       SMG$Put_Line (ScreenDisplay,'');
+       SMG$Put_Line (ScreenDisplay,'Throw away changes? (Y/N)');
+       If YES_OR_NO='Y' then Load_Level (Floor);
+     End
+  Else
+     Load_Level (Floor);
+End;
+
+(******************************************************************************)
+
+Procedure Ask_To_Save_Level (Var Answer: Char);
+
+Begin
+   If Need_to_Save then
+      Begin
+         SMG$Put_Line (ScreenDisplay,'');
+         SMG$Put_Line (ScreenDisplay,'Throw away changes? (Y/N)');
+         If YES_OR_NO='N' then Answer:='*';
+      End;
+End;
 
 (******************************************************************************)
 
