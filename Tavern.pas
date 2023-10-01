@@ -327,6 +327,7 @@ Begin { Remove Member }
    SMG$Put_Line (BottomDisplay,
        '([RETURN] exits)  --->',
        0);
+   SMG$End_Display_Update (BottomDisplay);
 
    { Get it }
 
