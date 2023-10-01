@@ -217,9 +217,9 @@ Begin { Player Utilities }
          SMG$Begin_Display_Update (Utilitiesdisplay);
          SMG$Erase_Display (Utilitiesdisplay);
          SMG$Put_Chars (UtilitiesDisplay,
-             'Player Utilities Menu',   ,6,27,,1);
+             'Player Utilities Menu',6,27,,1);
          SMG$Put_Chars (UtilitiesDisplay,
-             '------ --------- ----',   ,7,27,,1);
+             '------ --------- ----',7,27,,1);
          SMG$Put_Chars (UtilitiesDisplay,
              ' C)hange print queue'     ,8,27);
          SMG$Put_Chars (UtilitiesDisplay,
