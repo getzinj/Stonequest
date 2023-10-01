@@ -59,7 +59,7 @@ End;  { Character Record Exists }
 
 (******************************************************************************)
 
-Procedure Put_Character_in_Slot (Var Character: Character_Type; Slot: Integer);
+Procedure Put_Character_in_Slot (Character: Character_Type; Slot: Integer);
 
 Begin { IF the character already exists in the roster }
    Roster[Slot]:=Character;  { Store an updated copy }
@@ -68,7 +68,7 @@ End;  { If the character already exists in the roster }
 
 (******************************************************************************)
 
-[Global]Procedure Store_Character (Var Character: Character_Type);
+[Global]Procedure Store_Character (Character: Character_Type);
 
 { This procedure will store CHARACTER in the roster }
 
@@ -92,12 +92,12 @@ Begin  { Store Character }
             Repeat  Slot:=Slot+1  Until Roster[Slot].Status=Deleted;
             Put_Character_In_Slot (Character,Slot);
 
-         End;  { If the character doesn't exists}
+         End    { If the character doesn't exists}
 End;  { Store Character }
 
 (******************************************************************************)
 
-Procedure Store_Character_Without_Lock (Var Character: Character_Type);
+Procedure Store_Character_Without_Lock (Character: Character_Type);
 
 { This procedure will store CHARACTER in the roster }
 
@@ -105,13 +105,13 @@ Var
    Slot: Integer;
    Name: Line;
 
-Begin  { Store Character }
+Begin  { Store Character without Lock }
    Name:=Character.Name;
    If Character_Exists (Name,Slot) then
-      Put_Character_In_Slot (Character,Slot)
+      Roster[Slot]:=Character  { Store an updated copy }
    Else
       If Character_Record_Exists (Name, Slot) then
-         Put_Character_In_Slot (Character, Slot)
+         Roster[Slot]:=Character
       Else
          Begin { If the character doesn't exist }
 
@@ -119,15 +119,15 @@ Begin  { Store Character }
 
             Slot:=0;
             Repeat  Slot:=Slot+1  Until Roster[Slot].Status=Deleted;
-            Put_Character_In_Slot (Character,Slot);
+            Roster[Slot]:=Character;
 
-         End;  { If the character doesn't exists}
+         End;  { If the character doesn't exists }
   Roster[Slot].Lock:=True;
 End;  { Store Character Without Lock }
 
 (******************************************************************************)
 
-[Global]Procedure Backup_Party (Var Party: Party_Type; Party_Size: Integer);
+[Global]Procedure Backup_Party (Party: Party_Type; Party_Size: Integer);
 
 Var
    Character: Integer;
@@ -139,7 +139,7 @@ End;  { Backup Party }
 
 (******************************************************************************)
 
-[Global]Procedure Save_Characters (Var Party: Party_Type;  Var Party_Size: Integer);
+[Global]Procedure Save_Characters (Party: Party_Type;  Var Party_Size: Integer);
 
 { This procedure removes every member of the current party, and stores them back in the roster so that it can be saved at the end
   of play   }
@@ -276,7 +276,6 @@ Procedure Run_Kyrn (Party_Size: Integer);
                 Tavern - Kyrn - Store
                         /    \
                   Church      Casino     }
-
 
 Var
    Choices: Char_Set;
@@ -492,7 +491,7 @@ End;  { Initialize Kyrn }
 
 (******************************************************************************)
 
-Procedure Quit (Var Party: Party_Type; Var Party_Size: Integer);
+Procedure Quit (Party: Party_Type; Var Party_Size: Integer);
 
 { This procedure is called when the player elects to leave the game.  All it does is save off the party, if not in an auto-save,
   and unpastes the pasted displays }
