@@ -308,10 +308,174 @@ End;
 
 (******************************************************************************)
 
-{ TODO: Enter this code }
+Procedure Edit_Encounter (Index: Integer; Var Enc: Encounter);
+
+Var
+  Number: Integer;
+  Answer: Char;
+
+Begin
+   Repeat
+      Begin
+         Print_Encounter_Menu (Index,Enc);
+         Answer:=Make_Choice (['A'..'C','E']);
+         If Answer in ['A','C'] then
+            Begin
+               SMG$Put_Chars (ScreenDisplay,
+                   'Enter an integer: ',13,1);
+               Get_Num (Number,ScreenDisplay);
+               Case Answer of
+                  'A': If (Number<=450) and (Number>=0) then
+                         Enc.Base_Monster_Number:=Number
+                       Else
+                         Enc.Base_Monster_Number:=450;
+                  'C': If (Number<=200) and (Number>=0) then
+                         Enc.Probability:=Number
+                       Else
+                         Enc.Probability:=200;
+               End
+            End
+         Else
+            If Answer='B' then
+               Begin
+                  SMG$Put_Chars(ScreenDisplay,'Enter X: ',13,1);
+                  Get_Num (Enc.Addition.X,ScreenDisplay);
+                  SMG$Put_Chars(ScreenDisplay,'Enter Y: ',14,1);
+                  Get_Num (Enc.Addition.Y,ScreenDisplay);
+                  SMG$Put_Chars(ScreenDisplay,'Enter Z: ',15,1);
+                  Get_Num (Enc.Addition.Z,ScreenDisplay);
+               End;
+      End;
+   Until Answer='E'
+End;
+
+(******************************************************************************)
+
+Procedure Print_Range (Enc: Encounter);
+
+Var
+  T: Line;
+  First,Last: Integer;
+
+Begin
+   T:='';
+   Check_Monsters;
+   First:=Enc.Base_Monster_Number;  Last:=First+(Enc.Addition.X*Enc.Addition_Y)+Enc.Addition.Z;
+   If (First>0) and (Last<451) then
+       T:='['
+       +Monster[First].Real_Name
+       +'-'
+       +Monster[Last].Real_Name
+       +']';
+   SMG$Put_Chars (ScreenDisplay, T);
+End;
+
+(******************************************************************************)
+
+Procedure Encounter_Edit (Var Table: Encounter_Table);
+
+Var
+   Answer: Char;
+
+Begin
+   Repeat
+      Begin
+         SMG$Begin_Display_Update (ScreenDisplay);
+         SMG$Erase_Display (ScreenDisplay);
+         Print_Level;
+         SMG$Put_Chars (ScreenDisplay,
+             'Encounter Edit',5,29,,1);
+         SMG$Put_Chars (ScreenDisplay,
+             '--------- ----',6,29,,1);
+         SMG$Put_Chars (ScreenDisplay,
+             ' 1) Edit Encounter one  '
+             +' (wandering) ',7,1);
+         Print_Range (Table[1]);
+         SMG$Put_Chars (ScreenDisplay,
+             ' 2) Edit Encounter two  '
+             +' (lair)      ',8,1);
+         Print_Range (Table[2]);
+         SMG$Put_Chars (ScreenDisplay,
+             ' 3) Edit Encounter three '
+             +'(?special?) ',9,1);
+         Print_Range (Table[3]);
+         SMG$Put_Chars (ScreenDisplay,
+             ' 0) Exit',10,1);
+         SMG$Put_Chars (ScreenDisplay,
+             ' Which?',12,1);
+         SMG$End_Display_Update (ScreenDisplay);
+         Answer:=Make_Choice (['0'..'3']);
+         If Answer<>'0' then Edit_Encounter (Ord(Answer)-ZeroOrd,Table[Ord(Answer)-ZeroOrd]);
+      End;
+   Until (Answer='0');
+End;
+
+(******************************************************************************)
+
+Procedure Print_Item (Table: Special_Table_Type; Position: Integer);
+
+Var
+   T: Line;
+   Item: Integer;
+
+Begin
+   Item:=Position;
+   T:=' '+CHR(Position+65);
+   T:=T+' '+Special_Kind_Name[Table[Item].Special];
+   T:=T+' ';
+   If Table[Item].Special=SPFeature then
+      T:=T+SPKind_Name[Table[Item].Feature]
+   Else
+      T:=T+Pad('Nothing',' ',15);
+   T:=T+' ';
+   T:=T+String (table[Item].Pointer1,10);
+   T:=T+' ';
+   T:=T+String (table[Item].Pointer2,10);
+   T:=T+' ';
+   T:=T+String (table[Item].Pointer3,10);
+   SMG$Put_Chars (ScreenDisplay,T,Position+5,1);
+End;
+
+(******************************************************************************)
+
+Procedure Print_Special_Item (Special: SpKind; Position: Integer);
+
+Begin
+   SMG$Put_Chars (ScreenDisplay,SpKind_Name[Special],Position+5,20);
+ENd;
+
+
+(******************************************************************************)
+
+Procedure Print_Feature_Item (Feature: Special_Kind; Position: Integer);
+
+Begin
+   SMG$Put_Chars (ScreenDisplay,Special_Kind_Name[Feature],Position+5,4);
+ENd;
+
+      { TODO: Enter this code }
+
+(******************************************************************************)
 
 [Global]Procedure Edit_Maze (Var MazeFile: LevelFile);
+
 Begin { Edit Maze }
-{ TODO: Enter this code }
+   Repeat
+      Begin { Repeat }
+         SMG$Begin_Display_Update (ScreenDisplay);
+         SMG$Erase_Display (ScreenDisplay);
+         Print_Level;  { Print the level number (if any) at top of screen }
+         Print_Main_Menu;
+         Answer:=Make_Choice (['L','S','E','Q','P']);  { Get the command }
+         Case Answer of
+                'L':  Ask_to_load_Level;
+                'P': If Not Need_to_Load then Print_Level_to_File (Floor.Room);
+                'S': If Not Need_to_Load then Save_Level (Floor);
+                'E': If Not Need_to_Load then Edit_Level (Answer);
+                'Q': Ask_to_Save_Level (Answer);
+         End;
+      End;  { Repeat }
+   Until Answer='Q';  { Until the user wants to Q)uit editting }
+   Need_to_Save:=False;
 End;  { Edit Maze }
 End.  { Edit Maze }
