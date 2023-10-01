@@ -41,7 +41,7 @@ Value
 [External]Function  Compute_Hit_Die (Character: Character_Type): Integer;external;
 [External]Function  Regenerates (Character: Character_Type):Integer;external;
 [External]Procedure Restore_Spells (Var Character: Character_Type);external;
-[External]Procedure Store_Character (Character: Character_Type);external;
+[External]Procedure Store_Character (Var Character: Character_Type);external;
 {******************************************************************************)
 
 Procedure Update_Class_Choices (Character: Character_Type);

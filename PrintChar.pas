@@ -69,6 +69,11 @@ Var
 [External]Function Alive (Character: Character_Type): Boolean;External;
 [External]Procedure Find_Spell_Group (Spell: Spell_Name;  Character: Character_Type;  Var Class,Level: Integer);External;
 [External]Function Caster_Level (Cls: Integer; Character: Character_Type): Integer;External;
+[External]Procedure Cast_Camp_Spell (Var Character: Character_Type; Var Leave_Maze: Boolean;  Direction: Direction_Type;
+                                     Var Party: Party_Type;  Var Party_Size: Integer);External;
+[External]Procedure Handle_Spell (Var Character: Character_Type; Spell: Spell_Name;  Class,Spell_Level: Integer;  Var Leave_Maze: Boolean;
+                                  Direction: Direction_Type;  Var Party: Party_Type;  Var Party_Size: Integer;  Item_Spell: Boolean:=False);External;
+
 (******************************************************************************)
 
 Function Can_Use (Character: Character_Type; Stats: Equipment_Type): Boolean;
@@ -128,7 +133,47 @@ End;  { Center Text }
 
 (******************************************************************************)
 
-{ TODO: Enter this code }
+Procedure Select_Camp_Spell (Var SpellChosen: Spell_Name);
+
+Var
+  SpellName: Line;
+  Location,Loop: Spell_Name;
+  Long_Spell: [External]Array [Spell_Name] of Varying[25] of Char;
+
+Begin { Select Camp Spell }
+   Location:=NoSp;
+   SMG$Set_Cursor_ABS (ScreenDisplay,20,1);
+   Cursor;
+   SMG$Read_String (Keyboard,SpellName,Display_ID:=ScreenDisplay,
+       prompt_string:='--->');
+   No_Cursor;
+   If SpellName.Length<4 then SpellName:=Pad(SpellName,' ',4);
+   For Loop:=CrLt to DetS do
+       If (STR$Case_Blind_Compare(Spell[Loop]+'',SpellName)=0) or
+          (STR$Case_Blind_Compare(Long_Spell[Loop]+'',SpellName)=0) then
+          Location:=Loop;
+   SpellChosen:=Location;
+   SMG$Erase_Line (ScreenDisplay,20);
+End;  { Select Camp Spell }
+
+(******************************************************************************)
+
+Procedure Handle_Party_Spell (Caster_Level: Integer; Spell: Spell_Name; Var Party: Party_Type; Party_Size: Integer);
+
+Var
+  Add: Integer;
+  Position: Integer;
+
+Begin
+   Case Spell of
+        DiPr: Add:=2;
+        HgSh: Add:=4;
+   End;
+   Rounds_Left[Spell]:=Rounds_Left[Spell]+Spell_Duration (Spell,Caster_Level);
+   For Position:=1 to Party_Size do
+      Party[Position].Armor_Class:=Party[Position].Armor_Class-Add;
+   SMG$Put_Chars (ScreenDisplay,Done_It,23,32);
+End;
 
 (******************************************************************************)
 
@@ -146,7 +191,7 @@ Begin
       If Position<=Character.No_of_Items then
          Begin
             Temp:=Character.Item[Position];
-            Item:=Item_List[Temp, Item_num];
+            Item:=Item_List[Temp.Item_num];
             If (Temp.Equipted) and (Temp.Cursed) then
                SMG$Put_Chars (ScreenDisplay,
                    '-')
@@ -157,19 +202,19 @@ Begin
                Else
                   If Not((Character.class in Item.usable_by) or (Character.PreviousClass in Item.Usable_By)) or
                         ((Character.Alignment<>Item.Alignment) and (Item.Alignment<>NoAlign)) then
-                     SMG$Put_Char (ScreenDisplay,
+                     SMG$Put_Chars (ScreenDisplay,
                         '#')
                   Else
-                     SMG$Put_Char (ScreenDisplay,
+                     SMG$Put_Chars (ScreenDisplay,
                          ' ');
            If Temp.Ident then
               SMG$Put_Chars (ScreenDisplay,
                   Pad(Item.True_Name,
-                      ' ',20)
+                      ' ',20))
            Else
               SMG$Put_Chars (ScreenDisplay,
                   Pad(Item.Name,
-                      ' ',20);
+                      ' ',20));
          End;
   If (Position Mod 2)=0 then SMG$Put_Line (
      ScreenDisplay, '')
@@ -184,16 +229,16 @@ Procedure Print_Equipment (Character: Character_Type);
 Var
   Eq: Integer;
 
-Begin { Print Equipment {
+Begin { Print Equipment }
   SMG$Begin_Display_Update (ScreenDisplay);
   SMG$Set_Cursor_ABS (ScreenDisplay,14,5);
   SMG$Put_Line (ScreenDisplay,
       '* = Equipped,  - = Cu'
       +'rsed,  ? = Unknown, '
       +' # = Unusable');
-  For Eq:=1 to 8 do Print_It em (Character,Eq);
+  For Eq:=1 to 8 do Print_Item (Character,Eq);
   SMG$End_Display_Update (ScreenDisplay);
-End;  { Print Equipment {
+End;  { Print Equipment }
 
 (******************************************************************************)
 
@@ -215,7 +260,7 @@ Begin { Choose Item }
             +String(Character.No_of_items,1)
             +', [RETURN] exits)', 0);
         Choices:=['1'..CHR(Character.No_of_Items+ZeroOrd),CHR(13)];
-        Answer:=Make_Choice(Chocies);
+        Answer:=Make_Choice(Choices);
         If Answer=CHR(13) then Answer:='0';
         Choose_Item:=Ord(Answer)-ZeroOrd;
      End
@@ -271,7 +316,7 @@ Begin { Choose Character }
            Begin
               SMG$Put_Chars (ScreenDisplay,
                   ' ');
-              If Not (Items of HP) then SMG$Put_Chars (ScreenDisplay,
+              If Not (Items or HP) then SMG$Put_Chars (ScreenDisplay,
                   Pad('',' ',13));
            End;
      End;
@@ -287,14 +332,7 @@ End;  { Choose Character }
 
 (******************************************************************************)
 
-{ TODO: Enter this code }
 
-Procedure Cast_Camp_Spell (Var Character: Character_Type; Var Leave_Maze: Boolean;  Direction: Direction_Type;
-                          Var Party: Party_Type;  Var Party_Size: Integer);
-
-Begin
-   { TODO: Enter this code }
-End;
 
 { TODO: Enter this code }
 
@@ -331,14 +369,6 @@ End;
 
 
 Procedure Item_Breaks (Character: Character_Type; Var Equipment: Equipment_Type);
-
-Begin
-  { TODO: Enter this code }
-End;
-
-
-Procedure Handle_Spell (Var Character: Character_Type; Spell: Spell_Name;  Class,Spell_Level: Integer;  Var Leave_Maze: Boolean;
-                        Direction: Direction_Type;  Var Party: Party_Type;  Var Party_Size: Integer;  Item_Spell: Boolean:=False);
 
 Begin
   { TODO: Enter this code }

@@ -8,6 +8,8 @@ $      write sys$output "Compiling Types.pas"
 $      pas Types
 $      write sys$output "Compiling Stonequest.pas"
 $      pas Stonequest
+$      write sys$output "Compiling AdminUtils.pas"
+$      pas AdminUtils
 $      write sys$output "Compiling Camp.pas"
 $      pas Camp
 $      write sys$output "Compiling Casino.pas"
@@ -62,6 +64,8 @@ $      write sys$output "Compiling PlaceStack.pas"
 $      pas PlaceStack
 $      write sys$output "Compiling PrintChar.pas"
 $      pas PrintChar
+$      write sys$output "Compiling PrintCharSpell.pas"
+$      pas PrintCharSpell
 $      write sys$output "Compiling Random.pas"
 $      pas Random
 $      write sys$output "Compiling Scores.pas"
@@ -84,8 +88,6 @@ $      write sys$output "Compiling View.pas"
 $      pas View
 $      write sys$output "Compiling Windows.pas"
 $      pas Windows
-$      write sys$output "Compiling AdminUtils.pas"
-$      pas AdminUtils
 $      write sys$output "Compiling PlayerUtils.pas"
 $      pas PlayerUtils
 $      write sys$output "Assembling Handler.mar"
@@ -99,7 +101,7 @@ $!
 $!
 $      Link Camp,Casino,Character,CharacterAttacks,Church,Compute,Craps,-
        Demo,EditMaze,Encounter,Experience,Keyboard,Random,-
-       GiveTreasure,Help,Hours,Inn,Io,Items,Tables,-
+       GiveTreasure,Help,Hours,Inn,Io,Items,Tables,PrintCharSpell,-
        Kyrn,LibRtl,Maze,Messages,Monster,MonsterAttack,PicEdit,PickPocket,-
        PlaceStack,PrintChar,Scores,Shell_Out,Slots,SmgRtl,Stonequest,-
        AdminUtils,PlayerUtils,Store,StrRtl,Tavern,Training,Treasure,-

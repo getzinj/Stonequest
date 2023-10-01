@@ -39,7 +39,7 @@ Var
 [External]Function String(Num: Integer; Len: Integer:=0):Line;external;
 [External]Procedure Delay (Seconds: Real);External;
 [External]Procedure Print_Character_Line (CharNo: Integer; Party: Party_Type; Party_Size: Integer);External;
-[External]Procedure Store_Character (Character: Character_Type);External;
+[External]Procedure Store_Character (Var Character: Character_Type);External;
 [External]Procedure Backup_Party (Party: Party_Type;  Party_Size: Integer);External;
 (******************************************************************************)
 
@@ -512,7 +512,7 @@ Begin { Print Choices }
        'Welcome to the tavern of '
        +'the Archmage, Dor!',2);
    Choices:=['L','?'];
-   T:='Thou cants: ';
+   T:='Thou canst: ';
    If Party_Size<6 then  { If there's room for more... }
       Begin
          Print_Options (T,
@@ -525,7 +525,7 @@ Begin { Print Choices }
             'load P)arty, ');
             Choices:=Choices+['P'];
       End;
-   If Party_Size<0 then  { If there are characters in the party... }
+   If Party_Size>0 then  { If there are characters in the party... }
       Begin
          Print_Options (T,
             'R)emove a member, ');

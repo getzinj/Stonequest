@@ -59,7 +59,7 @@ End;  { Character Record Exists }
 
 (******************************************************************************)
 
-Procedure Put_Character_in_Slot (Character: Character_Type; Slot: Integer);
+Procedure Put_Character_in_Slot (Var Character: Character_Type; Slot: Integer);
 
 Begin { IF the character already exists in the roster }
    Roster[Slot]:=Character;  { Store an updated copy }
@@ -68,7 +68,7 @@ End;  { If the character already exists in the roster }
 
 (******************************************************************************)
 
-[Global]Procedure Store_Character (Character: Character_Type);
+[Global]Procedure Store_Character (Var Character: Character_Type);
 
 { This procedure will store CHARACTER in the roster }
 
@@ -97,7 +97,7 @@ End;  { Store Character }
 
 (******************************************************************************)
 
-Procedure Store_Character_Without_Lock (Character: Character_Type);
+Procedure Store_Character_Without_Lock (Var Character: Character_Type);
 
 { This procedure will store CHARACTER in the roster }
 
@@ -127,7 +127,7 @@ End;  { Store Character Without Lock }
 
 (******************************************************************************)
 
-[Global]Procedure Backup_Party (Party: Party_Type; Party_Size: Integer);
+[Global]Procedure Backup_Party (Var Party: Party_Type; Party_Size: Integer);
 
 Var
    Character: Integer;
@@ -139,7 +139,7 @@ End;  { Backup Party }
 
 (******************************************************************************)
 
-[Global]Procedure Save_Characters (Party: Party_Type;  Var Party_Size: Integer);
+[Global]Procedure Save_Characters (Var Party: Party_Type;  Var Party_Size: Integer);
 
 { This procedure removes every member of the current party, and stores them back in the roster so that it can be saved at the end
   of play   }
@@ -213,7 +213,7 @@ End;  { Update Screen }
 [External]Procedure Run_Trading_Post (Var Party: Party_Type; Party_Size: Integer);External;
 [External]Procedure Run_Training_Grounds;External;
 [External]Procedure Run_Inn (Var Party: Party_Type; Party_Size: Integer);External;
-[External]Procedure Run_Tavern (Var Party: Party_Type; Party_Size: Integer);External;
+[External]Procedure Run_Tavern (Var Party: Party_Type; Var Party_Size: Integer);External;
 [External]Procedure Enter_Maze (Party_Size: Integer; Var Member: Party_Type);External;
 [External]Procedure Run_Casino (Var Party: Party_Type; Party_Size: Integer);External;
 (******************************************************************************)
@@ -407,7 +407,7 @@ End;  { Go Training Grounds }
 
 (******************************************************************************)
 
-Procedure Location_Driver (Party: Party_Type; Var Party_Size: Integer);
+Procedure Location_Driver (Var Party: Party_Type; Var Party_Size: Integer);
 
 { This procedure handles all the locations.  It will branch to the appropriate subroutine depending on where the party is }
 
@@ -492,7 +492,7 @@ End;  { Initialize Kyrn }
 
 (******************************************************************************)
 
-Procedure Quit (Party: Party_Type; Var Party_Size: Integer);
+Procedure Quit (Var Party: Party_Type; Var Party_Size: Integer);
 
 { This procedure is called when the player elects to leave the game.  All it does is save off the party, if not in an auto-save,
   and unpastes the pasted displays }
