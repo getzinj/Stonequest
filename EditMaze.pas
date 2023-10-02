@@ -453,6 +453,12 @@ ENd;
 
       { TODO: Enter this code }
 
+Procedure Special_Edit (Var Table: Special_Table_Type);
+
+Begin
+      { TODO: Enter this code }
+End;
+
 (******************************************************************************)
 
 Function Top_Row (Spot: Room_Record): Line;
@@ -484,7 +490,358 @@ Begin
    Top_Row:=T;
 End;
 
+(******************************************************************************)
+
+Function Middle_Row (Spot: Room_Record; Mode: Print_Mode): Line;
+
+Var
+  T: Line;
+
+Begin
+  T:='';
+  Case Spot.West of
+     Passage:      T:=' ';
+     Transparent:  T:=Transparent_Char;  { left curly bracket }
+     Wall:         T:=Wall_Char;         { | }
+     Walk_Through: T:=Walk_Through_Char; { S }
+     Door:         T:=Door_Char;         { < }
+     Secret:       T:=Secret_Char;       { $ }
+     Otherwise     T:=Space_Char;
+  End;
+
+  Case Mode of
+     Normal:                           T:=T+Space_Char;
+     Rooms:  If Spot.Kind=Room then    T:=T
+         +'R'
+             Else                      T:=T
+         +'C';
+     Specials:                         T:=T+CHR(Ord(Spot.Contents)+65);
+     Otherwise                         T:=T+Space_Char;
+  End;
+
+  Case Spot.East of
+     Passage:      T:=T+' ';
+     Transparent:  T:=T+Transparent_Char;  { left curly bracket }
+     Wall:         T:=T+Wall_Char;         { | }
+     Walk_Through: T:=T+Walk_Through_Char; { S }
+     Door:         T:=T+Door_Char;         { < }
+     Secret:       T:=T+Secret_Char;       { $ }
+     Otherwise     T:=T+Space_Char;
+  End;
+  Middle_Row:=T;
+End;
+
+(******************************************************************************)
+
+Function Bottom_Row (Spot: Room_Record): Line;
+
+Var
+  T: Line;
+
+Begin
+   T:='';
+   If (Spot.South<>Passage) or (Spot.West<>Passage) then
+       T:=T+Wall_Char { + }
+   Else
+       T:=T+' ';
+
+   Case Spot.South of
+      Passage:      T:=T+' ';
+      Transparent:  T:=T+Transparent_Char;  { w }
+      Walk_Through: T:=T+Walk_Through_Char;  { ~ }
+      Wall:         T:=T+Wall_Char;  { - }
+      Door:         T:=T+Door_Char;  { ^ }
+      Secret:       T:=T+Secret_Char;
+      Otherwise     T:=T+Space_Char;
+   End;
+   If (Spot.South<>Passage) or (Spot.East<>Passage) then
+       T:=T+Wall_Char { + }
+   Else
+       T:=T+' ';
+   Bottom_Row:=T;
+End;
+
+
+Procedure Print_Key;
+
+Begin
+   { TODO: Enter this code }
+End;
+
+
+(******************************************************************************)
+
+Procedure Print_Screen (Maze: Floor_Type;  CursorX,CursorY,TopX,TopY: Integer;  Mode: Print_Mode:=Normal);
+
+Type
+   Row_Type = (Top,Middle,Bottom);
+
+Var
+  T: Line;
+  Row: Row_Type;
+  RoomX,RoomY,SpotY,LastX,LastY: Integer;
+  Spot: Room_Record;
+  Spot_Special: Special_Kind;
+  SP: SPKind;
+
+Begin
+  LastX:=1+20;  If LastX>20 then LastX:=20; LastY:=TopY+6;  { TODO: Looks like a logic error }
+  For RoomY:=TopY to LastY do
+     For Row:=Top to Bottom do
+        Begin
+           For RoomX:=1 to LastX do
+              Begin
+                 Spot:=Maze[RoomX,RoomY];
+                 Case Row of
+                       Top: SMG$Put_Chars (ScreenDisplay,Top_Row (Spot));
+                    Middle: SMG$Put_Chars (ScreenDisplay,Middle_Row (Spot,Mode));
+                    Bottom: SMG$Put_Chars (ScreenDisplay,Bottom_Row (Spot));
+                 End;
+              End;
+           SMG$Put_Line (ScreenDisplay,'');
+        End;
+  Spoty:=(CursorY-TopY)+1;
+  Spot:=Maze[CursorX,CursorY];
+  Case Mode of
+       Normal:  T:=Space_Char;
+       Rooms:   If Spot.Kind=Room then
+          T:='R'
+                Else
+         T:='C';
+       Specials: T:=CHR(Ord(Spot.Contents)+65);
+  End;
+  SMG$Put_Chars (ScreenDisplay,T,(SpotY*3),(CursorX*3)-1,0,2);
+  Print_Key;
+  Spot_Special:=Floor.Special_Table[Spot.Contents].Special;
+  If Spot_Special=SPFeature then
+     Begin
+        SP:=Floor.Special_Table[Spot.Contents].Feature;
+        SMG$Put_Chars (ScreenDisplay,
+            SpKind_Name[SP]
+            +'',13,62);
+     End
+  Else
+     SMG$Erase_Line (ScreenDisplay,13,62);
+  SMG$Put_Chars (ScreenDisplay,
+      String(Floor.Special_Table[Spot.Contents].Pointer1)
+          +' '+
+      String(Floor.Special_Table[Spot.Contents].Pointer2)
+          +' '+
+      String(Floor.Special_Table[Spot.Contents].Pointer3),14,62);
+End;
+
+(******************************************************************************)
+
+Procedure Move_Up (Var CurrentY,TopY: Integer);
+
+{ This procedure moves the cursor up, and wraps if off the edge }
+
+Begin { Move Up }
+   If CurrentY>1 then  { If still on screen... }
+      Begin { If on screen }
+         CurrentY:=CurrentY-1;
+         If CurrentY<TopY then
+            TopY:=CurrentY;
+      End   { If on screen }
+   Else
+      Begin { Wrap }
+         CurrentY:=20;
+         TopY:=20-6;
+      End;  { Wrap }
+End;  { Move Up }
+
+(******************************************************************************)
+
+Procedure Move_Left (Var CursorX,CursorY,TopY: Integer);
+
+{ This procedure moves the cursor to the left, and wraps if off the edge }
+
+Begin { Move Left }
+   CursorX:=CursorX-1;
+   If CursorX<1 then
+      Begin
+         CursorX:=20;
+         Move_UP (CursorY,TopY);
+      End;
+End;  { Move Left }
+
+(******************************************************************************)
+
+Procedure Move_Down (Var CurrentY,TopY: Integer);
+
+{ This procedure moves the cursor down, and wraps if off the edge }
+
+Begin { Move Down }
+   If CurrentY<20 then  { If still on screen... }
+      Begin { Move down }
+         CurrentY:=CurrentY+1;
+         If CurrentY>TopY+6 then
+            TopY:=TopY+1;
+      End
+   Else { Otherwise, wrap to top of screen }
+      Begin { Move to top }
+         CurrentY:=1;
+         TopY:=1;
+      End;  { Move to top }
+End;  { Move Down }
+
+(******************************************************************************)
+
+Procedure Move_Right (Var CursorX,CursorY,TopY: Integer);
+
+{ This procedure moves the cursor to the right, and wraps if off the edge }
+
+Begin { Move Right }
+   CursorX:=CursorX+1;
+   If CursorX>20 then
+      Begin
+         CursorX:=1;
+         Move_Down (CursorY,TopY);
+      End;
+End;  { Move Right }
+
+(******************************************************************************)
+
+Procedure Room_or_Corridor (Var Maze: Floor_Type;  Var CursorX,CursorY,TopY: Integer);
+
+{ This procedure enters the Room/Corridor mode, which allows the user to maneuver over any spot in the maze and assign it as a
+  room or as a corridor. }
+
+Begin
       { TODO: Enter this code }
+End;
+
+(******************************************************************************)
+
+Procedure Change_Room_Special (Var Maze: Floor_Type;  Var CursorX,CursorY,TopY: Integer);
+
+Begin
+      { TODO: Enter this code }
+End;
+
+(******************************************************************************)
+
+Procedure Special_Placement (Var Maze: Floor_Type;  Var CursorX,CursorY,TopY: Integer);
+
+{ This procedure runs the Special Placement mode.  It allows the user to maneuver the cursor over the maze, and place specials
+  wherever he or she feels like }
+
+Const
+   Special_Command_Line = 'Specials o'
+   +'ptions: Use Arrows, P)lace a spec'
+   +'ial or E)xit';
+
+Var
+   Answer: Char;
+
+Begin { Special Placement }
+   Repeat
+      Begin { Repeat }
+         SMG$Begin_Display_Update (ScreenDisplay);
+         SMG$Put_Chars (ScreenDisplay,Special_Command_Line,1,1,1,1);
+
+         { Print the floor plan, mode=2 (indicating specials) }
+
+         SMG$Set_Cursor_ABS (ScreenDisplay,2,1);
+         Print_Screen (Maze,CursorX,CursorY,1,TopY,Specials);
+         SMG$Put_Chars (ScreenDisplay,
+             'X: '
+             +String(CursorX,2)
+             +' Y: '
+             +String(CursorY,2)
+             +' Z: '
+             +String(Level_Loaded,2),2,66);
+         SMG$End_Display_Update (ScreenDisplay);
+
+         { Get the choice and handle it }
+
+         Answer:=Make_Choice ([Down_Arrow,Up_Arrow,Left_Arrow,Right_Arrow,'P','E']);
+         Case Answer of
+                     'E': ;
+                     'P': Change_Room_Special (Maze,CursorX,CursorY,TopY);
+              Left_Arrow: Move_Left (CursorX,CursorY,TopY);
+             Right_Arrow: Move_Right (CursorX,CursorY,TopY);
+                Up_Arrow: Move_Up (CursorY,TopY);
+              Down_Arrow: Move_Down (CursorY,TopY);
+         End;
+      End;  { Repeat }
+   Until answer='E';  { Until user wants to E)xit this menu }
+End;  { Special Placement }
+
+(******************************************************************************)
+
+Procedure Change_Room (Var Room: Room_Record; Item: Exit_Type);
+
+{ This procedure allows the user to place an ITEM (door, passage, etc) in the ROOM.  This procedure will ask the user where he/she
+  wants to put the ITEM (north,south,...) and place it there. }
+
+Var
+   Answer: Char;
+
+Begin { Change Room }
+
+   { The the direction to place the ITEM }
+
+   SMG$Put_Chars (ScreenDisplay,'Put it where? (<SPACE> exits)',23,1,1,1);
+   Answer:=Make_Choice([Left_Arrow,Right_Arrow,Up_arrow,Down_Arrow,CHR(32)]);
+
+   { Place it }
+
+   Case Answer of
+        Left_Arrow: Room.West:=Item;
+        Right_Arrow: Room.East:=Item;
+        Up_Arrow: Room.North:=Item;
+        Down_Arrow: Room.South:=Item;
+   End;
+End;  { Change Room }
+
+(******************************************************************************)
+
+Procedure Print_Level_To_File (Maze: Floor_Type);
+
+Type
+   Row_Type = (Top,Middle,Bottom);
+
+Var
+   Command: Line;
+   Row: Row_Type;
+   X,RoomX,RoomY: Integer;
+   Spot: Room_Record;
+
+Begin
+   Open (PrintMazeFile,
+       'SYS$LOGIN:Level_'
+       +String(Level_Loaded)
+       +'.Pic',Unknown,Error:=Continue);
+   Rewrite (PrintMazeFile,Error:=Continue);
+   Writeln (PrintMazeFile,
+       'Level: '+String(Level_Loaded));
+   Write (PrintMazeFile,'+');
+   For RoomY:=1 to 20 do
+      For Row:=Top to Bottom do
+         Begin
+            For RoomX:=1 to 20 do
+               Begin
+                  Spot:=Maze[RoomX,RoomY];
+                  Case Row of
+                        Top: Write (PrintMazeFile,Top_Row (Spot),Error:=Continue);
+                     Middle: Write (PrintMazeFile,Middle_Row (Spot,Normal),Error:=Continue);
+                     Bottom: Write (PrintMazeFile,Bottom_Row (Spot),Error:=Continue);
+                  End;
+               End;
+            Writeln (PrintMazeFile,Error:=Continue);
+         End;
+   Close (PrintMazeFile,Error:=Continue);
+   Command:='PRINT/DELETE/NOLOG/NONOTIFY/QUEUE='
+       +Print_Queue
+       +' SYS$LOGIN:Level_'
+       +String(Level_Loaded)
+       +'.PIC';
+    { LIB$SPAWN (Command); TODO: Not currently in LibRtl.pas and since we're not printing to VAX printers ... }
+   SMG$Put_Line (ScreenDisplay,'',2);
+   SMG$Put_Line (ScreenDisplay,'Printing queued.',0,1);
+   Delay(1);
+End;
 
 (******************************************************************************)
 
