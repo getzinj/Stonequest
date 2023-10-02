@@ -145,6 +145,19 @@ Begin { Print Load Choices }
 End;  { Print Load Choices }
 
 (******************************************************************************)
+[External]Function Read_Level_from_Maze_File(Var fileVar: LevelFile; filename: Line): Level;External;
+[External]Procedure Save_Level_to_Maze_File(Var fileVar: LevelFile; filename: Line; Floor: Level);External;
+(******************************************************************************)
+
+Function Get_Maze_File_Name (levelCharacter: Char): Line;
+
+Begin
+  Get_Maze_File_Name:='MAZE'
+      +levelCharacter
+      +'.DAT;1'
+End;
+
+(******************************************************************************)
 
 Procedure Load_Floor (Number: Integer; Typed_Char: Char);
 
@@ -159,28 +172,11 @@ Begin { Load Floor }
   { Set the appropriate flags, and build the filename for the specified level }
 
    Floor_Number:=Number;  Level_Loaded:=Number;  Need_to_Load:=False;
-   Name:='MAZE'+Typed_Char+'.DAT;1';
+   Name:=Get_Maze_File_Name(Typed_Char);
 
   { Attempt to open the level file }
 
-  Open (MazeFile,File_Name:=Name,History:=READONLY,Error:=CONTINUE,Sharing:=READONLY);
-  If (Status(MazeFile) = 0) then
-     Begin { successful read }
-        Reset (MazeFile);
-        Read (MazeFile,Floor);
-        Close (MazeFile);
-     End { successful read }
-  Else
-     Begin { failed to read; create a new one }
-         Open (MazeFile,file_name:=Name,History:=NEW,Error:=CONTINUE,Sharing:=READONLY);
-         If (Status(MazeFile) = 0) then
-            Begin
-             Floor:=Zero;
-             ReWrite(MazeFile,error:=Continue);
-             Write (MazeFile,Floor);
-             Close (MazeFile);
-         End; { TODO: Handle failure case }
-     End; { failed to read; create a new one }
+  Floor:=Read_Level_from_Maze_File(MazeFile,Name);
 
   SMG$Put_Chars (ScreenDisplay,
       'Loaded.',23,36,,1);
@@ -210,7 +206,8 @@ Begin { Load Level }
 
    Answer:=Make_Choice(['A'..'T']);
    If Answer<>'T' then
-      If (Ord(Answer)-64)<>Floor_Number then Load_Floor (Ord(Answer)-64,Answer)
+      If (Ord(Answer)-64)<>Floor_Number then
+      Load_Floor (Ord(Answer)-64,Answer)
 End;  { Load Level }
 
 (******************************************************************************)
@@ -219,6 +216,7 @@ Procedure Save_Level (Floor: Level);
 
 Var
   Answer: Char;
+  Name: Line;
 
 Begin
   SMG$Begin_Display_Update (ScreenDisplay);
@@ -239,13 +237,8 @@ Begin
   If Answer<>'Q' then
      Begin
         Answer:=Chr(Level_loaded+64);
-        Open (MazeFile,
-            'MAZE'
-            +ANSWER
-            +'.DAT;1',Unknown);
-        ReWrite (MazeFile);
-        Write (MazeFile,Floor);
-        Close (MazeFile);
+        Name:=Get_Maze_File_Name(Answer);
+        Save_Level_to_Maze_File(MazeFile,Name, Floor);
         SMG$Put_Chars (ScreenDisplay,
             'Saved.',23,36,,1);
         Need_to_Save:=False;

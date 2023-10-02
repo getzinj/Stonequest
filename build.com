@@ -32,6 +32,8 @@ $      write sys$output "Compiling Encounter.pas"
 $      pas Encounter
 $      write sys$output "Compiling Experience.pas"
 $      pas Experience
+$      write sys$output "Compiling Files.pas"
+$      pas Files
 $      write sys$output "Compiling GiveTreasure.pas"
 $      pas GiveTreasure
 $      write sys$output "Compiling Help.pas"
@@ -100,7 +102,7 @@ $      write sys$output "Linking ..."
 $!
 $!
 $      Link Camp,Casino,Character,CharacterAttacks,Church,Compute,Craps,-
-       Demo,EditMaze,Encounter,Experience,Keyboard,Random,-
+       Demo,EditMaze,Encounter,Experience,Keyboard,Random,Files,-
        GiveTreasure,Help,Hours,Inn,Io,Items,Tables,PrintCharSpell,-
        Kyrn,LibRtl,Maze,Messages,Monster,MonsterAttack,PicEdit,PickPocket,-
        PlaceStack,PrintChar,Scores,Shell_Out,Slots,SmgRtl,Stonequest,-
