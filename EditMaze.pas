@@ -159,27 +159,28 @@ Begin { Load Floor }
   { Set the appropriate flags, and build the filename for the specified level }
 
    Floor_Number:=Number;  Level_Loaded:=Number;  Need_to_Load:=False;
-   Name:='STONE_MAZE:MAZE'+Typed_Char+'.DAT;1';
+   Name:='MAZE'+Typed_Char+'.DAT;1';
 
   { Attempt to open the level file }
 
-  Repeat
-     Open (MazeFile,Name,Unknown,Sharing:=READONLY);
-  Until (Status(MazeFile)=PAS$K_SUCCESS);
-  Reset (MazeFile);
-
-  If Not EOF(MazeFile) then
-     Begin { If the file is not empty, read the level }
+  Open (MazeFile,File_Name:=Name,History:=READONLY,Error:=CONTINUE,Sharing:=READONLY);
+  If (Status(MazeFile) = 0) then
+     Begin { successful read }
+        Reset (MazeFile);
         Read (MazeFile,Floor);
         Close (MazeFile);
-     End   { If the file is not empty, read the level }
+     End { successful read }
   Else
-     Begin { If the file IS empty, create the file with a null level }
-         Floor:=Zero;
-         Rewrite (MazeFile);
-         Write (MazeFile,Floor);
-         Close (MazeFile);
-     End;  { If the file IS empty, create the file with a null level }
+     Begin { failed to read; create a new one }
+         Open (MazeFile,file_name:=Name,History:=NEW,Error:=CONTINUE,Sharing:=READONLY);
+         If (Status(MazeFile) = 0) then
+            Begin
+             Floor:=Zero;
+             ReWrite(MazeFile,error:=Continue);
+             Write (MazeFile,Floor);
+             Close (MazeFile);
+         End; { TODO: Handle failure case }
+     End; { failed to read; create a new one }
 
   SMG$Put_Chars (ScreenDisplay,
       'Loaded.',23,36,,1);
@@ -233,18 +234,22 @@ Begin
       ' Q) Don''t save a level',8,32);
   SMG$Put_Chars (ScreenDisplay,
       ' Which?',10,32);
-  Answer:=Make_Choice (['A','Q']);
+  SMG$End_Display_Update (ScreenDisplay);
+  Answer:=Make_Choice (['A'..'J', 'Q']);
   If Answer<>'Q' then
      Begin
         Answer:=Chr(Level_loaded+64);
         Open (MazeFile,
-            'STONE_MAZE'+ANSWER+'.DAT;1',Unknown);
+            'MAZE'
+            +ANSWER
+            +'.DAT;1',Unknown);
         ReWrite (MazeFile);
         Write (MazeFile,Floor);
         Close (MazeFile);
         SMG$Put_Chars (ScreenDisplay,
             'Saved.',23,36,,1);
         Need_to_Save:=False;
+        Delay(1);
      End;
 End;
 

@@ -731,7 +731,7 @@ End;  { Get Item }
 
 {**********************************************************************************************************************************}
 
-Procedure Read_Monsters (Var Monster: List_of_monsters);
+[Global]Procedure Read_Monsters (Var Monster: List_of_monsters);
 
 { This procedure will read in the monsters from the file into the array, MONSTERS }
 
