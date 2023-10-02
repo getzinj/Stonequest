@@ -17,7 +17,6 @@ Const
 Type
    Floor_Type = Array [1..20,1..20] of Room_Record;
    Print_Mode = (Specials,Rooms,Normal);
-   LevelFile = File of Level;
 
 Var
    Monster:                     List_of_monsters;
@@ -160,7 +159,7 @@ Begin { Load Floor }
   { Set the appropriate flags, and build the filename for the specified level }
 
    Floor_Number:=Number;  Level_Loaded:=Number;  Need_to_Load:=False;
-   Name:='STONE_MAZE:MAZE'+Typed_Char+'.DAT;1'
+   Name:='STONE_MAZE:MAZE'+Typed_Char+'.DAT;1';
 
   { Attempt to open the level file }
 
@@ -240,7 +239,8 @@ Begin
         Answer:=Chr(Level_loaded+64);
         Open (MazeFile,
             'STONE_MAZE'+ANSWER+'.DAT;1',Unknown);
-        ReWrite (MazeFile,Floor);
+        ReWrite (MazeFile);
+        Write (MazeFile,Floor);
         Close (MazeFile);
         SMG$Put_Chars (ScreenDisplay,
             'Saved.',23,36,,1);
@@ -358,7 +358,7 @@ Var
 Begin
    T:='';
    Check_Monsters;
-   First:=Enc.Base_Monster_Number;  Last:=First+(Enc.Addition.X*Enc.Addition_Y)+Enc.Addition.Z;
+   First:=Enc.Base_Monster_Number;  Last:=First+(Enc.Addition.X*Enc.Addition.Y)+Enc.Addition.Z;
    If (First>0) and (Last<451) then
        T:='['
        +Monster[First].Real_Name
@@ -463,7 +463,7 @@ Var
 Begin
    T:='';
    If (Spot.North<>Passage) or (Spot.West<>Passage) then
-       T:=T+Wall_Char;
+       T:=T+Wall_Char
    Else
        T:=T+' ';
 
@@ -478,7 +478,7 @@ Begin
    End;
 
    If (Spot.North<>Passage) or (Spot.East<>Passage) then
-       T:=T+Wall_Char;
+       T:=T+Wall_Char
    Else
        T:=T+' ';
    Top_Row:=T;
@@ -642,7 +642,7 @@ Begin { Edit Maze }
                 'L':  Ask_to_load_Level;
                 'P': If Not Need_to_Load then Print_Level_to_File (Floor.Room);
                 'S': If Not Need_to_Load then Save_Level (Floor);
-                'E': If Not Need_to_Load then Edit_Level (Answer);
+                'E': If Not Need_to_Load then Edit_Level (Floor);
                 'Q': Ask_to_Save_Level (Answer);
          End;
       End;  { Repeat }
