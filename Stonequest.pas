@@ -50,15 +50,15 @@ Var
 {*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Files~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*}
    PrintMazeFile:              [Global]Text;                { A pictoral representation of a level of levels }
    HoursFile:                  [Global]Text;                { The stonequest schedule }
-   TreasFile:                  Treas_File;                  { Treasure Types }
-   Monster_File:               Monst_File;                  { Monster records }
-   Item_File:                  Equip_File;                  { Item records }
+   TreasFile:                  [Global]Treas_File;                  { Treasure Types }
+   Monster_File:               [Global]Monst_File;                  { Monster records }
+   Item_File:                  [Global]Equip_File;                  { Item records }
    Char_File:                  [Global]Character_File;      { Character records }
-   Message_File:               Text;                        { Game text }
+   Message_File:               [Global]Text;                        { Game text }
    MazeFile:                   [Global]LevelFile;           { The maze }
    PartyFile:                  [Global]Party_File_Type;     { Save party file }
    SaveFile:                   [Global]Save_File_Type;      { Save game file }
-   PicFile:                    Picture_File_Type;           { Pictures }
+   PicFile:                    [Global]Picture_File_Type;           { Pictures }
    AmountFile:                 [Global]Number_File;         { Item amounts }
    ScoresFile:                 [Global]Score_File;          { High scores }
    LogFile:                    [Global]Packed file of Line;         { Player log }
@@ -540,67 +540,20 @@ Begin { Log Player Out }
 End;  { Log Player Out }
 
 {**********************************************************************************************************************************}
-[Global]Procedure Write_Roster;Forward;
-{**********************************************************************************************************************************}
-
-Procedure Create_Roster_File;
-
-{ Indicate the roster file will be created and make a null roster for that
-  purpose.. }
-
-Var
-   Loop: Integer;
-
-Begin { Create Roster File }
-
-  { Indicate that the file will be created }
-
-   SMG$Put_Chars (ScreenDisplay,'Creating: CHARACTER.DAT',23,1,1);
-
-  { Initialize the characters }
-
-  Roster:=Zero;
-  For Loop:=1 to 20 do  Roster[Loop].Status:=Deleted;
-  Write_Roster;
-End;  { Create Roster File }
-
-{**********************************************************************************************************************************}
-
-Procedure Read_Roster;
-
-{ This procedure reads in the current roster.  If no file exists, null characters are to be saved on exiting }
-
-Var
-   Loop: Integer;
-
-Begin { Read Roster }
-   Repeat
-      Open (Char_File,'SYS$LOGIN:Character.Dat;1',History:=OLD,Error:=CONTINUE,Sharing:=READONLY)
-   Until (Status(Char_File)<>PAS$K_FILALROPE);
-
-   { If the file doesn't exist, or is in an out-dated format }
-
-   If Status(Char_File)=PAS$K_FILNOTFOU then
-      Create_Roster_file
-   Else
-      Begin { File is there }
-         Reset (Char_File,Error:=Continue);
-         If Status(Char_File)<>PAS$K_SUCCESS then
-            Begin { Can't open it }
-               Read_Error_Window ('character',STATUS(Char_File));
-               Close (Char_File);
-               Create_Roster_file;
-            End   { Can't Open it }
-         Else
-            Begin { Read the characters and then close the file }
-               For Loop:=1 to 20 do Read (Char_File,Roster[Loop],Error:=Continue);
-               If (Status(Char_File)<>PAS$K_EOF) then
-                   Read_Error_Window ('Character',STATUS(Char_File));
-               Close (Char_File);
-             End;  { Read the characters and then close the file }
-      End;  { File is there }
-End;  { Read Roster }
-
+[External]Function Read_Items: List_of_Items;External;
+[External]Function Read_Pictures: Pic_List;External;
+[External]Function Read_Messages: Message_Group;external;
+[External]Function Read_Roster: Roster_Type;external;
+[External]Function Get_Maze_File_Name (levelCharacter: Char): Line;External;
+[External]Function Read_Level_from_Maze_File(Var fileVar: LevelFile; filename: Line): Level;External;
+[External]Function Read_Treasures: List_of_Treasures;external;
+[External]Function Read_Monsters: List_of_monsters;External;
+[External]Procedure Write_Roster (Roster: Roster_Type);External;
+[External]Procedure Save_Pictures(Pics: Pic_List);External;
+[External]Procedure Save_Monsters (Monster: List_of_monsters);external;
+[External]Procedure Save_Items(Item_List: List_of_Items);external;
+[External]Procedure Save_Treasure(Treasure: List_of_Treasures);external;
+[External]Procedure Save_Messages (Messages: Message_Group);external;
 {**********************************************************************************************************************************}
 
 [Global]Function Get_Level (Level_Number: Integer; Maze: Level; PosZ: Vertical_Type:=0): [Volatile]Level;
@@ -611,6 +564,7 @@ End;  { Read Roster }
 
 Var
    Letter:  Char;
+   Filename: Line;
    Temp: Level;
 
 Begin { Get Level }
@@ -620,86 +574,13 @@ Begin { Get Level }
          { Calculate the file name's suffix }
 
           Letter:=CHR(Level_Number+64);
+          FileName:=Get_Maze_File_Name(Letter);
 
-        { Wait until the file is available and then open it }
-
-         Repeat
-            Open (MazeFile, 'Stone_Maze:Maze'+Letter,Error:=CONTINUE,History:=UNKNOWN,Sharing:=READWRITE);
-         Until (Status(MazeFile)<>PAS$K_FILALROPE);
-
-         If Status(MazeFile)<>PAS$K_SUCCESS then
-             Read_Error_Window ('maze',Status(MazeFile));
-         Reset (MazeFile);
-
-         { If the level is defined load it, otherwise return the current level }
-
-         If Not(Eof(MazeFile)) then
-            Read (MazeFile,Temp)
-         Else
-            Temp:=Maze;
-
-         { Close the file and return the level }
-
-         Close (MazeFile);
-         Get_Level:=Temp;
+          Get_Level:=Read_Level_from_Maze_File(MazeFile,FileName);
       End
    Else
       Get_Level:=Maze;  { Otherwise, return the current level }
 End;  { Get Level }
-
-{**********************************************************************************************************************************}
-
-Procedure Read_Items;
-
-{ This procedure will read in the items from the file, and then randomly adjust their prices to simulate increasing and decreasing
-  values of items in a market place. }
-
-Var
-   Flux: Real;  { Some times you just have to say, "what's the flux?" }
-   Max_Items: Integer;
-
-Begin { Read Items }
-
-   Max_Items:=-1;  { So far, no items read }
-
-   { Wait until the file is available and then open it }
-
-   Repeat
-      Open (Item_File,'Stone_Data:Items.dat;1',History:=OLD,Error:=CONTINUE,Sharing:=READWRITE)
-   Until (Status(Item_File)<>PAS$K_FILALROPE);
-   If Status(Item_File)<>PAS$K_SUCCESS then
-       Read_Error_Window ('items',Status(Item_File));
-   Reset (Item_File);
-
-   While Not EOF(Item_File) do
-      Begin { More data }
-
-         { Increase counter and read item }
-
-         Max_Items:=Max_Items+1;
-         Read (Item_File,Item_List[Max_Items]);
-         STR$TRIM (Item_List[Max_Items].Name,Item_List[Max_Items].Name);
-         STR$TRIM (Item_List[Max_Items].True_Name,Item_List[Max_Items].True_Name);
-
-         { Calculate the price fluctuation, FLUX }
-
-         Flux:=Item_List[Max_Items].Gp_Value;
-         Flux:=Flux * Roll_Die(10)/100;
-         If Roll_Die(2)=2 then Flux:=Flux*(-1);
-
-         { Add flux to the current price }
-
-         Item_List[Max_Items].Current_Value:=Round(Item_List[Max_Items].GP_Value+Flux);
-
-         { Making sure items aren't given away... }
-
-         If Item_List[Max_Items].Current_Value<1 then Item_List[Max_Items].Current_Value:=1;
-      End;  { More Data }
-
-   { Close the file when no more data }
-
-   Close (Item_File);
-End;  { Read Items }
 
 {**********************************************************************************************************************************}
 
@@ -731,32 +612,6 @@ End;  { Get Item }
 
 {**********************************************************************************************************************************}
 
-[Global]Procedure Read_Monsters (Var Monster: List_of_monsters);
-
-{ This procedure will read in the monsters from the file into the array, MONSTERS }
-
-Var
-   Max_Monsters: Integer;
-
-Begin { Read Monsters }
-
-   { Wait until the file is available and then open it }
-
-   Repeat
-      Open (Monster_File,'Stone_Data:Monsters.dat;1',History:=OLD,Error:=CONTINUE,Sharing:=READWRITE)
-   Until (Status(Monster_File)<>PAS$K_FILALROPE);
-   If Status(Monster_File)<>PAS$K_SUCCESS then
-       Read_Error_Window ('monster',Status(Monster_File));
-   Reset (Monster_File); { Open the file }
-
-   { Read in the monsters }
-
-   For Max_Monsters:=1 to 450 do Read (Monster_File,Monster[Max_Monsters],Error:=Continue);
-   Close (Monster_File); { Close the file }
-End;  { Read_Monsters }
-
-{**********************************************************************************************************************************}
-
 Procedure Access_Monster_Record (N: Integer);
 
 Begin { Access Monster Record }
@@ -781,92 +636,6 @@ Begin { Get Monster }
    Unlock (Monster_File);
    Close (Monster_File);
 End;  { Get Monster }
-
-{**********************************************************************************************************************************}
-
-Procedure Read_Pictures;
-
-{ This procedure reads in the set of pictures }
-
-Var
-   Loop: Integer;
-
-Begin { Read Pictures }
-
-   { Wait until the file is available and then open it }
-
-   Repeat
-      Open (PicFile,'Stone_Data:Pictures.Dat',History:=OLD,Error:=CONTINUE,Sharing:=READWRITE);
-   Until Status(PicFile)<>PAS$K_FILALROPE;
-   If Status(PicFile)<>PAS$K_SUCCESS then Read_Error_Window ('picture',Status(PicFile));
-   Reset (PicFile);
-
-   { Read in the pictures and close the file }
-
-   Loop:=0;
-   While Not EOF(PicFile) do
-      Begin
-         Read(PicFile,Pics[Loop]);
-         Loop:=Loop+1;
-      End;
-   Close (PicFile);
-End;  { Read Pictures }
-
-{**********************************************************************************************************************************}
-
-[Global]Procedure Read_Messages (Var Messages: Message_Group);
-
-{ This procedure reads in the text from the message file }
-
-Var
-   Loop: Integer;
-
-Begin { Read Messages }
-
-   { Wait until the file is available and then open it }
-
-   Repeat
-      Open (Message_File,'Stone_Data:Messages.Dat;1',History:=OLD,Error:=CONTINUE,Sharing:=READWRITE);
-   Until Status(Message_File)<>PAS$K_FILALROPE;
-   If Status(Message_File)<>PAS$K_SUCCESS then
-       Read_Error_Window ('messages',Status(Message_File));
-   Reset (Message_File);
-
-   { Read in the messages and close the file }
-
-   For Loop:=1 to 999 do
-      Begin
-         Readln (Message_File,Messages[Loop],Error:=Continue);
-         If Not ((Status(Message_File)=PAS$K_SUCCESS) or (Status(Message_File)=PAS$K_EOF)) then Messages[Loop]:='';
-      End;
-   Close (Message_File);
-End;  { Read Messages }
-
-{**********************************************************************************************************************************}
-
-Procedure Read_Treasures;
-
-{ This procedure will read in the treasure types }
-
-Var
-   Loop: Integer;
-
-Begin { Read Treasures }
-
-   { Wait until the file is available and then open it }
-
-   Repeat
-      Open (TreasFile,'Stone_Data:Treasure.Dat;1',History:=OLD,Error:=CONTINUE,Sharing:=READWRITE);
-   Until Status(TreasFile)<>PAS$K_FILALROPE;
-   If Status(TreasFile)<>PAS$K_SUCCESS then
-       Read_Error_Window ('treasure',Status(TreasFile));
-   Reset (TreasFile);
-
-   { Read in the treasures and close the file }
-
-   For Loop:=1 to 150 do Read (TreasFile,Treasure[Loop]);
-   Close (TreasFile);
-End;  { Read Treasures }
 
 {**********************************************************************************************************************************}
 
@@ -907,147 +676,6 @@ Function Successful (Result_Code: Integer): Boolean;
 Begin { Successful }
    Successful:=(Result_Code=PAS$K_SUCCESS) or (Result_Code=PAS$K_EOF);
 End;  { Successful }
-
-{**********************************************************************************************************************************}
-
-Procedure Write_Roster;
-
-{ This procedure is used to write the current roster to the character file }
-
-Var
-   Loop: Integer;
-   Error: Boolean;
-
-Begin { Write Roster }
-   No_ControlY;
-   Error:=False;
-   Repeat
-      Open (Char_File,'SYS$LOGIN:Character.Dat;1',History:=UNKNOWN,Error:=CONTINUE,Sharing:=NONE)
-   Until (Status(Char_File)<>PAS$K_FILALROPE);
-   Error:=(Status(Char_File)<>PAS$K_SUCCESS);
-
-   ReWrite (Char_File,Error:=Continue);
-   Error:=Error or Not(Successful(Status(Char_File)));
-
-   { Write the characters and close the file }
-
-   For Loop:=1 to 20 do
-      Begin
-         Write (Char_File,Roster[Loop]{,Error:=continue});
-         Error:=Error or Not(Successful(Status(Char_File)));
-      End;
-
-   Close (Char_File{,Error:=Continue});
-   Error:=Error or Not(Successful(Status(Char_File)));
-
-   If Error then Error_Window ('Character');        { Put a window declaring the error }
-   ControlY;
-End;  { Write Roster }
-
-{**********************************************************************************************************************************}
-
-[Global]Procedure Save_Pictures;
-
-{ This procedure will write an updated set of pictures if the user is authorized to do so. }
-
-Var
-   Loop: Integer;
-
-Begin { Save Pictures }
-
-   { Wait until the file is available and then open it }
-
-   Repeat
-      Open (PicFile,'Stone_Data:Pictures.Dat',History:=OLD,Error:=CONTINUE,Sharing:=READONLY);
-   Until (Status(PicFile)=PAS$K_SUCCESS);
-   ReWrite (PicFile,Error:=Continue);
-
-   { Write the pictures and close the file }
-
-   For Loop:=1 to 150 do Write (PicFile,Pics[Loop]);
-   Close (PicFile);
-End;  { Save Pictures }
-
-{**********************************************************************************************************************************}
-
-[Global]Procedure Save_Monsters (Monster: List_of_monsters);
-
-{ This procedure will save the updates monster records if the current user is authorized to do so. }
-
-Var
-   Loop: Integer;
-
-Begin { Save Monsters }
-
-   { Wait until the file is available and then open it }
-
-   Repeat
-      Open (Monster_File,'Stone_Data:Monsters.Dat;1',History:=OLD,Error:=CONTINUE,Sharing:=READONLY)
-   Until (Status(Monster_File)=PAS$K_SUCCESS);
-   ReWrite (Monster_File,Error:=Continue);
-
-   { Write the monsters }
-
-   For Loop:=1 to 450 do Write (Monster_File,Monster[Loop]);
-
-   { Close the file }
-
-   Close (Monster_File);
-End;  { Save Monsters }
-
-{**********************************************************************************************************************************}
-
-Procedure Save_Items;
-
-{ This procedure will save the updated item records if the current user is authorized to do so. }
-
-Var
-   Loop: Integer;
-
-Begin { Save Items }
-
-   { Wait until the file is available and then open it }
-
-   Repeat
-      Open (Item_File,'Stone_Data:Items.Dat;1',History:=OLD,Error:=CONTINUE,Sharing:=READONLY)
-   Until (Status(Item_File)=PAS$K_SUCCESS);
-   ReWrite (Item_File,Error:=Continue);
-
-   { Write the items ... }
-
-   For Loop:=0 to 449 do Write (Item_File,Item_List[Loop]);
-
-   { Close the file }
-
-   Close (Item_File);
-End;  { Save Items }
-
-{**********************************************************************************************************************************}
-
-Procedure Save_Treasure;
-
-{ This procedure will save the updated treasure list if the current user is authorized to do so. }
-
-Var
-   Loop: Integer;
-
-Begin { Save Treasure }
-
-   { Wait until the file is available and then open it }
-
-   Repeat
-      Open (TreasFile,'Stone_Data:Treasure.Dat;1',History:=OLD,Error:=CONTINUE,Sharing:=READONLY)
-   Until (Status(TreasFile)=PAS$K_SUCCESS);
-   ReWrite (TreasFile);
-
-   { Write the treasures ... }
-
-   For Loop:=0 to 150 do Write (TreasFile,Treasure[Loop]);
-
-   { Close the file }
-
-   Close (TreasFile);
-End;  { Save_Treasure }
 
 {**********************************************************************************************************************************}
 
@@ -1379,9 +1007,9 @@ Begin { Initialize }
    X:=47;                                  { Initialize X for ADD_DOT }
    Cursor_Mode:=True;                      { The cursor is on at the moment }
    Create_Virtual_Devices;  Add_Dot(X);    { Create pasteboard and keyboard }
-   Read_Pictures;           Add_Dot(X);    { Read in the picture images }
-   Read_Roster;             Add_Dot(X);    { Read in the characters }
-   Read_Treasures;          Add_Dot(X);    { Read in the treasure types }
+   Pics:=Read_Pictures;     Add_Dot(X);    { Read in the picture images }
+   Roster:=Read_Roster;     Add_Dot(X);    { Read in the characters }
+   Treasure:=Read_Treasures;Add_Dot(X);    { Read in the treasure types }
    Read_Items;              Add_Dot(X);    { Read in items }
    Initialize_Displays;     Add_Dot(X);    { Create and initialize displays }
    Initialize_Globals;      Add_Dot(X);    { Initialize external variables }
@@ -1699,24 +1327,6 @@ End;  { Handle Response }
 
 {**********************************************************************************************************************************}
 
-[Global]Procedure Save_Messages (Messages: Message_Group);
-
-{ This procedure saves the messages to the disk }
-
-Var
-   Loop: Integer;
-
-Begin { Save Messages }
-   Repeat
-      Open (Message_File,'Stone_Data:Messages.dat;1',History:=OLD,Error:=CONTINUE,Sharing:=READONLY)
-   Until (Status(Message_File)=PAS$K_SUCCESS);
-   Rewrite (Message_File);
-   For Loop:=1 to 999 do  Writeln (Message_File,Messages[Loop]);
-   Close (Message_File);
-End;  { Save Messages }
-
-{**********************************************************************************************************************************}
-
 Procedure Quit;
 
 { This procedure disables trapping of broadcast messages, returns the cursor to normal, and saves the data used in the game. }
@@ -1740,14 +1350,13 @@ Begin { Quit }
    T:='Please Wait.';
    SMG$Put_Chars (ScreenDisplay, T, 11,40-(t.length div 2),1);
    SMG$End_Display_Update (ScreenDisplay);
-   Write_Roster;                                   Add_Dot (X);
-   No_ControlY;  { Control-Y is turned on again in Write Roster, so turn it off! }
+   Write_Roster(Roster);                           Add_Dot (X);
    Log_Player_Out;
    If (User_Name=Owner_Account) and DataModified then { Only I can save! Hahaha! }
       Begin
-         Save_Items;                               Add_Dot (X);
-         Save_Pictures;                            Add_Dot (X);
-         Save_Treasure;                            Add_Dot (X);
+         Save_Items(Item_List);                    Add_Dot (X);
+         Save_Pictures (Pics);                     Add_Dot (X);
+         Save_Treasure(Treasure);                  Add_Dot (X);
       End;
    Delete_Virtual_Devices;
 

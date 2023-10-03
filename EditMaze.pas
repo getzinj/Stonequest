@@ -147,16 +147,7 @@ End;  { Print Load Choices }
 (******************************************************************************)
 [External]Function Read_Level_from_Maze_File(Var fileVar: LevelFile; filename: Line): Level;External;
 [External]Procedure Save_Level_to_Maze_File(Var fileVar: LevelFile; filename: Line; Floor: Level);External;
-(******************************************************************************)
-
-Function Get_Maze_File_Name (levelCharacter: Char): Line;
-
-Begin
-  Get_Maze_File_Name:='MAZE'
-      +levelCharacter
-      +'.DAT;1'
-End;
-
+[External]Function Get_Maze_File_Name (levelCharacter: Char): Line;External;
 (******************************************************************************)
 
 Procedure Load_Floor (Number: Integer; Typed_Char: Char);
