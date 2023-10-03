@@ -114,6 +114,83 @@ End;  { Dead Characters }
 
 (******************************************************************************)
 
+Procedure Pool_Items (Var Member: Party_Type;  Party_Size: Integer; Var Choices: Item_Pool);
+
+{ This sub-procedure will make a list of all available items, and return it in CHOICES.  Then all characters are temporarilly "un-
+  equipped" so that duplicate items do not result. }
+
+Var
+   Character: Character_Type;
+   Kind,Item_Kind: Item_Type;
+   Person,Item_No,Num: Integer;
+   Temp: ItemSet;
+   Item: Item_Record;
+
+Begin { Pool Items }
+   For Kind:=Weapon to Cloak do
+      Begin
+         Choices[Kind]:=Nil; { initialize lists }
+      End;
+
+   For Person:=1 to Party_Size do  { For every character }
+      Begin { For each person }
+         Character:=Member[Person];  { Create a temp character }
+         Num:=Character.No_Of_Items; { Kee[ track of his/her # of items }
+         For Item_No:=Num downto 1 do  { For each item ... }
+            Begin { For }
+               If (Not (Character.item[Item_No].Cursed)) then  { If not cursed }
+                  Begin { Not cursed }
+                     Item:=Item_List[Character.Item[Item_No].Item_Num];
+                     Item_Kind:=Item.Kind;
+                     New (Temp);  { Make a node for the list }
+
+                     { Copy relevant data }
+
+                     Temp^.Identified:=Character.Item[Item_No].Ident;
+                     Temp^.Item_Num:=Item.Item_Number;
+                     Temp^.Owner_Number:=Person;
+
+                     Temp^.Next_Item:=Choices[Item_Kind];
+                     Choices[Item_Kind]:=Temp;
+
+                     { Remove the item from the character }
+
+                     Character.Item[Item_No]:=Character.Item[Num];
+                     Num:=Num-1;
+                  End;  { Not Cursed }
+            End; { For }
+         Character.No_of_Items:=Num;  { Return the updated # of items }
+         Member[Person]:=Character;   { Copy the character back to the party }
+      End;  { For Each Person }
+End;  { Pool Items }
+
+(******************************************************************************)
+
+Procedure Delete (Node: ItemSet; Var List: ItemSet);
+
+{ This procedure recursively deletes the node pointed to by NODE from the list, LIST }
+
+Var
+   Temp: ItemSet;
+
+Begin { Delete }
+   If List<> Nil then
+      Begin { Not Nil }
+         If List=Node then
+            Begin
+               List:=List^.Next_Item;
+            End
+         Else
+            Begin
+               Temp:=List^.Next_Item;
+               Delete (Node, Temp);
+               List^.Next_Item:=Temp;
+            End;
+      End;  { Not Nil }
+End;  { Delete }
+
+(******************************************************************************)
+
 { TODO: Enter this code }
 
 [Global]Procedure Camp (Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type;  Party_Size: Integer;
