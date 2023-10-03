@@ -61,6 +61,59 @@ End;  { Unpaste All }
 
 (******************************************************************************)
 
+Procedure Switch_Characters (Var Character1,Character2: Character_Type);
+
+{ This procedure will swap two characters.  Although it is a general-use procedure, this is mainly meant to be used with
+  REORDER_PARTY, when two characters must be switched in order. }
+
+Var
+   Temp: Character_Type;
+
+Begin { Switch Characters }
+   Temp:=Character1;
+   Character1:=Character2;
+   Character2:=Temp;
+End;  { Switch Characters }
+
+(******************************************************************************)
+
+Procedure Dead_Characters (Var Member: Party_Type; Var Current_Party_Size: Party_Size_Type; Party_Size: Integer);
+
+{ This procedure will check the characters in MEMBER to see if they are still alive, and an updated CURRENT_PARTY_SIZE is
+  returned.  Also, the party is Bubblesorted (why not?) so that the dead characters are pushed to the read of the party. }
+
+Var
+   Done: Boolean;
+   Character: Integer;
+
+Begin { Dead Characters }
+   Current_Party_Size:=0;
+   For Character:=1 to Party_Size do
+     If (Alive(Member[Character])) then  { For every living member }
+        Begin
+           Current_Party-Size:=Current_Party_Size+1;  { Increment survivor count }
+        End;
+
+   { With only six items, we might as well use a Bubblesort as any other sort.  This will put the dead characters at the rear of
+     the party. }
+
+   Repeat
+      Begin { Repeat }
+         Done:=True;
+         For Character:=Party_Size downto 2 do
+            Begin { For }
+               If (Alive(Member[Character]) and Not(Alive(Member[Character-1]))) then
+                  Begin { Need to swap }
+                     Switch_Characters (Member[Character],Member[Character-1]);
+                     Done:=False;
+                  End;  { Need to swap }
+            End; { For }
+      End;  { Repeat }
+   Until Done;
+End;  { Dead Characters }
+
+(******************************************************************************)
+
 { TODO: Enter this code }
 
 [Global]Procedure Camp (Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type;  Party_Size: Integer;
