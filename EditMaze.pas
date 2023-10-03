@@ -440,12 +440,154 @@ Begin
    SMG$Put_Chars (ScreenDisplay,Special_Kind_Name[Feature],Position+5,4);
 ENd;
 
-      { TODO: Enter this code }
+(******************************************************************************)
+
+Procedure Feature_Edit (Var Feature: SPKind; Number: Integer);
+
+Var
+   Answer: Char;
+
+Begin
+   Repeat
+      Begin
+         SMG$Put_Chars (ScreenDisplay,
+             '<-- -->, space exits',22,1,1);
+         Answer:=Make_Choice ([Left_Arrow,Right_Arrow,CHR(32)]);
+         Case Answer of
+             Left_Arrow: If (Feature=NothingSpecial) then
+                            Begin
+                               Feature:=Unknown;
+                            End
+                         Else
+                            Begin
+                               Feature:=Pred(Feature);
+                            End;
+            Right_Arrow: If (Feature=Unknown) then
+                            Begin
+                               Feature:=NothingSpecial;
+                            End
+                         Else
+                            Begin
+                               Feature:=Succ(Feature);
+                            End;
+         End;
+         Print_Special_Item (Feature,Number);
+      End;
+   Until Answer=CHR(32);
+End;
+
+(******************************************************************************)
+
+Procedure Kind_Edit (Var Special: Special_Kind; Number: Integer);
+
+Var
+   Answer: Char;
+
+Begin
+   Repeat
+      Begin
+         SMG$Put_Chars (ScreenDisplay,
+             '<-- -->, space exits',22,1,1);
+         Answer:=Make_Choice ([Left_Arrow,Right_Arrow,CHR(32)]);
+         Case Answer of
+             Left_Arrow: If (Special=Nothing) then
+                            Begin
+                               Special:=Cliff;
+                            End
+                         Else
+                            Begin
+                               Special:=Pred(Special);
+                            End;
+            Right_Arrow: If (Special=Cliff) then
+                            Begin
+                               Special:=Nothing;
+                            End
+                         Else
+                            Begin
+                               Special:=Succ(Special);
+                            End;
+         End;
+         Print_Feature_Item (Special, Number);
+      End;
+   Until (Answer=CHR(32));
+End;
+
+(******************************************************************************)
 
 Procedure Special_Edit (Var Table: Special_Table_Type);
 
+Var
+   Answer: Char;
+   Options: Char_Set;
+   T: Line;
+   Number: Integer;
+   Item: Integer;
+
 Begin
-      { TODO: Enter this code }
+   Repeat
+      Begin
+         SMG$Begin_Display_Update (ScreenDisplay);
+         SMG$Erase_Display (ScreenDisplay);
+         SMG$Put_Chars (ScreenDisplay,
+             'Special Editor',1,37,,1);
+         SMG$Put_Chars (ScreenDisplay,
+             '------- ------',2,37,,1);
+         Print_Level;
+         SMG$Set_Cursor_ABS (ScreenDisplay,3,1);
+         SMG$Put_Line (ScreenDisplay,
+             '#  Kind            Special  '
+             +'         Pointer1   Pointer'
+             +'2   Pointer3');
+         SMG$Put_Line (ScreenDisplay,
+             '-- --------------- ---------'
+             +'------ ---------- ---------'
+             +'- ----------');
+         For Item:=0 to 15 do
+            Begin
+               Print_Item (Table, Item);
+            End;
+         SMG$End_Display_Update (ScreenDisplay);
+         SMG$Put_Chars (ScreenDisplay,
+             'Edit which special? (Q exi'
+             +'ts) --',22,1);
+         Cursor;
+         Answer:=Make_Choice (['A'..'Q']);
+         No_Cursor;
+         Number:=Ord(Answer)-65;
+         If (Number<=15) then
+            Repeat
+               Begin
+                  Options:=['K','P','E'];
+                  T:='Edit: K)ind, ';
+                  If (Table[Number].Special=SPFeature) then
+                     Begin
+                        T:=T+'F)eature, ';
+                        Options:=Options+['F'];
+                     End;
+                  T:=T+'P)ointers, or E)xit edit';
+                  SMG$Put_Chars (ScreenDisplay,T,22,1,1);
+                  Answer:=Make_Choice (Options);
+                  Case Answer of
+                        'E': ;
+                        'F': Feature_Edit   (Table[Number].Feature,Number);
+                        'K': Kind_Edit      (Table[Number].Special,Number);
+                        'P': Begin
+                                SMG$Put_Chars (ScreenDisplay,
+    'Enter Pointer1: ',22,1,1);
+                                Get_Num (Table[Number].Pointer1, ScreenDisplay);
+                                SMG$Put_Chars (ScreenDisplay,
+    'Enter Pointer2: ',22,1,1);
+                                Get_Num (Table[Number].Pointer2, ScreenDisplay);
+                                SMG$Put_Chars (ScreenDisplay,
+    'Enter Pointer3: ',22,1,1);
+                                Get_Num (Table[Number].Pointer3, ScreenDisplay);
+                                Print_Item (Table,Number);
+                             End;
+                  End; { Case }
+               End; { Repeat }
+            Until (Answer='E');
+      End;
+   Until (Number=16);
 End;
 
 (******************************************************************************)
@@ -550,13 +692,48 @@ Begin
    Bottom_Row:=T;
 End;
 
+(******************************************************************************)
 
 Procedure Print_Key;
 
 Begin
-   { TODO: Enter this code }
+   SMG$Put_Chars (ScreenDisplay,
+       'Key',
+       16,62);
+   SMG$Put_Chars (ScreenDisplay,
+       '---',
+       17,62);
+   SMG$Put_Chars (ScreenDisplay,
+       'Space       = "'
+       +Space_Char
+       +'"',
+       18,62);
+   SMG$Put_Chars (ScreenDisplay,
+       'Trans. Wall = "'
+       +Transparent_Char
+       +'"',
+       19,62);
+   SMG$Put_Chars (ScreenDisplay,
+       'Walkthrough = "'
+       +Walk_Through_Char
+       +'"',
+       20,62);
+   SMG$Put_Chars (ScreenDisplay,
+       'Door        = "'
+       +Door_Char
+       +'"',
+       21,62);
+   SMG$Put_Chars (ScreenDisplay,
+       'Secret Door = "'
+       +Secret_Char
+       +'"',
+       22,62);
+   SMG$Put_Chars (ScreenDisplay,
+       'Wall        = "'
+       +Wall_Char
+       +'"',
+       23,62);
 End;
-
 
 (******************************************************************************)
 
@@ -696,17 +873,92 @@ Procedure Room_or_Corridor (Var Maze: Floor_Type;  Var CursorX,CursorY,TopY: Int
 { This procedure enters the Room/Corridor mode, which allows the user to maneuver over any spot in the maze and assign it as a
   room or as a corridor. }
 
-Begin
-      { TODO: Enter this code }
-End;
+Const
+    Room_Command_Line = 'Room/Corridor '
+        +'options. Use Arrows. T)oggle '
+        +'or E)xit';
+
+Var
+   Answer: Char;
+
+Begin { Room or Corridor }
+   Repeat
+      Begin { Repeat }
+         SMG$Begin_Display_Update (ScreenDisplay);
+         SMG$Put_Chars (ScreenDisplay,Room_Command_Line,1,1,1,1);
+         SMG$Set_Cursor_ABS (ScreenDisplay,2,1);
+         Print_Screen (Maze,CursorX,CursorY,1,TopY,Rooms);  { Print level }
+         SMG$Put_Chars (ScreenDisplay,
+            'X: '
+            + String(CursorX, 2)
+            + ' Y: '
+            + String(CursorY, 2)
+            + ' Z: '
+            + String(Level_Loaded,2),
+            2, 66);
+         SMG$End_Display_Update (ScreenDisplay);
+         Answer:=Make_Choice ([Down_Arrow,Up_Arrow,Left_Arrow,Right_Arrow,'T','E']);
+         Case Answer of
+             'T': Begin
+                    If Maze[CursorX,CursorY].Kind=Room then
+                       Begin
+                          Maze[CursorX,CursorY].Kind:=Corridor;
+                       End
+                    Else
+                       Begin
+                          Maze[CursorX,CursorY].Kind:=Room;
+                       End;
+                    Move_Right (CursorX,CursorY,TopY);
+                  End;
+             Left_Arrow: If (CursorX>1) then
+                Begin
+                   Move_Left (CursorX,CursorY,TopY);
+                End;
+             Right_Arrow: If (CursorX<20) then
+                Begin
+                   Move_Right (CursorX,CursorY,TopY);
+                End;
+             Up_Arrow: If (CursorY>1) then
+                Begin
+                   Move_Up (CursorY,TopY);
+                End;
+             Down_Arrow: If (CursorY<20) then
+                Begin
+                   Move_Down (CursorY,TopY);
+                End;
+         End; { Case }
+      End; { Repeat }
+   Until (answer='E');  { Until user wants to E)xit this mode }
+End;  { Room or Corridor }
 
 (******************************************************************************)
 
 Procedure Change_Room_Special (Var Maze: Floor_Type;  Var CursorX,CursorY,TopY: Integer);
 
-Begin
-      { TODO: Enter this code }
-End;
+{ This procedure lets the user place a special in the room by typing its letter code }
+
+Var
+   Special: Char;
+
+Begin { Change Room Special }
+
+   { Get the special }
+
+   SMG$Put_Chars (ScreenDisplay,
+       'Enter special letter, <SPACE> exits',
+       23,1,,1);
+   Special:=Make_Choice(['A'..'P',CHR(32)]);
+
+   { If not exiting mode, place the special }
+
+   If (Special<>CHR(32)) then
+      Begin
+         Maze[CursorX,CursorY].Contents:=ORD(Special)-65;
+      End;
+
+   SMG$Erase_Line (ScreenDisplay,23,1);
+   Move_Right (CursorX,CursorY,TopY);
+End;   { Change Room Special }
 
 (******************************************************************************)
 
