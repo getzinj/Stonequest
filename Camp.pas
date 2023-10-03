@@ -191,6 +191,211 @@ End;  { Delete }
 
 (******************************************************************************)
 
+Procedure Print_Item_Node (Node: ItemSet; Choice_Num: Integer);
+
+{ This procedure prints the name of the item pointed to by NODE.  It also gives the letter equivalent of CHOICE_NUM so that the
+  user can select it. }
+
+Var
+   Item: Item_Record;
+
+Begin { Print Item Node }
+   Item:=Item_List[Node^.Item_Num];
+   SMG$Put_Chars (CampDisplay,
+       '['+CHR(Choice_Num+64)+']   ');
+   If (Node^.Identified) then
+      Begin
+         SMG$Put_Line (CampDisplay,
+             Item.True_Name);
+      End
+   Else
+      Begin
+         SMG$Put_Line (CampDisplay,
+            '?'+Item.Name);
+      End;
+End;  { Print Item Node }
+
+(******************************************************************************)
+
+Function Choose_From_List (Class,Class1: Class_Type; Align: Align_Type; Var Choice_List: ItemSet): ItemSet;
+
+{ This function will display a list of viable choices for a character, and return the one (if any) he selects.  If nothing is
+  chosen, the value NUL is returned, otherwise the pointer to the selected item_node is returned. }
+
+Var
+   Position,Chosen: Integer;
+   TempPtr,Temp: ItemSet;
+   Options: Set of char;
+   Answer: Char;
+   Item: Item_Record;
+
+Begin { Choose from List }
+   Options:=[CHR(113)];  { So far, no options }
+   Position:=0;
+   TempPtr:=Choice_list;  { The temporary pointer points to beginning of list }
+   While (TmpPtr<>Nil) do  { While there are items on list }
+      Begin { For each item }
+         Item:=Item_List[TempPtr^.Item_Num];
+         If (((Class in Item.Usable_By) or (Class1 in Item.Usable_By)) and  { if the item is usable }
+            (((Align=Item.Alignment) or (Item.Alignment=NoAlign))) then
+            Begin { Usable item }
+               Position:=Position+1;                 { Increment the line counter }
+               Print_Item_Node (TempPtr,Position);  { Print the choice }
+               Options:=Options+[CHR(Position+64)]; { Add it to the set of choices }
+            End;  { Usable item }
+         TempPtr:=TempPtr^.Next_Item;           { Go to next item }
+      End;  { For each item }
+   SMG$Put_Line (CampDisplay,
+       'Which?',0);
+   SMG$End_Display_Update (CampDisplay);
+   Answer:=Make_Choice (Options);               { Get the choice }
+   If (Answer<>CHR (13)) then   { If the player chose an item... }
+      Begin { Item chosen }
+         Chosen:=Ord(Answer)-64;  { Find the number desired }
+
+         Position:=0;
+         TempPtr:=Choice_List;  Temp:=Nil;
+         While (TempPtr<>Nil) and (Position>Chosen) do  { Until found }
+            Begin { For each item }
+               Item:=Item_List[TempPtr^.Item_Num];  { Get the item }
+               If (((Class in Item.Usable_By) or (Class1 in Item.Usable_By)) and  { If the item is usable }
+                  (((Align=Item.Alignment) or (Item.Alignment=NoAlign))) then
+                     Begin
+                        Position:=Position+1;  { Advance the counter }
+                        Temp:=TempPtr;         { Get the current ptr. }
+                     End;
+               TempPtr:=TempPtr^.Next_Item;          { Go to next item }
+            End;  { For each item }
+         If (Temp<>Nil) then
+            Begin
+               Delete (Temp,Choice_List);  { delete the node from the list }
+            End;
+      End { Item chosen }
+   Else
+      Begin
+         Temp:=Nil;  { Otherwise, return Nil }
+      End;
+   Choose_From_List:=Temp;
+End;  { Choose from List }
+
+(******************************************************************************)
+
+Function One_Usable (Choices: ItemSet; Character: Character_Type): Boolean;
+
+{ This function returns TRUE if there one item in CHOICES that CHARACTER can use, and FALSE otherwise.  And item is usable by a
+  character if the alignments match (or if the item has NoAlign) and CHARACTER's class is one thatr can use the item (in .USABLE_BY).  }
+
+Var
+   Align: Align_Type;
+   Class,Class1: Class_Type;
+   At_Least_One: Boolean;
+   Traveller: ItemSet;
+   Item: Item_Record;
+
+Begin { One Usable }
+   Align:=Character.Alignment; Class:=Character.Class; Class1:=Character.PreviousClass;
+   At_Least_One:=False;  Traveller:=Choices;
+   While ((Not At_LeastOne) and (Traveller<>Nil)) do
+      Begin { At Least One means that there is >=1 equippable item }
+         Item:=Item_List[Traveller^.Item_Num];
+         At_Least_One:=(Class in Item.Usable_By) or (Class1 in Item.Usable_By);
+         At_Least_one:=At_Least_one and ((Align=Item.Alignment) or (Item.Alignment=NoAlign));
+         Traveller:=Traveller^.Next_item;
+      End;
+   One_Usable:=At_Least_One;
+End;  { One Usable }
+
+(******************************************************************************)
+
+Procedure Select_Item (Var Character: Character_Type; Kind: Item_Type; Var Choices: ItemSet);
+
+{ This procedure will print out a list of items and allow a character to choose one, or none. }
+
+Var
+   T: Line;
+   ItemPtr: ItemSet;
+   Num: Integer;
+   Item: Item_Record;
+   Item_Name: [External]Array [Item_Type] of Varying [7] of char;
+
+Begin { Select Item }
+   If (One_Usable (Choices,Character)) then  { If there is a usable item in list }
+      Begin { at least one usable }
+         SMG$Begin_Display_Update (CampDisplay);
+         SMG$Erase_Display (CampDisplay);
+         T:='[RETURN] for none';
+         SMG$Put_Chars (CampDisplay,1,23,39-(t.length div 2));
+         T:='Please select a '
+             +Item_Name[Kind]
+             +' for '
+             +Character.Name;
+         SMG$Set_Cursor_ABS (CampDisplay,1,39-(t.length div 2));
+         SMG$Put_Line (CampDisplay,T,1);
+         { SMG$END_DISPLAY_UPDATE (CAMPDISPLAY) in Choose_from_list }
+
+         { Get the item chosen }
+
+         ItemPtr:=Choose_From_List(Character.Class,Character.PreviousClass,Character.Alignment,Choices);
+         If (ItemPtr<>Nil) then  { If there WAS an item chosen }
+            Begin { Item selected }
+
+                  { Add the item to the character's collection }
+
+               Item:=Item_List[ItemPtr^.Item_Num];
+               Character.No_of_Items:=Character.No_of_Items+1;
+               Num:=Character.No_of_Items;
+               Character.Item[Num].Item_Num:=ItemPtr^.Item_Num;
+               Character.Item[Num].Ident:=ItemPtr^.Identified;
+               Character.Item[Num].Cursed:=Item.cursed;
+               Character.Item[Num].Equipted:=True;
+
+                  { Check to see if it's cursed }
+
+               If (Character.Item[Num].Cursed) then
+                  Begin { Cursed }
+                     SMG$Put_Line (CampDisplay,
+                         'Cursed!!!!');
+                     Ring_Bell (CampDisplay,3);
+                     Delay (2);
+                  End;  { Cursed }
+               Dispose (ItemPtr);  { Dispose of the node }
+            End { Item selected }
+      End { One usable }
+End;  { Select Item }
+
+(******************************************************************************)
+
+Function Not_stuck (Character: Character_Type; Kind: Item_Type): Boolean;
+
+{ This function will determine if can select an item of type KIND, or if he is stuck with the one he has, e.g. cursed item }
+
+Var
+   Item: Integer;
+   Temp: Boolean;
+   Character_Item: Item_Record;
+
+Begin { Not Stuck }
+   If (Character.No_of_items=0) then  { If the character has NO items... }
+      Begin
+         Not_Stuck:=True              { He can choose one }
+      End
+   Else
+      Begin { Has items }
+         Temp:=True;                  { So far, he can choose one }
+         For Item:=1 to Character.No_Of_Items do  { For each item }
+            Begin
+               Character_Item:=Item_List[Character.Item].Item_Num];
+               If (Character_Item.Kind=Kind) then  { If of the right type }}
+                  Begin
+                     Temp:=Temp AND Not(Character.Item[Item].Cursed);  { Cursed? }
+                  End
+            End;
+         Not_Stuck:=Temp;  { Return the function value }
+      End;  { Has items }
+End;  { Not Stuck }
+
+(******************************************************************************)
+
 { TODO: Enter this code }
 
 [Global]Procedure Camp (Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type;  Party_Size: Integer;
