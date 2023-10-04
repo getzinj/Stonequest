@@ -396,6 +396,305 @@ End;  { Not Stuck }
 
 (******************************************************************************)
 
+Procedure Store_Item (Item_Ptr: ItemSet; Var Member: Party_Type; Party_Size: Integer);
+
+{ This procedure will attempt to give the item pointed to by ITEM_TR to
+  its owner.  If the owner has too many items, the procedure will find someone
+  who has room and give it to him/her.  It bears mentioning that there MUST
+  be room for the item SOMEWHERE in the party since all the items where taken
+  from the party, and new items can be added during the equip. }
+
+Var
+   CharNo: Integer;
+   Done: Boolean;
+
+Begin { Store Item }
+   Done:=False; { We haven't found a place yet }
+   CharNo:=Item_Ptr^.Owner_Number;  { Get the person who owns the item }
+   Repeat
+      If (Member[CharNo].No_of_items<8) then  { If this person has room... }
+         Begin { Has room }
+
+                { Give the item to this person }
+
+            Member[CharNo].No_of_Items:=Member[CharNo].No_of_Items+1;
+            With Member[CharNo].Item[Member[CharNo].No_of_Items] do
+               Begin
+                  Ident:=Item_Ptr^.Identified;
+                  Cursed:=False;
+                  Equipted:=False;
+                  Item_Num:=Item_Ptr^.Item_Num;
+               End;
+            Done:=True; { We have found a place }
+         End  { Has room }
+      Else
+         Begin { Doesn't have room }
+            CharNo:=CharNo+1;  { Go to next character }
+            If (CharNo>Party_Size) then
+               Begin { Loop around to beginning }
+                  CharNo:=1;
+               End;  { Loop around to beginning }
+         End;  { Doesn't have room }
+   Until Done;  { Do this until we've found a place for the item }
+End;  { Store Item }
+
+(******************************************************************************)
+
+Procedure Redistribute_Remainders (Var Member: Party_Type;  Party_Size: Integer;  Var Choices: Item_Pool);
+
+{ This procedure will take the remaining items, the ones not selected, and return them to their owners (if possible) or to someone
+  else (if the owner doesn't have room) }
+
+Var
+   Kind: Item_Type;
+   Traveller: ItemSet;
+   Temp: ItemSet;
+
+Begin { Redistribute Remainders }
+   For Kind:=Weapon to cloak do  { For each item list... }
+      Begin { For each item kind }
+         Traveller:=Choices[Kind];
+         While (Traveller<>Nil) do  { For each item IN the list... }
+            Begin { Traverse list }
+               Store_Item (Traveller,Member,Party_Size);  { Give the item to a character }
+               Temp:=Traveller;
+               Traveller:=Traveller^.Next_Item; { Move to next node }
+               Dispose (Temp);  { Delete this node }
+            End;
+         Choices[Kind]:=Nil; { Kill the list }
+      End;  { For each item kind }
+End;  { Redistribute Remainders }
+
+(******************************************************************************)
+
+Function Wants_To_Invoke (Character: Character_Type; Item_No: Integer): Boolean;
+
+{ This function will ask the player if he or she wishes to invoke the special power of CHARACTER's ITEM_NOth item.  If the
+  player responds with a 'Y' then the function value is TRUE, if the response is 'N' then the value is FALSE. }
+
+Var
+   T: Line;
+   Item: Item_Record;
+
+Begin { Wants_To_Invoke }
+   Item:=Item_List[Character.Item[Item_No].Item_Num];
+   T:=Character.Name
+       +', dost though wish to invoke the '
+       +'special power of thine ';
+   If (Character.Item[Item_No].Ident) then
+      Begin
+         T:=T+Item.True_Name;
+      End
+   Else
+      Begin
+         T:=T+Item.Name;
+      End;
+   T:=T+'?';
+
+   { Print the question }
+
+   SMG$Begin_Display_Update (CampDisplay);
+   SMG$Erase_Display (CampDisplay);
+   SMG$Put_Chars (CampDisplay,T,1,39-(t.length div 2));
+   SMG$End_Display_Update (CampDisplay);
+
+   { The function value is returned }
+
+   Wants_to_Invoke:=(Yes_or_No='Y');
+End;  { Wants to Invoke ]
+
+(******************************************************************************)
+
+Procedure Special_Occurances (Var Member: Party_Type; Var Current_Party_Size: Party_Size_Type);
+
+{ This procedure will check each item is equipped with to see if it has a possible special occurance.  If so, it will
+  ask the character if he/she wishes to invoke it, and handle it if he/she does. }
+
+Var
+   Character: Character_Type;
+   Character_No,Item_No: Integer;
+   New_Item,Item: Item_Record;
+
+[External]Procedure Special_Occurance (Var Character: Character_Type; Number: Integer);External;
+
+Begin { Special Occurances }
+   For Character_No:=1 to Current_party_Size do  { For each character... }
+      Begin { For each character }
+         Character:=Member[Character_No];  { Get the character }
+         For Item_No:=1 to Character.No_of_items do  { For each item owned... }
+            Begin
+
+               { If the item is equipped and has a special occurance number, it can be invoked. }
+
+               Item:=Item_List[Character.Item[Item_No].Item_Num];  { Make a copy of the item }
+
+               If (Item.Special_Occurance_No>0) and (Character.Item[Item_No].Equipted) then
+                 Begin { Can be invoked }
+                    If Wants_to_Invoke (Character,Item_No) then  { Will he invoke? }
+                       Begin { Character invokes item }
+
+                          { If the item is invoked, handle it... }
+
+                          Special_Occurance(Character,Item.Special_Occurance_No);
+
+                          { Check to see if the item makes it break percentage. If it does, change it into whatever it's supposed to
+                            turn into. }
+
+                            If Made_Roll (Item.Percentage_Breaks) then
+                               Begin { Item Breaks }
+                                  New_Item:=Item_List[Item.Turns_Into];
+                                  With Character.Item[Item_No] do
+                                     Begin { Change Item }
+                                        Equipted:=False;  { No longer equipped }
+                                        Ident:=False;  { No longer knows what it is }
+                                        Cursed:=False;  { Not cursed }
+                                        Item_Num:=Item.Turns_Into;
+                                        Usable:=(Character.Class in New_Item.Usable_By) or (Character.PreviousClass in New_Item.Usable_By);
+                                     End;  { Change item }
+                               End;  { Item Breaks }
+                       End;  { Character invokes item }
+                    Member[Character_No]:=Character;  { Return updated character }
+                 End;  { Can be invoked }
+            End;
+      End; { For each character }
+End;  { Special Occurances }
+
+(******************************************************************************)
+
+Procedure Update_Roster (Var Member: Party_Type;  Current_Party_Size: Party_Size_Type);
+
+Var
+   Character: Integer;
+
+[External]Function  Regenerates (Character: Character_Type; PosZ:integer:=0): Integer;external;
+[External]Function  Compute_AC (Character: Character_Type; PosZ:integer:=0): Integer;external;
+
+Begin
+   For Character:=1 to Current_Party_Size do
+      Begin
+         Member[Character].Regenerates:=Regenerates(Member[Character],PosZ);
+         Member[Character].Armor_Class:=Compute_AC (Member[Character],PosZ);
+      End;
+End;
+
+(******************************************************************************)
+
+Procedure Equip_Party (Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type; Party_Size: Integer);
+
+{ This procedure will allow an entire party to pool their items, and equip themselves from the pool.  When the equip is done,
+  unselected items will be distributed to the person who owns it, or, if there's no room, to someone else with room }
+
+Var
+   Choices: Item_Pool; { A list for each item type }
+   Kind: Item_Type;
+   Person: Integer;
+
+Begin { Equip Party }
+   { Collect all the items into lists }
+
+   Pool_Items (Member,Party_Size,Choices);
+
+   { Have each player select an item for each item class (Sword,Armor, etc) available.  If the player is stuck with a particular
+     item, such as the case when he or she has a cursed item, he or she can not choose another in its place. }
+
+   For Kind:=Weapon to cloak do  { For each item type... }
+      If Kind<>Scroll then  { You can't equip a scroll }
+         For Person:=1 to Current_Party_Size do  { For each character }
+            If Member[Person].No_of_items<8 then
+               If Not_Stuck (Member[Person],Kind) and (Choices[Kind]<>Nil) then
+                  Select_Item (Member[Person],Kind,Choices[Kind]);
+
+   { Give back whatever's not selected }
+
+   Redistribute_Remainders (Member,Party_Size,Choices);
+
+   { Check items for special powers }
+
+   Special_Occurances (Member, Current_Party_Size);
+
+   { Recompute Armor Classes and Regeneration }
+
+   Update_Roster (Member,Party_Size);
+End;  { Equip Party }
+
+(******************************************************************************)
+
+Function Party_Has_Items (Member: Party_Type; Party_Size: Integer):Boolean;
+
+Var
+   Char_Num: Integer;
+
+Begin
+   Party_Has_Items:=False;
+   For Char_Num:=1 to Party_Size do
+      If Member[Char_Num].No_of_items>0 then Party_Has_Items:=True;
+End;
+
+(******************************************************************************)
+
+Procedure Print_Character_Line_Aux (CharNo: Integer; Member: Party_Type;  Party_Size: Integer);
+
+Var
+  AlignName: [External]Array [Align_Type] of Packed Array [1..7] of char;
+  StatusName: [External]Array [Status_Type] of Varying [14] of char;
+  ClassName: [External]Array [Class_Type] of Varying [13] of char;
+
+Begin
+  If CharNo<=Party_Size then { If there is a CHARNOth Person }
+     Begin { Print status line }
+        SMG$Put_Chars (CampDisplay,
+            String(CharNo,1),,,1);
+        SMG$Put_Chars (CampDisplay,
+            '  '
+            +Pad(Member[CharNo].Name,' ',22));
+        SMG$Put_Chars (CampDisplay,
+            String(Member[CharNo].Level,3));
+        SMG$Put_Chars (CampDisplay,
+            '     '
+            +AlignName[member[CharNo].Alignment][1]);
+        SMG$Put_Chars (CampDisplay,
+            '-'
+            +Pad(ClassName[member[CharNo].Class],' ',14));
+        SMG$Put_Chars (CampDisplay,
+            String(10-Member[CharNo].Armor_Class,3));
+        SMG$Put_Chars (CampDisplay,
+            '   '
+            +String(Member[CharNo].Curr_HP,5));
+        If Alive(Member[CharNo]) then
+           If (Member[CharNo].Regenerates>0) then
+              SMG$Put_Chars (CampDisplay,
+                  '+')
+           Else
+              If (Member[CharNo].Regenerates<0) then
+                 SMG$Put_Chars (CampDisplay,
+                     '-')
+        Else
+           SMG$Put_Chars (CampDisplay,
+               ' ');
+        If Member[CharNo].Status<>Healthy then
+           SMG$Put_Chars (CampDisplay,
+               '    '
+               +StatusName[Member[CharNo].Status])
+        Else
+           SMG$Put_Chars (CampDisplay,
+               '    '
+               +String(Member[CharNo].Max_HP,5));
+     End;  { Print Status line }
+End;
+
+(******************************************************************************)
+
+Procedure Print_Character_Line (CharNo: Integer; Member: Party_Type;  Party_Size: Integer);
+
+{ This procedure will print the CHARNOth party member's statistics int eh CHARNO+3 row. }
+
+Begin { Print Character Line }
+   SMG$SET_CURSOR_ABS (CampDisplay,CharNo+3,2);
+   Print_Character_Line_Aux (CharNo,Member,Party_Size);
+End;  { Print Character Line }
+
+(******************************************************************************)
+
 { TODO: Enter this code }
 
 [Global]Procedure Camp (Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type;  Party_Size: Integer;
