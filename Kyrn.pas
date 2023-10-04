@@ -26,7 +26,7 @@ Const
    SMG$M_WRAP_WORD = 2; { Just guessing because it's a bitmap }
 
 (******************************************************************************)
-[External]Procedure Write_Roster;External;
+[External]Procedure Write_Roster(Roster: Roster_Type);External;
 [External]Procedure Cursor;External;
 [External]Procedure No_Cursor;External;
 [External]Function Character_Exists (CharName: Name_Type; Var Spot: Integer):Boolean;external;
@@ -134,7 +134,7 @@ Var
 
 Begin { Backup Party }
   For Character:=1 to Party_Size do  Store_Character_Without_Lock (Party[Character]);
-  Write_Roster;
+  Write_Roster (Roster);
 End;  { Backup Party }
 
 (******************************************************************************)
@@ -394,7 +394,7 @@ Begin { Go Training Grounds }
 
    { Save roster and update TopDisplay to indicate of characters }
 
-   Write_Roster;
+   Write_Roster (Roster);
    For Person:=1 to 6 do  Print_Character_Line (Person,Party,Party_Size);
 
    { Remove the added display and erase it for future use }
