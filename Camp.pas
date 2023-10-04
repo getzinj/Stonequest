@@ -695,6 +695,87 @@ End;  { Print Character Line }
 
 (******************************************************************************)
 
+Procedure Print_Camp_Roster (Member: Party_Type; Party_Size:Integer);
+
+{ This procedure will print out the roster of the adventuring party by printing a heading labeling the columns, and then printing
+  the status line of each character in the party. }
+
+Const
+   Roster_Heading = ' #  Character '
+       +'Name      Level     Class '
+       +'           AC    Hits   Status';
+
+Var
+   Character: 1..6;
+
+Begin { Print Roster }
+  SMG$Erase_Display (CampDisplay);
+  SMG$Put_Chars (CampDisplay,Roster_Heading,3,1);
+  For Character:=1 to 6 do
+     Begin
+        Print_Character_Line (Character,Member,Party_Size);
+     End;
+End;  { Print Roster }
+
+(******************************************************************************)
+
+Procedure Print_Lower_Character_Line (CharNo: Integer;  Member: Party_Type;  Party_Size: Integer);
+
+{ This procedure will print out the roster of the adventuring party by printing a heading labeling the columns, and then printing
+  the status line of each character in the party. }
+
+Begin { Print_Lower_Character_Line }
+  SMG$SET_CURSOR_ABS (CampDisplay,CharNo+15,2);
+  Print_Character_Line_Aux (CharNo,Member,Party_Size);
+End;  { Print_Lower_Character_Line }
+
+(******************************************************************************)
+
+Procedure Reorder_Party (Var Member: Party_Type; Party_Size: Integer; Current_Party_Size: Integer);
+
+{ This procedure allows the player to update the marching order of the party. }
+
+Var
+   Options: Char_Set;
+   Number,Position: 1..6;
+   Temp_Party: Party_Type;
+
+Begin { Reorder party }
+   Options:=['1'..CHR(Party_Size+ZeroOrd)];  { Characters that can be selected }
+
+   { This will ask for the position of all but one character.  The position of the last character is not asked because it will simply
+     go in the only remaining spot. }
+
+   SMG$Erase_Display (CampDisplay,12,1);
+   For Position:=1 to Party_size-1 do    { For each position in the new party }
+      Begin { Each Position }
+         SMG$Put_Chars (CampDisplay,
+             'Choose character for position #'
+             +String(Position,1),
+             13,2,1)
+         Number:=Ord (Make_Choice(Options))-ZeroOrd;  { get the character number }
+         Options:=Options-[CHR(Number+ZeroOrd)];  { No longer a choice now }
+         Temp_Party[Position]:=Member[Number];
+         Print_Lower_Character_Line (Position,Temp_Party,Party_Size);
+      End;  { Each position }
+
+   { This following section will place the remaining character last in order }
+
+   For Position:=1 to Party_Size do
+      If CHR(Position+ZeroOrd) in Options then { If this is the remaining char. }
+         Temp_Party[Party_Size]:=Member[Position];  { Add him... }
+   Print_Lower_Character_Line (Party_Size,Temp_Party,Party_Size);  { ... and print him }
+   Delay (1/2);
+   Member:=Temp_Party;  { Copy the new party over the current party }
+
+   { Move dead characters to rear again }
+
+   Dead_Characters (Member,Current_Party_Size,Party_Size);
+End;  { Reorder party }
+
+(******************************************************************************)
+
+
 { TODO: Enter this code }
 
 [Global]Procedure Camp (Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type;  Party_Size: Integer;
