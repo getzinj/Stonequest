@@ -775,6 +775,60 @@ End;  { Reorder party }
 
 (******************************************************************************)
 
+Procedure View_Character (Character_Number: Integer; Var Member: Party_Type; Var Current_Party_Size: Party_Size_Type;
+                                  Party_Size: Integer);
+
+{ This procedure allows a player to view his/her character via PRINT_CHARACTER.  A call to DEAD_CHARACTRS is made afterwords, since
+  the number of living characters may increase or decrease depending on what happens in PRINT_CHARACTER. }
+
+[External]Procedure Print_Character (Var Party: Party_Type;  Party_Size: Integer;  Var Characters: Character_Type;
+                                     Var Leave_Maze: Boolean; Automatic: Boolean:=False);external;
+
+Begin { View Character }
+
+   { Put the necessary display on }
+
+   SMG$Erase_Display (ScreenDisplay);
+   SMG$Begin_Pasteboard_Update (Pasteboard);
+   SMG$Paste_Virtual_Display (ScreenDisplay,Pasteboard,1,1);
+
+   { Call Print_Character to display the character }
+
+   Print_Character (Member,Party_Size,Member[Character_Number],Leave_Maze,Automatic:=False);
+   { SMG$END_PASTEBOARD_UPDATE is in PRINT_CHARACTER }
+
+   { Update the party }
+
+   Dead_Characters (Member,Current_Party_Size,Party_Size);
+   Update_Roster (Member,Current_Party_Size);
+   Print_Camp_Roster (Member,Party_Size);  { Print the roster }
+
+   { Remove the SCREENDISPLAY }
+
+   SMG$Unpaste_Virtual_Display (ScreenDisplay,Pasteboard);
+   SMG$Erase_Display (ScreenDisplay);
+End;  { View Character }
+
+(******************************************************************************)
+
+Procedure Print_Camp_Options (Member: Party_Type; Party_Size: Integer);
+
+{ This procedure prints the party's options }
+
+Var
+   T: Varying [390] of Char;
+
+Begin { Print Camp Options }
+   T:='Thou may ';
+   If Not Game_Saved then T:=T+'S)ave the game, ';  { only one saved game allowed }
+   T:=T+'R)eorder party, ';
+   If Party_Has_Items (Member,Party_Size) then T:=T+'E)quip party, ';
+   T:=T+'#) to inspect a party member, or L)eave the camp.';
+   SMG$Set_Cursor_ABS (CampDisplay,13,1);
+   SMG$Put_Line (CampDisplay,T,Wrap_Flag:=SMG$M_WRAP_WORD);
+End;  { Print Camp Options }
+
+(******************************************************************************)
 
 { TODO: Enter this code }
 
