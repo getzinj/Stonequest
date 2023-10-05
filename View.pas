@@ -418,6 +418,92 @@ End;
 
 (******************************************************************************)
 
+Function Left_Room (Direction: Direction_Type): Room_Record;
+
+Var
+   Temp: Room_Record;
+
+Begin
+   Case Direction of
+          North:  If PosX>1 then
+                     Temp:=Maze.Room[PosX-1,PosY]
+                  Else
+                     Temp:=Maze.Room[20,PosY];
+          South:  If PosX<20 then
+                     Temp:=Maze.Room[PosX+1,PosY]
+                  Else
+                     Temp:=Maze.Room[1,PosY];
+          East:  If PosY>1 then
+                     Temp:=Maze.Room[PosX,PosY-1]
+                  Else
+                     Temp:=Maze.Room[PosX,20];
+          West:  If PosY<20 then
+                     Temp:=Maze.Room[PosX,PosY+1]
+                  Else
+                     Temp:=Maze.Room[PosX,1];
+   End;
+   Left_Room:=Temp;
+End;
+
+(******************************************************************************)
+
+Function Right_Room (Direction: Direction_Type): [Volatile]Room_Record;
+
+Begin
+   Case Direction of
+          North:  Right_Room:=Left_Room (South);
+          South:  Right_Room:=Left_Room (North);
+          East:   Right_Room:=Left_Room  (West);
+          West:   Right_Room:=Left_Room  (East)
+   End;
+End;
+
+(******************************************************************************)
+
+Function Top_Room (Direction: Direction_Type): [Volatile]Room_Record;
+
+Var
+   Temp: Room_Record;
+
+Begin
+   Case Direction of
+          North:  If PosY>1 then
+                     Temp:=Maze.Room[PosX,PosY-1]
+                  Else
+                     Temp:=Maze.Room[PosX,20];
+          South:  If PosY<20 then
+                     Temp:=Maze.Room[PosX,PosY+1]
+                  Else
+                     Temp:=Maze.Room[PosX,1];
+          East:  If PosX<20 then
+                     Temp:=Maze.Room[PosX+1,PosY]
+                  Else
+                     Temp:=Maze.Room[1,PosY];
+          West:  If PosX>1 then
+                     Temp:=Maze.Room[PosX-1,PosY]
+                  Else
+                     Temp:=Maze.Room[20,PosY];
+   End;
+   Top_Room:=Temp;
+End;
+
+
+(******************************************************************************)
+
+Function Bottom_Room (Direction: Direction_Type): [Volatile]Room_Record;
+
+Begin
+   Case Direction of
+          South:  Bottom_Room:=Top_Room (North);
+          North:  Bottom_Room:=Top_Room (South);
+          West:   Bottom_Room:=Top_Room  (East)
+          East:   Bottom_Room:=Top_Room  (West);
+   End;
+End;
+
+(******************************************************************************)
+
+
 { TODO: Enter this code }
 
 [Global]Procedure Print_View (Direction: Direction_Type; Member: Party_Type;  Current_Party_Size: Party_Size_Type);
