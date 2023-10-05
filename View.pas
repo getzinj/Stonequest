@@ -335,25 +335,76 @@ Begin
    Bright:=0;
    If Has_Light then Bright:=Bright+SMG$M_BOLD;
 
-   SMG$Put_Line (ViewDisplay,'   '+View[1],1);
-   SMG$Put_Line (ViewDisplay,'   '+View[2],1);
-   SMG$Put_Line (ViewDisplay,'   '+View[3],1);
+   SMG$Put_Line (ViewDisplay,
+       '   '
+       +View[1],1);
+   SMG$Put_Line (ViewDisplay,
+       '   '
+       +View[2],1);
+   SMG$Put_Line (ViewDisplay,
+       '   '
+       +View[3],1);
 
-   SMG$Put_Chars (ViewDisplay,'   '+View[4,1]+View[4,2]+View[4,3],,,1,);
-   SMG$Put_Chars (ViewDisplay,View[4,4]+View[4,5]+View[4,6],,,,Bright);
-   SMG$Put_Line (ViewDisplay,View[4,7]+View[4,8]+View[4,9]);
+   SMG$Put_Chars (ViewDisplay,
+       '   '
+       +View[4,1]
+       +View[4,2]
+       +View[4,3],
+       ,,1,);
+   SMG$Put_Chars (ViewDisplay,
+       View[4,4]
+       +View[4,5]
+       +View[4,6],
+       ,,,Bright);
+   SMG$Put_Line (ViewDisplay,
+       View[4,7]
+       +View[4,8]
+       +View[4,9]);
 
-   SMG$Put_Chars (ViewDisplay,'   '+View[5,1]+View[5,2]+View[5,3],,,1,);
-   SMG$Put_Chars (ViewDisplay,View[5,4]+View[5,5]+View[5,6],,,,Bright);
-   SMG$Put_Line (ViewDisplay,View[5,7]+View[5,8]+View[5,9]);
+   SMG$Put_Chars (ViewDisplay,
+       '   '
+       +View[5,1]
+       +View[5,2]
+       +View[5,3],
+       ,,1,);
+   SMG$Put_Chars (ViewDisplay,
+       View[5,4]
+       +View[5,5]
+       +View[5,6],
+       ,,,Bright);
+   SMG$Put_Line (ViewDisplay,
+       View[5,7]
+       +View[5,8]
+       +View[5,9]);
 
-   SMG$Put_Chars (ViewDisplay,'   '+View[6,1]+View[6,2]+View[6,3],,,1,);
-   SMG$Put_Chars (ViewDisplay,View[6,4]+View[6,5]+View[6,6],,,,Bright);
-   SMG$Put_Line (ViewDisplay,View[6,7]+View[6,8]+View[6,9]);
+   SMG$Put_Chars (ViewDisplay,
+       '   '
+       +View[6,1]
+       +View[6,2]
+       +View[6,3],
+       ,,1,);
+   SMG$Put_Chars (ViewDisplay,
+       View[6,4]
+       +View[6,5]
+       +View[6,6],
+       ,,,Bright);
+   SMG$Put_Line (ViewDisplay,
+       View[6,7]
+       +View[6,8]
+       +View[6,9]);
 
-   SMG$Put_Line (ViewDisplay,'   '+View[7],1);
-   SMG$Put_Line (ViewDisplay,'   '+View[8],1);
-   SMG$Put_Line (ViewDisplay,'   '+View[9],1);
+   SMG$Put_Line (ViewDisplay,
+       '   '
+       +View[7],
+       1);
+   SMG$Put_Line (ViewDisplay,
+       '   '
+       +View[8],
+       1);
+   SMG$Put_Line (ViewDisplay,
+       '   '
+       +View[9],
+       1);
 
 End;
 
