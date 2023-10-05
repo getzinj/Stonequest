@@ -180,6 +180,193 @@ End;
 
 (******************************************************************************)
 
+Function Graphic_Room_Generic (Spot: Room_Record; Section: Section_Type; Member: Party_Type;
+                                       Current_Party_Size: Party_Size_Type;
+                                       H_Section: Horizontal_Section_Type:=Center) : Side;
+
+Var
+   T: Side;
+   Up, Down, Left, Right: Exit_Type;
+
+Begin
+   Get_Bearings (Spot,Up,Down,Left,Right);
+   Case Section of
+          Top:  T:=Top_Row (Spot,Up,Down,Left,Right,Member,Current_Party_Size);
+       Bottom:  T:=Bottom_Row (Spot,Up,Down,Left,Right,Member,Current_Party_Size);
+       Middle:  T:=Middle_Row (Spot,Up,Down,Left,Right,Member,Current_Party_Size,H_Section);
+   End;
+   Graphic_Room_Generic:=T;
+End;
+
+(******************************************************************************)
+
+Function Graphic_Room (Spot: Room_Record; Section: Section_Type; Member: Party_Type;.
+                               Current_Party_Size: Party_Size_Type;
+                               H_Section: Horizontal_Section_Type:=Center_ Side;
+
+Begin
+   Graphic_Room:='   ';
+   If Maze.Special_Table[Spot.Contents].Special<>Darkness then
+      Graphic_Room:=Graphic_Room_Generic (Spot,Section,Member,Current_Party_Size,H_Section);
+End;
+
+(******************************************************************************)
+
+Function Has_Light: [Volatile]Boolean;
+
+Begin
+   Has_Light:=(Rounds_Left[Lght]>0) or (Rounds_LeftCoLi]>0);
+End;
+
+(******************************************************************************)
+
+Function Left_Side (Direction: Direction_Type; Section: Section_Type; Member: Party_Type;
+                            Current_Party_Size: Party_Size_Type;
+                            H_Section: Horizontal_Section_Type:=Left_S): Side;
+
+Var
+   Temp: Side;
+
+Begin
+   Temp:='   ';
+   If Has_Light then
+      Case Direction of
+          North: If Maze.Room[PosX,PosY].West in [Passage,Transparent] then
+                 If PosX>1 then
+                    Temp:=Graphic_Room(Maze,Room[PosX-1,PosY],Section,Member,Current_Party_Size,H_Section)
+                 Else
+                    Temp:=Graphic_Room(Maze,Room[20,PosY],Section,Member,Current_Party_Size,H_Section);
+          South: If Maze.Room[PosX,PosY].East in [Passage,Transparent] then
+                 If PosX<20 then
+                    Temp:=Graphic_Room(Maze,Room[PosX-1,PosY],Section,Member,Current_Party_Size,H_Section)
+                 Else
+                    Temp:=Graphic_Room(Maze,Room[20,PosY],Section,Member,Current_Party_Size,H_Section);
+          East: If Maze.Room[PosX,PosY].North in [Passage,Transparent] then
+                 If PosY>1 then
+                    Temp:=Graphic_Room(Maze,Room[PosX,PosY-1],Section,Member,Current_Party_Size,H_Section)
+                 Else
+                    Temp:=Graphic_Room(Maze,Room[PosX,20],Section,Member,Current_Party_Size,H_Section);
+          West: If Maze.Room[PosX,PosY].South in [Passage,Transparent] then
+                 If PosY<20 then
+                    Temp:=Graphic_Room(Maze,Room[PosX,PosY+1],Section,Member,Current_Party_Size,H_Section)
+                 Else
+                    Temp:=Graphic_Room(Maze,Room[PosX,1],Section,Member,Current_Party_Size,H_Section);
+      End
+   Else
+      Temp:='   ';
+   Left_Side:=Temp;
+End;
+
+(******************************************************************************)
+
+Function Right_Side (Direction: Direction_Type; Section: Section_Type;
+                             Member: Party_Type;
+                             Current_Party_Size: Party_Size_Type): Side;
+
+Begin
+   Case Direction of
+        North: Right_Side:=Left_Side (South,Section,Member,Current_Party_Size,Right_S);
+        South: Right_Side:=Left_Side (North,Section,Member,Current_Party_Size,Right_S);
+        East:  Right_Side:=Left_Side  (West,Section,Member,Current_Party_Size,Right_S);
+        West:  Right_Side:=Left_Side  (East,Section,Member,Current_Party_Size,Right_S);
+   End;
+End;
+
+(******************************************************************************)
+
+Function Top_Side (Direction: Direction_Type; Section: Section_Type; Member: Party_Type;
+                            Current_Party_Size: Party_Size_Type): Side;
+
+Var
+   Temp: Side;
+
+Begin
+   Temp:='   ';
+   If Has_Light then
+      Case Direction of
+          North: If Maze.Room[PosX,PosY].North in [Passage,Transparent] then
+                 If PosY>1 then
+                    Temp:=Graphic_Room(Maze,Room[PosX,PosY-1],Section,Member,Current_Party_Size)
+                 Else
+                    Temp:=Graphic_Room(Maze,Room[PosX,20],Section,Member,Current_Party_Size);
+          South: If Maze.Room[PosX,PosY].South in [Passage,Transparent] then
+                 If PosY<20 then
+                    Temp:=Graphic_Room(Maze,Room[PosX,PosY+1],Section,Member,Current_Party_Size)
+                 Else
+                    Temp:=Graphic_Room(Maze,Room[PosX,1],Section,Member,Current_Party_Size);
+          East: If Maze.Room[PosX,PosY].South in [Passage,Transparent] then
+                 If PosX<20 then
+                    Temp:=Graphic_Room(Maze,Room[PosX+1,PosY],Section,Member,Current_Party_Size)
+                 Else
+                    Temp:=Graphic_Room(Maze,Room[1,PosY],Section,Member,Current_Party_Size);
+          West: If Maze.Room[PosX,PosY].East in [Passage,Transparent] then
+                 If PosX>1 then
+                    Temp:=graphic_Room(Maze,Room[PosX-1,PosY],Section,Member,Current_Party_Size)
+                 Else
+                    Temp:=Graphic_Room(Maze,Room[20,PosY],Section,Member,Current_Party_Size);
+      End
+   Else
+      Temp:='   ';
+   Top_Side:=Temp;
+End;
+
+(******************************************************************************)
+
+Function Bottom_Side (Direction: Direction_Type; Section: Section_Type; Member: Party_Type;
+                             Current_Party_Size: Party_Size_Type): Side;
+
+Begin
+   Case Direction of
+        South: Bottom_Side:=Top_Side (North,Section,Member,Current_Party_Size);
+        North: Bottom_Side:=Top_Side (South,Section,Member,Current_Party_Size);
+         West: Bottom_Side:=Top_Side  (East,Section,Member,Current_Party_Size);
+         East: Bottom_Side:=Top_Side  (West,Section,Member,Current_Party_Size);
+   End;
+End;
+
+(******************************************************************************)
+
+Procedure Display_View (View: View_Matrix);
+
+Var
+   Bright: Unsigned;
+
+Begin
+   Bright:=0;
+   If Has_Light then Bright:=Bright+SMG$M_BOLD;
+
+   SMG$Put_Line (ViewDisplay,'   '+View[1],1);
+   SMG$Put_Line (ViewDisplay,'   '+View[2],1);
+   SMG$Put_Line (ViewDisplay,'   '+View[3],1);
+
+   SMG$Put_Chars (ViewDisplay,'   '+View[4,1]+View[4,2]+View[4,3],,,1,);
+   SMG$Put_Chars (ViewDisplay,View[4,4]+View[4,5]+View[4,6],,,,Bright);
+   SMG$Put_Line (ViewDisplay,View[4,7]+View[4,8]+View[4,9]);
+
+   SMG$Put_Chars (ViewDisplay,'   '+View[5,1]+View[5,2]+View[5,3],,,1,);
+   SMG$Put_Chars (ViewDisplay,View[5,4]+View[5,5]+View[5,6],,,,Bright);
+   SMG$Put_Line (ViewDisplay,View[5,7]+View[5,8]+View[5,9]);
+
+   SMG$Put_Chars (ViewDisplay,'   '+View[6,1]+View[6,2]+View[6,3],,,1,);
+   SMG$Put_Chars (ViewDisplay,View[6,4]+View[6,5]+View[6,6],,,,Bright);
+   SMG$Put_Line (ViewDisplay,View[6,7]+View[6,8]+View[6,9]);
+
+   SMG$Put_Line (ViewDisplay,'   '+View[7],1);
+   SMG$Put_Line (ViewDisplay,'   '+View[8],1);
+   SMG$Put_Line (ViewDisplay,'   '+View[9],1);
+
+End;
+
+(******************************************************************************)
+
+Function Looks_Like_Wall (Exit: Exit_Type): Boolean;
+
+Begin
+   Looks_Like_Wall:=Not (Exit in [Passage,Transparent]);
+End;
+
+(******************************************************************************)
+
 { TODO: Enter this code }
 
 [Global]Procedure Print_View (Direction: Direction_Type; Member: Party_Type;  Current_Party_Size: Party_Size_Type);
