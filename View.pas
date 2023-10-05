@@ -101,6 +101,85 @@ End;
 
 (******************************************************************************)
 
+Function Top_Row (Spot: Room_Record; Up,Down,Left,Right: Exit_Type; Member: Party_Type; Current_Party_Size: Integer): Line;
+
+Var
+   T: Line;
+
+Begin
+   If Sight_Blocked(Up) or Sight_Blocked(Left) then
+       T:='#'
+   Else
+       T:=' ';
+
+   T:=T+Symbol_Type (Up,Member,Current_Party_Size);
+
+   If Sight_Blocked(Up) or Sight_Blocked(Right) then
+       T:=T+'#'
+   Else
+       T:=T+' ';
+
+   Top_Row:=T;
+End;
+
+(******************************************************************************)
+
+Function Bottom_Row (Spot: Room_Record; Up,Down,Left,Right: Exit_Type; Member: Party_Type; Current_Party_Size: Integer): Line;
+
+Var
+   T: Line;
+
+Begin
+   If Sight_Blocked(Down) or Sight_Blocked(Left) then
+       T:='#'
+   Else
+       T:=' ';
+
+   T:=T+Symbol_Type (Down,Member,Current_Party_Size);
+
+   If Sight_Blocked(Down) or Sight_Blocked(Right) then
+       T:=T+'#'
+   Else
+       T:=T+' ';
+
+   Top_Row:=T;
+End;
+
+
+(******************************************************************************)
+
+Function Middle_Row (Spot: Room_Record; Up,Down,Left,Right: Exit_Type; Member: Party_Type;
+                              Current_Party_Size: Integer;
+                              Section: Horizontal_Section_Type:=Center): Line;
+
+Var
+   T: Line;
+
+Begin
+   T:='';
+   If Section<>Right_S then
+       T:=Symbol_Type (Left,Member,Current_Party_Size)
+   Else
+       T:=' ';
+
+   If Is_Stairs (Spot) then
+      T:=T+'@'
+   Else
+      If Is_Special(Spot) and Show_Special (Member,Current_Party_Size) then
+          T:=T+'o'
+      Else
+          T:=T+'.';
+
+   If Section<>Left_S then
+       T:=T+Symbol_Type (Right,Member,Current_Party_Size)
+   Else
+       T:=T+' ';
+
+   Middle_Row:=T;
+End;
+
+(******************************************************************************)
+
 { TODO: Enter this code }
 
 [Global]Procedure Print_View (Direction: Direction_Type; Member: Party_Type;  Current_Party_Size: Party_Size_Type);
