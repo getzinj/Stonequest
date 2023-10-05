@@ -114,31 +114,6 @@ End;  { Save Monsters }
 
 {**********************************************************************************************************************************}
 
-[Global]Procedure Write_Roster (Roster: Roster_Type);
-
-{ This procedure is used to write the current roster to the character file }
-
-Const
-  Filename = 'SYS$LOGIN:Character.Dat;1';
-
-Var
-   Loop: Integer;
-   Error: Boolean;
-
-Begin { Write Roster }
-    Open (Char_File,
-         file_name:=filename,
-         History:=OLD);
-    ReWrite (Char_File);
-    For Loop:=1 to 20 do
-        Begin
-           Write (Char_File,Roster[Loop]);
-        End;
-    Close (Char_File);
-End;  { Write Roster }
-
-{**********************************************************************************************************************************}
-
 [Global]Procedure Save_Treasure(Treasure: List_of_Treasures);
 
 { This procedure will save the updated treasure list if the current user is authorized to do so. }
@@ -460,6 +435,31 @@ End;  { Read Messages }
 
 {**********************************************************************************************************************************}
 
+[Global]Procedure Write_Roster (Roster: Roster_Type);
+
+{ This procedure is used to write the current roster to the character file }
+
+Const
+  Filename = 'SYS$LOGIN:Character.Dat;1';
+
+Var
+   Loop: Integer;
+   Error: Boolean;
+
+Begin { Write Roster }
+    Open (Char_File,
+         file_name:=filename,
+         History:=OLD);
+    ReWrite (Char_File);
+    For Loop:=1 to 20 do
+        Begin
+           Write (Char_File,Roster[Loop]);
+        End;
+    Close (Char_File);
+End;  { Write Roster }
+
+{**********************************************************************************************************************************}
+
 [Global]Function Read_Roster: Roster_Type;
 
 Const
@@ -488,12 +488,16 @@ Begin { Read Roster }
         Open (Char_File,file_name:=Filename,History:=NEW,Error:=CONTINUE,Sharing:=READONLY);
         If (Status(Char_File) = 0) then
            Begin
+              ReWrite (Char_File);
+
               For Loop:=1 to 20 do
-                 Begin
-                    Roster[Loop].Status:=Deleted;
-                 End;
+                Begin
+                  Roster[Loop].Status:=Deleted;
+                  Write (Char_File,Roster[Loop]);
+                End;
+
               Close (Char_File);
-              Write_Roster (Roster);
+
               Read_Roster:=Roster;
            End
         Else

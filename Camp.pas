@@ -739,6 +739,7 @@ Var
    Options: Char_Set;
    Number,Position: 1..6;
    Temp_Party: Party_Type;
+   T: Line;
 
 Begin { Reorder party }
    Options:=['1'..CHR(Party_Size+ZeroOrd)];  { Characters that can be selected }
@@ -749,10 +750,9 @@ Begin { Reorder party }
    SMG$Erase_Display (CampDisplay,12,1);
    For Position:=1 to Party_size-1 do    { For each position in the new party }
       Begin { Each Position }
-         SMG$Put_Chars (CampDisplay,
-             'Choose character for position #'
-             +String(Position,1),
-             13,2,1)
+         T:='Choose character for position #'
+             +String(Position,1);
+         SMG$Put_Chars (CampDisplay,T,13,2,1);
          Number:=Ord (Make_Choice(Options))-ZeroOrd;  { get the character number }
          Options:=Options-[CHR(Number+ZeroOrd)];  { No longer a choice now }
          Temp_Party[Position]:=Member[Number];
@@ -830,14 +830,164 @@ End;  { Print Camp Options }
 
 (******************************************************************************)
 
-{ TODO: Enter this code }
+Procedure Camp_Sleep (Var Member: Party_Type; Current_Party_Size: Integer);
+
+{ This procedure checks to see if any days have gone by.  If so, the rest will benefit the character in terms of one hit point per
+  half-day, and a restoration of spells every half day.  }
+
+Var
+   Slot: Integer;
+   Days: Integer;
+
+Begin
+   Days:=Trunc(Minute_Counter/100);
+   For Slot:=1 to Current_Party_Size do
+      Begin
+         Member[Slot].Curr_HP:=Member[Slot].Curr_HP+Days;
+         If Member[Slot].Curr_HP>Member[Slot].Max_HP then Member[Slot].Curr_HP:=Member[Slot].Max_HP;
+         If Minute_Counter>(3*100) then Restore_Spells (Member[Slot]);
+      End;
+   Minute_Counter:=Minute_Counter-(100* (Trunc (Minute_Counter / 100)));
+End;
+
+(******************************************************************************)
+
+Procedure Save_the_Game (Member: Party_Type;  Current_Party_Size: Party_Size_Type; Party_Size: Integer;
+                                 Var Auto_Save: Boolean;  Time_Delay: Integer);
+
+{ This procedure will save the current game for use later }
+
+Var
+   SaveFile: [External]Save_File_Type;
+   Temp: Save_Record;
+   Error: Boolean;
+
+[External]Procedure ControlY;External;
+[External]Procedure No_ControlY;External;
+
+Begin { Save The Game }
+   SMG$Set_Cursor_ABS (CampDisplay,21,25);
+   SMG$Put_Line (CampDisplay,
+       '* * * Saving the game * * *',0);
+
+   { Record position and direction }
+
+   Temp.PosX:=PosX;  Temp.PosY:=PosY;  Temp.PosZ:=PosZ;
+   Temp.Direction:=Direction;
+
+   Temp.Time_Delay:=Time_Delay;
+
+   Temp.Spells_Casted:=Rounds_Left;  { What spells were in effect }
+
+   { Save the current party }
+
+   Temp.Party_Size:=Party_Size;
+   Temp.Current_Size:=Current_Party_Size;
+   Temp.Characters:=Member;
+
+   { Save the current level of the dungeon }
+
+   Temp.Current_Level:=Maze;
+
+   { Write the save record to STONE_SAVE.DAT }
+
+   No_ControlY;
+   Open (SaveFile,'SYS$LOGIN:STONE_SAVE.DAT',HISTORY:=NEW,Error:=Continue);
+   Error:=(Status(SaveFile)<>PAS$K_SUCCESS);
+
+   ReWrite (SaveFile,Error:=Continue);
+   Error:=Error or ((Status(SaveFile)<>PAS$K_SUCCESS) and (Status(SaveFile)<>PAS$K_EOF));
+
+   Write (SaveFile,Temp,Error:=Continue);
+   Error:=Error or ((Status(SaveFile)<>PAS$K_SUCCESS) and (Status(SaveFile)<>PAS$K_EOF));
+
+   Close (SaveFile,Error:=Continue);
+   Error:=Error or ((Status(SaveFile)<>PAS$K_SUCCESS) and (Status(SaveFile)<>PAS$K_EOF));
+
+   ControlY;
+
+   If Error then
+      Error_Window ('Save')
+   Else
+      Begin
+
+         { Update related flags }
+
+         Game_Saved:=True;
+         Auto_Save:=True;
+         Auto_Load:=False;
+      End;
+End;
+
+(******************************************************************************)
 
 [Global]Procedure Camp (Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type;  Party_Size: Integer;
                         Var Leave_Maze,Auto_Save: Boolean; Var Time_Delay: Integer);
 
+{ This procedure allows the adventuring party to set up camp inside the maze, and perform such tasks as casting spells or re-
+  ordering the party }
+
+Var
+   FirstTime: Boolean;
+   Character_Number: 1..6;
+   Choices: Set of Char;
+   Answer: Char;
+
+[External]Procedure Time_Effects (Position: Integer; Var Member: Party_Type; Party_Size: Integer);External;
+[External]Function  Can_Play: [Volatile]Boolean;External;
+[External]Procedure Backup_Party (Party: Party_Type; Party_Size: Integer);External;
+
 Begin { Camp }
+   If Minute_Counter>=100 then Camp_Sleep (Member,Current_Party_Size);  { Add the effects of sleep }
+   Update_Roster (Member,Current_Party_Size);
 
-{ TODO: Enter this code }
+       { Paste the necessary display onto the screen }
 
+   SMG$Paste_Virtual_Display (CampDisplay,Pasteboard,2,2);
+
+        { This is the first pass. When called, we are in a BEGIN_PASTEBOARD_UPDATE (set by caller) so we must END it on the first
+          pass, but not on the following passes. }
+
+   FirstTime:=True;
+   Repeat
+      Begin { CAMP Main Menu }
+         If Not FirstTime then SMG$Begin_Display_Update (CampDisplay);
+         Print_Camp_Roster (Member,Party_Size);  { Print the roster }
+         Print_Camp_Options (Member,Party_Size); { Display the party's options }
+         If Not FirstTime then  { If not first pass, we are in display batch }
+            SMG$End_Display_Update (CampDisplay)  { So end it... }
+         Else
+            SMG$End_Pasteboard_Update (Pasteboard);
+            { Otherwise, pasteboard batch }
+
+         FirstTime:=False;  {Now we are starting the >= 2nd batch }
+         Choices:=['1'..CHR(Party_Size+ZeroOrd),'R','L'];
+         If Not Game_Saved then Choices:=Choices+['S'];
+         If Party_Has_Items (Member,Party_Size) then Choices:=Choices+['E'];
+         Answer:=Make_Choice (Choices);                                     { Get the player's choice }
+
+         If Not Can_Play then Answer:='S';
+         Case Answer of
+            '1'..'6': View_Character (Ord(answer)-ZeroOrd,Member,Current_Party_Size,Party_Size);
+                 'R': Reorder_Party (Member,Party_Size,Current_Party_Size);
+                 'E': Equip_Party (Member,Current_Party_Size,Party_Size);
+                 'S': Save_The_Game (Member,Current_Party_Size,Party_Size,Auto_Save,Time_Delay);
+                 'L': ;
+         End;  { Input case }
+      End;  { Camp Main Menu }
+   Until Auto_Save or Leave_Maze or (Answer='L');
+
+   Party_Box (Member,Current_Party_Size,Party_Size,Leave_Maze);
+
+   If Not Auto_Save then   { If not massive POP }
+      For Character_Number:=Party_Size downto 1 do  { For each character... }
+         Time_Effects (Character_Number,Member,Party_Size)     {  Age him/her }
+   Else
+      SMG$Paste_Virtual_Display (ScreenDisplay,Pasteboard,1,1);
+
+   { Remove the display }
+
+   Backup_Party (Member,Party_Size);
+   SMG$Unpaste_Virtual_Display (CampDisplay,Pasteboard);
 End;  { Camp }
 End.  { Camp }
