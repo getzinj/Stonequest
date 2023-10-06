@@ -26,7 +26,7 @@ Type
 
 Var
    Dont_Draw:                                       Boolean;
-   Game_Saved,Leave_Maze,Auto_Load,Auth_Save:       [External]Boolean;
+   Game_Saved,Leave_Maze,Auto_Load,Auto_Save:       [External]Boolean;
    Places:                                          [Global]Place_Stack;
    Plane_Name:                                      Array [0..9] of Line;
    Direction:                                       [External]Direction_Type;
@@ -200,6 +200,7 @@ Begin { Ouch }
    SMG$Put_Chars (ViewDisplay,'Ouch!',5,8);
    Ring_Bell (ViewDisplay);
    Delay (0.5);
+   SMG$Put_Chars (ViewDisplay,'     ',5,8);
 End; { Ouch }
 
 (******************************************************************************)
@@ -495,6 +496,49 @@ End;  { Party Box }
 
 (******************************************************************************)
 
+{ TODO: Enter this code }
+
+Function Party_Movable (Member: Party_Type; Current_Party_Size: Party_Size_Type): Boolean;
+
+Var
+   Temp: Boolean;
+   Charnum: Integer;
+
+Begin { Party Movable }
+  Temp:=False;
+  For CharNum:=1 to Current_Party_Size do
+     If Member[CharNum].Status in [Healthy,Poisoned,Insane] then
+        Temp:=True;
+  Party_Movable:=Temp;
+End;  { Party Movable }
+
+(******************************************************************************)
+
+Procedure Check_For_Encounter (Var Member: Party_Type; Var Current_Party_Size: Party_Size_Type; Party_Size: Integer;
+                               Var New_Spot: Boolean;  Just_Kicked: Boolean; Var Time_Delay: Integer);
+
+Begin
+   { TODO: Enter this code }
+End;
+
+
+Procedure Enter_Grave_Yard (Var Member: Party_Type; Party_Size: Integer);
+
+Begin
+   { TODO: Enter this code }
+End;
+
+Function Game_Won (Member: Party_Type; Party_Size: Integer): Boolean;
+
+Begin
+   { TODO: Enter this code }
+  Game_Won:=False;
+End;
+
+{ TODO: Enter this code }
+
+(******************************************************************************)
+
 Procedure Init_Windows (Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type;  Party_Size: Integer;
                                 Var Leave_Maze: Boolean;  NewSpot: Boolean);
 
@@ -518,6 +562,11 @@ Begin { Draw Screen }
    SMG$Paste_Virtual_Display (ViewDisplay,Pasteboard,ViewY,ViewX);
    SMG$Paste_Virtual_Display (MessageDisplay,Pasteboard,MsgY,MsgX);
 End;  { Draw Screen }
+
+(******************************************************************************)
+
+[External]Procedure Camp (Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type; Party_Size: Integer;
+                                 Var Leave_Maze,Auto_Save: Boolean; Var Time_Delay: Integer);external;
 
 (******************************************************************************)
 
@@ -607,11 +656,256 @@ End;  { Initialize }
 
 { TODO: Enter this code }
 
-[Global]Procedure Enter_Maze (Party_Size: Integer; Var Member: Party_Type);
-
-Begin { Enter Maze }
+Procedure Handle_Completed_Quest (Var Member: Party_Type;  Party_Size: Integer);
+Begin
+   { TODO: Enter this code }
+End;
 
 { TODO: Enter this code }
 
+Procedure Fix_Compass (Direction: Direction_Type;  Rounds_Left: Spell_Duration_List);
+
+Begin { Fix Compass }
+  If Rounds_Left[Comp]>0 then SMG$Label_Border (ViewDisplay,DirectionName[Direction],SMG$K_TOP)
+  Else                        SMG$Label_Border (ViewDisplay);
+End;  { Fix Compass }
+
+(******************************************************************************)
+
+Procedure Update_Status (Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type;  Party_Size: Integer;
+                               Var Leave_Maze: Boolean; Rounds_Left: Spell_Duration_List);
+
+
+Begin
+   Spells_Box (Rounds_Left);
+   Party_Box (Member,Current_Party_Size,Party_Size,Leave_Maze);
+End;
+
+{ TODO: Enter this code }
+
+(******************************************************************************)
+
+Procedure New_Round (Var Round_Counter: Integer; Var Member: Party_Type; Current_Party_Size,Party_Size: Integer);
+
+Var
+   Character: Integer;
+   Spell: Spell_Name;
+
+Begin
+  Round_Counter:=1;
+  For Spell:=Crlt to DetS do
+     If Rounds_Left[Spell]>0 then
+        Rounds_Left[Spell]:=Rounds_Left[Spell]-1;
+
+  For Character:=1 to Current_Party_Size do
+     Time_Effects (Character,Member,Party_Size);
+
+  Party_Box (Member,Current_Party_Size,Party_Size,Leave_Maze);
+  Spells_Box (Rounds_Left);
+End;
+
+(******************************************************************************)
+
+Procedure Set_Up_Camp (Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type;  Party_Size: Integer;
+                               Var Leave_Maze: Boolean;  Var Auto_Save,New_Spot: Boolean;  Var Time_Delay: Integer);
+
+Var
+   OldZ: Vertical_Type;
+
+Begin
+   OldZ:=PosZ;
+
+   SMG$Begin_Pasteboard_Update (Pasteboard);
+   Camp (Member,Current_Party_Size,Party_Size,Leave_Maze,Auto_Save,Time_Delay);
+   If Not Auto_Save then
+      Begin
+         New_Spot:=True;
+         Maze:=Get_Level (PosZ,Maze,OldZ);
+         SMG$Begin_Pasteboard_Update (Pasteboard);
+         SMG$Set_Cursor_Mode (Pasteboard,1);
+         Spells_Box (Rounds_Left);
+         Party_Box (Member, Current_Party_Size,Party_Size,Leave_Maze);
+         Draw_View (Direction,New_Spot,Member,Current_Party_Size);
+         SMG$End_Pasteboard_Update (Pasteboard);
+      End;
+End;
+
+(******************************************************************************)
+
+Procedure Turn_Left (Var Direction: Direction_Type);
+
+Begin
+   If Direction=West then Direction:=West
+   Else                   Direction:=Pred (Direction);
+End;
+
+(******************************************************************************)
+
+Procedure Turn_Right (Var Direction: Direction_Type);
+
+Begin
+   If Direction=West then Direction:=North
+   Else                   Direction:=Succ(Direction);
+End;
+
+(******************************************************************************)
+
+Procedure Change_Time (Var Time_Delay: Integer);
+
+Var
+   Change: Integer;
+
+Begin
+   SMG$Erase_Display (MessageDisplay);
+   SMG$Put_Line (MessageDisplay,'Current time delay: '+String(Time_Delay));
+   SMG$Put_Chars (MessageDisplay,'New Delay (0-999, -1 exits) :');
+   Get_Num (Change,MessageDisplay);
+   If (Change>-1) and (change<1000) then
+      Time_Delay:=Change;
+   SMG$Erase_Display (MessageDisplay);
+End;
+
+(******************************************************************************)
+
+Procedure Make_Move (Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type;  Party_Size: Integer;
+                             Var Leave_Maze: Boolean; Var Time_Delay: Integer;  Var Auto_Save: Boolean;
+                             Var Direction: Direction_Type;  Var Round_Counter: Integer;  Var Minute_Counter: Real;
+                             Var New_Spot,Just_Kicked: Boolean; Var Previous_Spot: Area_Type);
+
+Var
+   Options: Char_Set;
+   Answer: Char;
+
+Begin
+   Options:=['T','K','F',Up_Arrow,'L','R','C','S',Left_Arrow,Right_Arrow,'E'];
+   If Not Party_Movable (Member,Current_Party_Size) then Options:=['S','T'];
+   Answer:=Make_Choice (Options,Time_Out:=5,Time_Out_Char:='S');
+   Just_Kicked:=False;
+   Round_Counter:=Round_Counter+1;
+   If Round_Counter=5 then New_Round (Round_Counter,Member,Current_Party_Size,Party_Size);
+   Minute_Counter:=Minute_Counter+1;
+   Case Answer of
+                    'S': Update_Status (Member,Current_Party_Size,Party_Size,Leave_Maze,Rounds_Left);
+                    'C': Set_Up_Camp   (Member,Current_Party_Size,Party_Size,Leave_Maze,Auto_Save,New_Spot,Time_Delay);
+                    'K': Kick_Door     (Direction,New_Spot,Just_Kicked,Previous_Spot);
+          Up_Arrow, 'F': Move_Forward  (Direction,New_Spot,Previous_Spot);
+        Left_Arrow, 'L': Turn_Left     (Direction);
+       Right_Arrow, 'R': Turn_Right    (Direction);
+                    'T': Change_Time   (Time_Delay);
+   End;
+   If Not Auto_Save then Fix_Compass (Direction,Rounds_Left);
+End;
+
+(******************************************************************************)
+
+Procedure Handle_Room_Special (Var New_Spot: Boolean; Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type;
+                                           Party_Size: Integer;  Var Leave_Maze: Boolean;  Var Previous_Spot: Area_Type;
+                                       Var Time_Delay: Integer);
+
+Begin
+{ TODO: Enter this code }
+End;
+
+(******************************************************************************)
+
+Procedure Spend_Time_In_Maze (Var Member: Party_Type; Var Current_Party_Size: Party_Size_Type; Party_Size: Integer;
+                                      Var Time_Delay: Integer;  Var Previous_Spot: Area_Type;  Var Round_Counter: Integer;
+                                      Var Alarm_Off: Boolean);
+
+Var
+   Just_Kicked,New_Spot: Boolean;
+
+Begin
+   New_Spot:=True;  Just_Kicked:=False;
+   Repeat
+      Begin
+         SMG$Begin_Display_Update (CharacterDisplay);
+         Update_Status (Member,Current_Party_Size,Party_Size,Leave_Maze,Rounds_Left);
+         SMG$End_Display_Update (CharacterDisplay);
+         If Not (New_Spot or Leave_Maze or Dont_Draw) then
+            Draw_View (Direction,New_Spot,Member,Current_Party_Size);
+         Dont_Draw:=False;
+         Handle_Room_Special (New_Spot,Member,Current_Party_Size,Party_Size,Leave_Maze,Previous_Spot,Time_Delay);
+
+         { Whatever special checking will occur here }
+
+         If (Current_Party_Size=0) or ((PosX=0) and (PosY=0) and (PosZ=0)) then
+            Leave_Maze:=True;
+         If Not (Leave_Maze) then
+            Make_Move (Member,Current_Party_Size,Party_Size,Leave_Maze,Time_Delay,Auto_Save,Direction,Round_Counter,Minute_Counter,
+                       New_Spot,Just_Kicked,Previous_Spot);
+         Leave_Maze:=Leave_Maze or (Current_Party_Size=0) or ((PosX=0) and (PosY=0) and (PosZ=0));
+         If Not (Leave_Maze or Auto_Save) then
+            Check_For_Encounter (Member,Current_Party_Size,Party_Size,New_Spot,Just_Kicked,Time_Delay);
+      End;
+   Until Leave_Maze or Auto_Save;
+End;
+
+(******************************************************************************)
+
+Procedure Set_Up_Windows (Var Member: Party_Type; Var Current_Party_Size: Party_Size_Type; Party_Size: Integer;
+                                  Var Maze: Level);
+
+Begin
+   If Not Dont_Draw then Draw_View (Direction,TRUE,Member,Current_Party_Size);
+   Party_Box (Member,Current_Party_Size,Party_Size,Leave_Maze);
+End;
+
+(******************************************************************************)
+
+Procedure Get_Out_of_Maze (Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type; Party_Size: Integer);
+
+Var
+   Character: Integer;
+
+[External]Procedure Print_Character_Line (CharNo: Integer; Party: Party_Type; Party_Size: Integer);External;
+
+Begin
+   Rounds_Left:=Zero;
+   For Character:=1 to Current_Party_Size do
+      Time_Effects (Character,Member,Party_Size);
+
+   Current_Party_Size:=Compute_Party_Size (Member,Party_Size);
+   For Character:=1 to 6 do
+       Print_Character_Line (Character,Member,Current_Party_Size);
+
+   If Current_Party_Size=0 then
+      Begin
+         SMG$Begin_Pasteboard_Update (Pasteboard);
+         Enter_Grave_Yard (Member,Party_Size)
+      End
+   Else
+      If Game_Won (Member,Party_Size) then
+         Handle_Completed_Quest (Member,Party_Size)
+      Else
+         Begin
+            SMG$Begin_Pasteboard_Update (Pasteboard);
+            Unpaste_All;
+            SMG$End_Pasteboard_Update (Pasteboard);
+         End;
+End;
+
+(******************************************************************************)
+
+[Global]Procedure Enter_Maze (Party_Size: Integer; Var Member: Party_Type);
+
+Var
+   Current_Party_Size: Party_Size_Type;
+   Round_Counter,Time_Delay: Integer;
+   Previous_Spot: Area_Type;
+   Alarm_Off: Boolean;
+
+Begin { Enter Maze }
+   Initialize (Member,Current_Party_Size,Party_Size,Maze,Time_Delay,Round_Counter,Previous_Spot);
+   Camp (Member, Current_Party_Size,Party_Size,Leave_Maze,Auto_Save,Time_Delay);
+   If Not Auto_Save then
+      Begin
+         Set_Up_Windows    (Member,Current_Party_Size,Party_Size,Maze);
+         Spend_Time_In_Maze (Member,Current_Party_Size,Party_Size,Time_Delay,Previous_Spot,Round_Counter,Alarm_Off);
+         Get_out_of_Maze    (Member,Current_Party_Size,Party_Size);
+      End
+   Else
+      Unpaste_All;
+   Remove_Nodes (Places);
 End;  { Enter Maze }
 End.  { Maze }
