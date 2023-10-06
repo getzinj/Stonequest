@@ -163,6 +163,27 @@ End;  { Compute Party Size }
 
 (******************************************************************************)
 
+[Global]Function Show_Special (Member: [Unsafe]Party_Type:=0; Current_Party_Size: Integer:=0): Boolean;
+
+Var
+   Person,Psi_Chance: Integer;
+   Temp: Boolean;
+
+Begin { Show Special }
+   PSI_Chance:=0;
+   Temp:=(Rounds_Left[DetS]>0);
+   If Current_Party_Size>0 then
+      Begin
+         For Person:=1 to Current_Party_Size do
+            If Member[Person].Psionics then
+               Psi_Chance:=Psi_Chance+Member[Person].DetectTrap; { TODO: Should check if character is alive and conscious }
+         Temp:=Temp or Made_Roll (PSI_Chance);
+      End;
+   Show_Special:=Temp;
+End;  { Show Special }
+
+(******************************************************************************)
+
 { TODO: Enter this code }
 
 [Global]Procedure Time_Effects (Position: Integer; Var Member: Party_Type; Party_Size: Integer);
@@ -328,7 +349,59 @@ Begin
    If New_Spot then SMG$Erase_Display (MessageDisplay);
 End;
 
-   { TODO: Enter this code }
+(******************************************************************************)
+
+Procedure Spells_Box (Rounds_Left: Spell_Duration_List);
+
+Var
+   Rendition: Unsigned;
+   Detect,Protection,Light,Compass,Levitate: Boolean;
+   WeakDetect,WeakProtection,WeakLight,WeakCompass,WeakLevitate: Boolean;
+
+Begin { Spells Box }
+   Detect:=(Rounds_Left[DetS]>0);
+   WeakDetect:=Detect and (Rounds_Left[DetS]<10);
+
+   Light:=Has_Light;
+   WeakLight:=Light and ((Rounds_Left[CoLi]<10) and (Rounds_Left[Lght]<10));
+
+   Protection:=(Rounds_Left[DiPr]>0) or (Rounds_Left[HgSh]>0);
+   WeakProtection:=Protection and ((Rounds_Left[DiPr]<10) or (Rounds_Left[HgSh]<10));
+
+   Compass:=(Rounds_Left[Comp]>0);
+   WeakCompass:=Compass and (Rounds_Left[Comp]<10);
+
+   Levitate:=(Rounds_Left[Levi]>0);
+   WeakLevitate:=Levitate and (Rounds_Left[levi]<10);
+
+   SMG$Begin_Display_Update (SpellsDisplay);
+   SMG$Erase_Display (SpellsDisplay);
+   SMG$Put_Chars (SpellsDisplay,'Spells:',2,2);
+
+   Rendition:=0;  If WeakLight then rendition:=SMG$M_REVERSE;
+   If Light then        SMG$Put_Chars (SpellsDisplay,'Light',3,12,,Rendition)
+   Else                 SMG$Put_Chars (SpellsDisplay,'     ',3,12);
+
+   Rendition:=0;  If WeakCompass then rendition:=SMG$M_REVERSE;
+   If Compass then      SMG$Put_Chars (SpellsDisplay,'Compass',4,12,,Rendition)
+   Else                 SMG$Put_Chars (SpellsDisplay,'       ',4,12);
+
+   Rendition:=0;  If WeakProtection then rendition:=SMG$M_REVERSE;
+   If Protection then   SMG$Put_Chars (SpellsDisplay,'Protection',3,22,,Rendition)
+   Else                 SMG$Put_Chars (SpellsDisplay,'          ',3,22);
+
+   Rendition:=0;  If WeakLevitate then rendition:=SMG$M_REVERSE;
+   If Levitate then     SMG$Put_Chars (SpellsDisplay,'Levitate',4,22,,Rendition)
+   Else                 SMG$Put_Chars (SpellsDisplay,'        ',4,22);
+
+   Rendition:=0;  If WeakDetect then rendition:=SMG$M_REVERSE;
+   If Detect then       SMG$Put_Chars (SpellsDisplay,'Detect',3,36,,Rendition)
+   Else                 SMG$Put_Chars (SpellsDisplay,'      ',3,36);
+
+   SMG$End_Display_Update (SpellsDisplay);
+   SMG$Set_Cursor_ABS (SpellsDisplay);
+End; { Spells Box }
+
 (******************************************************************************)
 
 Procedure Print_A_Character_Line (Character: Character_Type; Position: Integer);
@@ -437,7 +510,6 @@ End;  { Init Windows }
 Procedure Draw_Screen (New_Spot: Boolean; Var Member: Party_Type; Var Current_Party_Size: Party_Size_Type;
                                Party_Size: Integer);
 
-
 Begin { Draw Screen }
    Init_windows (Member,Current_Party_Size,Party_Size,Leave_Maze,New_Spot);
    SMG$Paste_Virtual_Display (CharacterDisplay,Pasteboard,CharY,CharX);
@@ -451,6 +523,25 @@ End;  { Draw Screen }
 
 { TODO: Enter this code }
 
+(******************************************************************************)
+
+Procedure Initialize_Party (Var Member: Party_Type; Var Current_Party_Size: Party_Size_Type; Party_Size: Integer);
+
+Var
+   Character: Integer;
+
+Begin { Initialize Party }
+   For Character:=1 to Party_Size do
+      Begin
+         Member[Character].Regenerates:=Regenerates (Member[Character],PosZ);
+         Member[Character].Armor_Class:=Compute_Ac (Member[Character],PosZ);
+         Member[Character].Attack.Berserk:=False;
+      End;
+   Current_Party_Size:=Compute_Party_Size (Member,Party_Size);
+End;  { Initialize Party }
+
+(******************************************************************************)
+[External]Procedure Create_Null_SaveFile;External;
 (******************************************************************************)
 
 Procedure Initialize (Var Member: Party_Type; Var Current_Party_Size: Party_Size_Type; Party_Size: Integer;  Var Maze: Level;

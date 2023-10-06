@@ -8,6 +8,7 @@ Var
    Monster_File:               [External]Monst_File;                  { Monster records }
    PicFile:                    [External]Picture_File_Type;           { Pictures }
    Message_File:               [External]Text;                        { Game text }
+   SaveFile:                   [External]Save_File_Type;
 
 [External]Function Roll_Die (Die_Type: Integer): [Volatile]Integer;External;
 
@@ -552,6 +553,18 @@ Begin
      End; { failed to read; create a new one }
 End;
 
+(******************************************************************************)
+
+[Global]Procedure Create_Null_SaveFile;
+
+Const
+  Filename = 'SYS$LOGIN:STONE_SAVE.DAT;1';
+
+Begin
+   Open (SaveFile,file_name:=filename,History:=Unknown);
+   ReWrite (SaveFile);
+   Close (SaveFile);
+End;
 
 (******************************************************************************)
 
