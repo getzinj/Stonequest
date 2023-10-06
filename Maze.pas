@@ -1,5 +1,71 @@
-[Inherit ('Types','SMGRTL','STRRTL')]Module Maze;
+[Inherit ('SYS$LIBRARY:STARLET','Types','SMGRTL','STRRTL')]Module Maze;
 
+Const
+   CharY  = 17;  CharX  =  2;
+   MonY   =  2;  MonX   = 26;
+   SpellsY=  7;  SpellsX= 26;
+   ViewY  =  2;  ViewX  =  2;
+   MsgY   = 12;  MsgX   =  2;
+
+  Up_Arrow          = CHR(18);               Down_Arrow    = CHR(19);
+  Left_Arrow        = CHR(20);               Right_Arrow   = CHR(21);
+  ZeroOrd=Ord('0');
+
+Type
+    Coordinate_Matrix = Array [1..6] of Integer;
+    Place_Ptr  = ^Place_Node;
+    Place_Node = Record
+                    PosX,PosY: Horizontal_Type;
+                    PosZ: Vertical_Type;
+                    Next,Previous: Place_Ptr;
+                 End;
+    Place_Stack  = Record
+                    Length: Integer;
+                    Front,Rear: Place_Ptr;
+                 End;
+
+Var
+   Dont_Draw:                                       Boolean;
+   Game_Saved,Leave_Maze,Auto_Load,Auth_Save:       [External]Boolean;
+   Places:                                          [Global]Place_Stack;
+   Plane_Name:                                      Array [1..9] of Line;
+   Direction:                                       [External]Direction_Type;
+   Rounds_Left:                                     [External]Array [Spell_Name] of Unsigned;
+   Maze:                                            [External]Level;
+   PosX,PosY,PosZ:                                  [Byte,External]0..20;
+   Minute_Counter:                                  [External]Real;
+   DirectionName:                                   Array [Direction_Type] of Line;
+   SaveFile:                                        [External]Save_File_Type;
+   Item_List:                                       [External]List_of_IOtems;
+   Messages:                                        Message_Group;
+
+   ScreenDisplay,BottomDisplay,OptionsDisplay,Pasteboard,CharacterDisplay,CommandsDisplay,SpellsDisplay: [External]Unsigned;
+   MonsterDisplay,Keyboard,WinDisplay,GraveDisplay,MessageDisplay,ViewDisplay: [External]Unsigned;
+
+   DemonPic,AngelPic: Array [1..20] of Line;
+
+Value
+   DemonPic[1]  :='                          _^___^_         |  |';
+   DemonPic[2]  :='             |||| |      /       \       ---<)';
+   DemonPic[3]  :='             |||| |      | @   @ |       ---<)';
+   DemonPic[4]  :='             ####/       |       |       ---<)';
+   DemonPic[5]  :='             {   ||     /|\     /|\      ---<)';
+   DemonPic[6]  :='              \( )\/   ^v^v^v^v^v^v^    / |  |';
+   DemonPic[7]  :='               \( )\  /             \  /( |  |';
+   DemonPic[8]  :='                \  (\/      | |      \/(  |  |';
+   DemonPic[9]  :='                 \(         | |          )|  |';
+   DemonPic[10] :='                  \    \   /   \   /     /|  |';
+   DemonPic[11] :='                   \()/\            /\()/ |  |';
+   DemonPic[12] :='                    \/  \   / \    /  \/  |  |';
+   DemonPic[13] :='          $             /          \      |  |';
+   DemonPic[14] :='        $  $    $    \\/     ^      \//   |  |';
+   DemonPic[15] :='       $$  $     $   \/     / \  $   \/$  |  |  $';
+   DemonPic[16] :='       $ v  $   $     \     > <   $  /  $ |  | $';
+   DemonPic[17] :='       $/ \  /\/\$    /    <   >/\$  \ $  |  |$';
+   DemonPic[18] :='       $   \% ^\$\    \ $ $ >/\/ $\$ /\$ /\  | $/\';
+   DemonPic[19] :='      /$     ^  %%    ^ $$ </  \$  \/  \/  \/\$/  \';
+   DemonPic[20] :='    / $          #\/^\^$ ^/    \  \   \   \$/    \';
+   
 { TODO: Enter this code }
 
 (******************************************************************************)
@@ -191,15 +257,126 @@ Begin
    If New_Spot then SMG$Erase_Display (MessageDisplay);
 End;
 
+   { TODO: Enter this code }
+(******************************************************************************)
+
+Procedure Print_A_Character_Line (Character: Character_Type; Position: Integer);
+
+Var
+   Rendition: Unsigned;
+   AlignName: [External,Readonly]Array [Align_Type] of Packed Array [1..7] of char;
+   ClassName: [External,Readonly]Array [Class_Type] of Varying [13] of char;
+   StatusName: [External,Readonly]Array [Status_Type] of Varying [14] of char;
+
+Begin { Print a Character Line }
+   SMG$Put_Chars (CharacterDisplay,
+       '   '
+       +Pad(Character.Name,' ',20)
+       +'  ');
+   SMG$Put_Chars (CharacterDisplay,
+       '  '
+       +String(Character.Level,3)
+       +'  '
+       +AlignName[Character.Alignment][1]
+       +'-' );
+   SMG$Put_Chars (CharacterDisplay,
+       Pad(ClassName[Character.Class],
+           ' ',14);
+   SMG$Put_Chars (CharacterDisplay,
+       String(10-Character.Amor_Class,3)
+       +'     '
+       +String(Character.Curr_HP,5) );
+   If Character.Regenerates>0 then
+      SMG$Put_Chars (CharacterDisplay,
+          '+')
+   Else
+      If Character.Regenerates<0 then
+         SMG$Put_Chars (CharacterDisplay,
+             '-')
+      Else
+         SMG$Put_Chars (CharacterDisplay,
+             ' ');
+   SMG$Put_Chars (CharacterDisplay,
+       '  ');
+   If (Character.Status=Healthy) then
+      SMG$Put_Line (CharacterDisplay,
+      Substr(String(Character.Max_HP,4),1,4),0 )
+   Else
+      Begin
+         SMG$Put_Chars (CharacterDisplay,
+             ' ');
+         Rendition:=0;
+         Case Character.Status of
+                NoStatus,Healthy,Afraid,Asleep,Zombie,Insane: ;
+                Dead,Deleted,Paralyzed,Petrified,Ashes: Rendition:=SMG$M_REVERSE;
+                Poisoned: Rendition:=SMG$M_BLINK+SMG$M_BOLD+SMG$M_REVERSE;
+                Otherwise Rendition:=SMG$M_REVERSE;
+         End;
+         SMG$Put_Line (CharacterDisplay,StatusName[Character.Status],0,Rendition);
+      End;
+End;  { Print a Character Line }
+
+(******************************************************************************)
+
+[Global]Procedure Print_Party_Line (Member: Party_Type;  Party_Size,Position: Integer);
+
+Begin { Print Party Line }
+   SMG$Put_Chars (CharacterDisplay,CHR(Position+ZeroOrd),Position+1,2,1);
+   If Position<=Party_Size then
+      Print_A_Character_Line (Member[Position],Position);
+End;  { Print Party Line }
+
 (******************************************************************************)
 
 [Global]Procedure Party_Box (Var Member: Party_Type; Var Current_Party_Size: Party_Size_Type;  Party_Size: Integer;
                              Var Leave_Maze: Boolean);
 
-Begin
-   { TODO: Enter this code }
-End;
+Const
+    Character_Window_Heading = ' #   Character '
+        +'Name         Level  Class            '
+        +'AC     Hits   Status';
 
+Var
+  Person: Integer;
+
+Begin { Party Box }
+   SMG$Begin_Display_Update (CharacterDisplay);
+   SMG$Put_Chars(CharacterDisplay,Character_Window_Heading,1,1);
+   For Person:=1 to 6 do
+      Print_Party_Line (Member,Party_Size,Person);
+   SMG$End_Display_Update (CharacterDisplay);
+   Current_Party_Size:=Compute_Party_Size (Member,Party_Size);
+   Leave_Maze:=Leave_Maze or (Current_Party_Size:=0);
+End;  { Party Box }
+
+(******************************************************************************)
+
+Procedure Init_Windows (Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type;  Party_Size: Integer;
+                                Var Leave_Maze: Boolean;  NewSpot: Boolean);
+
+Begin { Init Windows }
+  SMG$Label_Border (ViewDisplay);
+  If Not Dont_Draw then Draw_View (Direction,New_Spot,Member,Current_Party_Size);
+  Party_Box (Member,Current_Party_Size,Party_Size,Leave_Maze);
+  Spells_Box (Rounds_Left);
+End;  { Init Windows }
+
+(******************************************************************************)
+
+Procedure Draw_Screen (New_Spot: Boolean; Var Member: Party_Type; Var Current_Party_Size: Party_Size_Type;
+                               Party_Size: Integer);
+
+
+Begin { Draw Screen }
+   Init_windows (Member,Current_Party_Size,Party-Size,Leave_Maze,New_Spot);
+   SMG$Paste_Virtual_Display (CharacterDisplay,Pasteboard,CharY,CharX);
+   SMG$Paste_Virtual_Display (CommandsDisplay,Pasteboard,MonY,MonX);
+   SMG$Paste_Virtual_Display (SpellsDisplay,Pasteboard,SpellsY,SpellsX);
+   SMG$Paste_Virtual_Display (ViewDisplay,Pasteboard,ViewY,ViewX);
+   SMG$Paste_Virtual_Display (MessageDisplay,Pasteboard,MsgY,MsgX);
+End;  { Draw Screen }
+
+(******************************************************************************)
 
 { TODO: Enter this code }
 
