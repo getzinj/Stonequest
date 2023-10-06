@@ -87,6 +87,35 @@ Value
    AngelPic[19] :='          (___/     |   ^    |     \__)';
    AngelPic[20] :='';
 
+   Plane_Name[0]:='The Prime';
+   Plane_Name[1]:='Avernus';    Plane_Name[2]:='Dis';    Plane_Name[3]:='Minauros';
+   Plane_Name[4]:='Phlegethos'; Plane_Name[5]:='Stygia'; Plane_Name[6]:='Malbolge';
+   Plane_Name[7]:='Maladomini'; Plane_Name[8]:='Caina';  Plane_Name[9]:='Nessus';
+
+   DirectionName[North]:= ' North ';   DirectionName[South]:=' South ';
+   DirectionName[East]:=  ' East ';    DirectionName[West]:= ' West ';
+
+(******************************************************************************)
+[External]Procedure Get_Num (Var Number: Integer; Display: Unsigned);External;
+[External]Procedure Show_Image (Number: Pic_Type; Var Display: Unsigned);External;
+[External]Function Random_Number (Die: Die_Type): [Volatile]Integer;External;
+[External]Function Make_Choice (Choices: Char_Set; Time_Out: Integer:=-1;
+    Time_Out_Char: Char:=' '):Char;External;
+[External]Function Rendition_Set (Var T: Line): Unsigned;External;
+[External]Function String(Num: Integer; Len: Integer:=0):Line;external;
+[External]Function Compute_AC (Character: Character_Type; PosZ: Integer:=0): Integer;external;
+[External]Function Roll_Die (Die_Type: Integer): [Volatile]Integer;External;
+[External]Function Regenerates (Character: Character_Type; PosZ: Integer:=0): Integer;external;
+[External]Function Get_Level (Level_Number: Integer; Maze: Level; PosZ: Vertical_Type:=0): [Volatile]Level;External;
+[External]Function Pick_Character_Number (Party_Size: Integer; Current_Party_Size:=0;  Time_Out: Integer:=-1;
+                                          Time_Out_Char: Char:='0'):[Volatile]Integer;External;
+                                          
+[External]Function
+[External]Function
+[External]Function
+[External]Function
+[External]Function
+
 
 { TODO: Enter this code }
 
