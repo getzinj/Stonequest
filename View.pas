@@ -17,7 +17,7 @@ Var
 
 (******************************************************************************)
 [External]Function Show_Special (Member: [Unsafe]Party_Type:=0;  Current_Party_Size: Integer:=0):Boolean;External;
-[External]Function Detected_Secret_Door (Member: Party_Type;  Current_Party_Size: Party_Size_Type;Rounds_Left: SpellDurationList):[Volatile]Boolean;External;
+[External]Function Detected_Secret_Door (Member: Party_Type;  Current_Party_Size: Party_Size_Type;Rounds_Left: Spell_Duration_List):[Volatile]Boolean;External;
 (******************************************************************************)
 
 Function Sight_Blocked (Exit: Exit_Type): Boolean;
@@ -142,9 +142,8 @@ Begin
    Else
        T:=T+' ';
 
-   Top_Row:=T;
+   Bottom_Row:=T;
 End;
-
 
 (******************************************************************************)
 
@@ -200,9 +199,9 @@ End;
 
 (******************************************************************************)
 
-Function Graphic_Room (Spot: Room_Record; Section: Section_Type; Member: Party_Type;.
+Function Graphic_Room (Spot: Room_Record; Section: Section_Type; Member: Party_Type;
                                Current_Party_Size: Party_Size_Type;
-                               H_Section: Horizontal_Section_Type:=Center_ Side;
+                               H_Section: Horizontal_Section_Type:=Center): Side;
 
 Begin
    Graphic_Room:='   ';
@@ -215,7 +214,7 @@ End;
 Function Has_Light: [Volatile]Boolean;
 
 Begin
-   Has_Light:=(Rounds_Left[Lght]>0) or (Rounds_LeftCoLi]>0);
+   Has_Light:=(Rounds_Left[Lght]>0) or (Rounds_Left[CoLi]>0);
 End;
 
 (******************************************************************************)
@@ -233,24 +232,24 @@ Begin
       Case Direction of
           North: If Maze.Room[PosX,PosY].West in [Passage,Transparent] then
                  If PosX>1 then
-                    Temp:=Graphic_Room(Maze,Room[PosX-1,PosY],Section,Member,Current_Party_Size,H_Section)
+                    Temp:=Graphic_Room(Maze.Room[PosX-1,PosY],Section,Member,Current_Party_Size,H_Section)
                  Else
-                    Temp:=Graphic_Room(Maze,Room[20,PosY],Section,Member,Current_Party_Size,H_Section);
+                    Temp:=Graphic_Room(Maze.Room[20,PosY],Section,Member,Current_Party_Size,H_Section);
           South: If Maze.Room[PosX,PosY].East in [Passage,Transparent] then
                  If PosX<20 then
-                    Temp:=Graphic_Room(Maze,Room[PosX-1,PosY],Section,Member,Current_Party_Size,H_Section)
+                    Temp:=Graphic_Room(Maze.Room[PosX-1,PosY],Section,Member,Current_Party_Size,H_Section)
                  Else
-                    Temp:=Graphic_Room(Maze,Room[20,PosY],Section,Member,Current_Party_Size,H_Section);
+                    Temp:=Graphic_Room(Maze.Room[20,PosY],Section,Member,Current_Party_Size,H_Section);
           East: If Maze.Room[PosX,PosY].North in [Passage,Transparent] then
                  If PosY>1 then
-                    Temp:=Graphic_Room(Maze,Room[PosX,PosY-1],Section,Member,Current_Party_Size,H_Section)
+                    Temp:=Graphic_Room(Maze.Room[PosX,PosY-1],Section,Member,Current_Party_Size,H_Section)
                  Else
-                    Temp:=Graphic_Room(Maze,Room[PosX,20],Section,Member,Current_Party_Size,H_Section);
+                    Temp:=Graphic_Room(Maze.Room[PosX,20],Section,Member,Current_Party_Size,H_Section);
           West: If Maze.Room[PosX,PosY].South in [Passage,Transparent] then
                  If PosY<20 then
-                    Temp:=Graphic_Room(Maze,Room[PosX,PosY+1],Section,Member,Current_Party_Size,H_Section)
+                    Temp:=Graphic_Room(Maze.Room[PosX,PosY+1],Section,Member,Current_Party_Size,H_Section)
                  Else
-                    Temp:=Graphic_Room(Maze,Room[PosX,1],Section,Member,Current_Party_Size,H_Section);
+                    Temp:=Graphic_Room(Maze.Room[PosX,1],Section,Member,Current_Party_Size,H_Section);
       End
    Else
       Temp:='   ';
@@ -286,24 +285,24 @@ Begin
       Case Direction of
           North: If Maze.Room[PosX,PosY].North in [Passage,Transparent] then
                  If PosY>1 then
-                    Temp:=Graphic_Room(Maze,Room[PosX,PosY-1],Section,Member,Current_Party_Size)
+                    Temp:=Graphic_Room(Maze.Room[PosX,PosY-1],Section,Member,Current_Party_Size)
                  Else
-                    Temp:=Graphic_Room(Maze,Room[PosX,20],Section,Member,Current_Party_Size);
+                    Temp:=Graphic_Room(Maze.Room[PosX,20],Section,Member,Current_Party_Size);
           South: If Maze.Room[PosX,PosY].South in [Passage,Transparent] then
                  If PosY<20 then
-                    Temp:=Graphic_Room(Maze,Room[PosX,PosY+1],Section,Member,Current_Party_Size)
+                    Temp:=Graphic_Room(Maze.Room[PosX,PosY+1],Section,Member,Current_Party_Size)
                  Else
-                    Temp:=Graphic_Room(Maze,Room[PosX,1],Section,Member,Current_Party_Size);
+                    Temp:=Graphic_Room(Maze.Room[PosX,1],Section,Member,Current_Party_Size);
           East: If Maze.Room[PosX,PosY].South in [Passage,Transparent] then
                  If PosX<20 then
-                    Temp:=Graphic_Room(Maze,Room[PosX+1,PosY],Section,Member,Current_Party_Size)
+                    Temp:=Graphic_Room(Maze.Room[PosX+1,PosY],Section,Member,Current_Party_Size)
                  Else
-                    Temp:=Graphic_Room(Maze,Room[1,PosY],Section,Member,Current_Party_Size);
+                    Temp:=Graphic_Room(Maze.Room[1,PosY],Section,Member,Current_Party_Size);
           West: If Maze.Room[PosX,PosY].East in [Passage,Transparent] then
                  If PosX>1 then
-                    Temp:=graphic_Room(Maze,Room[PosX-1,PosY],Section,Member,Current_Party_Size)
+                    Temp:=graphic_Room(Maze.Room[PosX-1,PosY],Section,Member,Current_Party_Size)
                  Else
-                    Temp:=Graphic_Room(Maze,Room[20,PosY],Section,Member,Current_Party_Size);
+                    Temp:=Graphic_Room(Maze.Room[20,PosY],Section,Member,Current_Party_Size);
       End
    Else
       Temp:='   ';
@@ -496,21 +495,193 @@ Begin
    Case Direction of
           South:  Bottom_Room:=Top_Room (North);
           North:  Bottom_Room:=Top_Room (South);
-          West:   Bottom_Room:=Top_Room  (East)
+          West:   Bottom_Room:=Top_Room  (East);
           East:   Bottom_Room:=Top_Room  (West);
    End;
 End;
 
 (******************************************************************************)
 
+Function Adjacent_Exit (Position,Exit_Direction: Integer): [Volatile]Exit_Type;
 
-{ TODO: Enter this code }
+{ Exit_Direction,Position            2
+                                 1   0   3
+                                     4           }
+
+Var
+   Room: Room_Record;
+   Up,Down,Left,Right: Exit_Type;
+
+Begin
+   Case Position of
+      0: Room:=Maze.Room[PosX,PosY];
+      1: Room:=Left_Room (Direction);
+      2: Room:=Top_Room (Direction);
+      3: Room:=Right_Room (Direction);
+      4: Room:=Bottom_Room (Direction);
+   End;
+
+   Get_Bearings (Room,Up,Down,Left,Right);
+
+   Case Exit_Direction of
+       1: Adjacent_Exit:=Left;
+       2: Adjacent_Exit:=Up;
+       3: Adjacent_Exit:=Right;
+       4: Adjacent_Exit:=Down;
+   End;
+End;
+
+(******************************************************************************)
+
+Function Top_Left_Corner: [Volatile]Char;
+
+Var
+   Dol: Boolean;
+
+Begin
+   Dol:=Looks_Like_Wall (Adjacent_Exit(0,1));
+
+   Dol:=Dol or Looks_Like_Wall (Adjacent_Exit (1, 2)); { TODO: the source was blurry. May be incorrect }
+   Dol:=Dol or Looks_Like_Wall (Adjacent_Exit (2, 3)); { TODO: the source was blurry. May be incorrect }
+
+   If Dol then
+      Top_Left_Corner:='#'
+   Else
+      Top_Left_Corner:=' ';
+End;
+
+
+(******************************************************************************)
+
+Function Top_Right_Corner: [Volatile]Char;
+
+Var
+   Dol: Boolean;
+
+Begin
+   Dol:=Looks_Like_Wall (Adjacent_Exit(0,3));
+
+   Dol:=Dol or Looks_Like_Wall (Adjacent_Exit (3, 2)); { TODO: the source was blurry. May be incorrect }
+   Dol:=Dol or Looks_Like_Wall (Adjacent_Exit (2, 3)); { TODO: the source was blurry. May be incorrect }
+
+   If Dol then
+      Top_Right_Corner:='#'
+   Else
+      Top_Right_Corner:=' ';
+End;
+
+
+(******************************************************************************)
+
+Function Bottom_Right_Corner: [Volatile]Char;
+
+Var
+   Dol: Boolean;
+
+Begin
+   Dol:=Looks_Like_Wall (Adjacent_Exit(0,2));{ TODO: the source was blurry. May be incorrect }
+
+   Dol:=Dol or Looks_Like_Wall (Adjacent_Exit (2, 4)); { TODO: the source was blurry. May be incorrect }
+   Dol:=Dol or Looks_Like_Wall (Adjacent_Exit (4, 2)); { TODO: the source was blurry. May be incorrect }
+
+   If Dol then
+      Bottom_Right_Corner:='#'
+   Else
+      Bottom_Right_Corner:=' ';
+End;
+
+(******************************************************************************)
+
+Function Bottom_Left_Corner: [Volatile]Char;
+
+Var
+   Dol: Boolean;
+
+Begin
+   Dol:=Looks_Like_Wall (Adjacent_Exit(0,21));
+
+   Dol:=Dol or Looks_Like_Wall (Adjacent_Exit (1, 4));
+   Dol:=Dol or Looks_Like_Wall (Adjacent_Exit (4, 1));
+
+   If Dol then
+      Bottom_Left_Corner:='#'
+   Else
+      Bottom_Left_Corner:=' ';
+End;
+
+(******************************************************************************)
+
+Function Top_Corner (X: Integer): [Volatile]Char;
+
+Begin
+   Case X of
+        4: Top_Corner:=Top_Left_Corner;
+        6: Top_Corner:=Top_Right_Corner;
+        Otherwise Top_Corner:=' ';
+   End;
+End;
+
+(******************************************************************************)
+
+Function Bottom_Corner (X: Integer): [Volatile]Char;
+
+Begin
+   Case X of
+        4: Bottom_Corner:=Bottom_Left_Corner;
+        6: Bottom_Corner:=Bottom_Right_Corner;
+        Otherwise Bottom_Corner:=' ';
+   End;
+End;
+
+(******************************************************************************)
+
+Function Corner (Y, X: Integer): [Volatile]Char;
+
+Begin
+   Case Y of
+        4: Corner:=Top_Corner (X);
+        6: Corner:=Bottom_Corner (X);
+        Otherwise Corner:=' ';
+   End;
+End;
+
+(******************************************************************************)
 
 [Global]Procedure Print_View (Direction: Direction_Type; Member: Party_Type;  Current_Party_Size: Party_Size_Type);
 
+Var
+  Spot: Room_Record;
+  View: View_Matrix;
+
+
 Begin { Print View }
+   Spot:=Maze.Room[PosX,PosZ];
+   If Maze.Special_Table[Spot.Contents].Special<>Darkness then
+      Begin
+        view[1]:='';  { TODO: Missing text, but believed to be correct }
+        View[2]:='    ' + Top_Side(Direction,Top,Member,Current_Party_Size);
+        View[3]:='    ' + Top_Side(Direction,Middle,Member,Current_Party_Size);
+        View[4]:=Left_Side(Direction,Top,Member,Current_Party_Size)+
+                 Graphic_Room(Spot,Top,Member,Current_Party_Size)+
+                 Right_Side (Direction,Top,Member,Current_Party_size);
+        View[5]:=Left_Side(Direction,Middle,Member,Current_Party_Size)+
+                 Graphic_Room(Spot,Middle,Member,Current_Party_Size)+
+                 Right_Side (Direction,Middle,Member,Current_Party_size);
+        View[6]:=Left_Side(Direction,Bottom,Member,Current_Party_Size)+
+                 Graphic_Room(Spot,Bottom,Member,Current_Party_Size)+
+                 Right_Side (Direction,Bottom,Member,Current_Party_size);
+        View[7]:='    ' + Bottom_Side(Direction,Middle,Member,Current_Party_Size);
+        View[8]:='    ' + Bottom_Side(Direction,Bottom,Member,Current_Party_Size);
+        View[9]:='';
 
-{ TODO: Enter this code }
+        View[5,5]:='^';
 
+        If View[4,4]=' ' then View[4,4]:=Corner(4,4);
+        If View[4,6]=' ' then View[4,6]:=Corner(4,6);
+        If View[6,4]=' ' then View[6,4]:=Corner(6,4);
+        If View[6,6]=' ' then View[6,6]:=Corner(6,6);
+
+        Display_View (View);
+      End
 End;  { Print View }
 End.  { View }
