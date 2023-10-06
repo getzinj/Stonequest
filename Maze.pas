@@ -28,7 +28,7 @@ Var
    Dont_Draw:                                       Boolean;
    Game_Saved,Leave_Maze,Auto_Load,Auth_Save:       [External]Boolean;
    Places:                                          [Global]Place_Stack;
-   Plane_Name:                                      Array [1..9] of Line;
+   Plane_Name:                                      Array [0..9] of Line;
    Direction:                                       [External]Direction_Type;
    Rounds_Left:                                     [External]Array [Spell_Name] of Unsigned;
    Maze:                                            [External]Level;
@@ -36,7 +36,7 @@ Var
    Minute_Counter:                                  [External]Real;
    DirectionName:                                   Array [Direction_Type] of Line;
    SaveFile:                                        [External]Save_File_Type;
-   Item_List:                                       [External]List_of_IOtems;
+   Item_List:                                       [External]List_of_Items;
    Messages:                                        Message_Group;
 
    ScreenDisplay,BottomDisplay,OptionsDisplay,Pasteboard,CharacterDisplay,CommandsDisplay,SpellsDisplay: [External]Unsigned;
@@ -107,18 +107,23 @@ Value
 [External]Function Roll_Die (Die_Type: Integer): [Volatile]Integer;External;
 [External]Function Regenerates (Character: Character_Type; PosZ: Integer:=0): Integer;external;
 [External]Function Get_Level (Level_Number: Integer; Maze: Level; PosZ: Vertical_Type:=0): [Volatile]Level;External;
-[External]Function Pick_Character_Number (Party_Size: Integer; Current_Party_Size:=0;  Time_Out: Integer:=-1;
+[External]Function Pick_Character_Number (Party_Size: Integer; Current_Party_Size: Integer:=0;  Time_Out: Integer:=-1;
                                           Time_Out_Char: Char:='0'):[Volatile]Integer;External;
-                                          
-[External]Function
-[External]Function
-[External]Function
-[External]Function
-[External]Function
-
-
-{ TODO: Enter this code }
-
+[External]Procedure Cursor;External;
+[External]Procedure No_Cursor;External;
+[External]Procedure Wait_Key (Time_Out: Integer:=-1);External;
+[External]Procedure Cursor;External;
+[External]Procedure No_Cursor;External;
+[External]Procedure Change_Status (Var Character: Character_Type; Status: Status_Type; Var Changed: Boolean);External;
+[External]Procedure Delay (Seconds: Real);External;
+[External]Procedure Ring_Bell (Display_Id: Unsigned; Number_of_Times: Integer:=1);External;
+[External]Function Made_Roll (Needed: Integer): [Volatile]Boolean;external;
+[External]Function Alive (Character: Character_Type): Boolean;external;
+[External]Procedure Backup_Party (Party: Party_Type; Party_Size: Integer);External;
+[External]Function  Empty_Stack (Stack: Place_Stack):Boolean;external;
+[External]Procedure Init_Stack (Var Stack: Place_Stack);External;
+[External]Procedure Remove_Nodes (Var Stack: Place_Stack);External;
+[External]Procedure Insert_Place (PosX,PosY: Horizontal_Type; PosZ: Vertical_Type; Var Stack: Place_Stack);External;
 (******************************************************************************)
 
 Function Has_Light: [Volatile]Boolean;
@@ -140,6 +145,21 @@ Begin { Unpaste All }
    SMG$unpaste_virtual_display(MonsterDisplay,Pasteboard);
    SMG$unpaste_virtual_display(ViewDisplay,Pasteboard);
 End;  { Unpaste All }
+
+(******************************************************************************)
+
+[Global]Function Compute_Party_Size (Member: Party_Type;  Party_Size: Integer): Integer;
+
+Var
+   Temp,Character: Integer;
+
+Begin { Compute Party Size }
+   Temp:=0;
+   For Character:=1 to Party_Size do
+      If Alive (Member[Character]) then
+         Temp:=Temp+1;
+   Compute_Party_Size:=Temp;
+End;  { Compute Party Size }
 
 (******************************************************************************)
 
@@ -191,7 +211,7 @@ Begin
          Previous_Spot:=Maze.Room[PosX,PosY].Kind;
          PosX:=TempX;
          PosY:=TempY;
-         Insert_Place (PosX,PosY,Places);
+         Insert_Place (PosX,PosY,PosZ,Places);
          New_Spot:=True;
       End;
    SMG$Erase_Display (MessageDisplay);
@@ -294,7 +314,7 @@ End;
 
 (******************************************************************************)
 
-Procedure Draw_View (Direction: Direction_Type;  New_Spot: Boolean; Member: Party_Type; Current_Party_Size; Party_Size_Type);
+Procedure Draw_View (Direction: Direction_Type;  New_Spot: Boolean; Member: Party_Type; Current_Party_Size: Party_Size_Type);
 
 [External]Procedure Print_View (Direction: Direction_Type; Member: Party_Type;  Current_Party_Size: Party_Size_Type);External;
 
@@ -332,9 +352,9 @@ Begin { Print a Character Line }
        +'-' );
    SMG$Put_Chars (CharacterDisplay,
        Pad(ClassName[Character.Class],
-           ' ',14);
+           ' ',14));
    SMG$Put_Chars (CharacterDisplay,
-       String(10-Character.Amor_Class,3)
+       String(10-Character.Armor_Class,3)
        +'     '
        +String(Character.Curr_HP,5) );
    If Character.Regenerates>0 then
@@ -397,7 +417,7 @@ Begin { Party Box }
       Print_Party_Line (Member,Party_Size,Person);
    SMG$End_Display_Update (CharacterDisplay);
    Current_Party_Size:=Compute_Party_Size (Member,Party_Size);
-   Leave_Maze:=Leave_Maze or (Current_Party_Size:=0);
+   Leave_Maze:=Leave_Maze or (Current_Party_Size=0);
 End;  { Party Box }
 
 (******************************************************************************)
@@ -407,7 +427,7 @@ Procedure Init_Windows (Var Member: Party_Type;  Var Current_Party_Size: Party_S
 
 Begin { Init Windows }
   SMG$Label_Border (ViewDisplay);
-  If Not Dont_Draw then Draw_View (Direction,New_Spot,Member,Current_Party_Size);
+  If Not Dont_Draw then Draw_View (Direction,NewSpot,Member,Current_Party_Size);
   Party_Box (Member,Current_Party_Size,Party_Size,Leave_Maze);
   Spells_Box (Rounds_Left);
 End;  { Init Windows }
@@ -419,7 +439,7 @@ Procedure Draw_Screen (New_Spot: Boolean; Var Member: Party_Type; Var Current_Pa
 
 
 Begin { Draw Screen }
-   Init_windows (Member,Current_Party_Size,Party-Size,Leave_Maze,New_Spot);
+   Init_windows (Member,Current_Party_Size,Party_Size,Leave_Maze,New_Spot);
    SMG$Paste_Virtual_Display (CharacterDisplay,Pasteboard,CharY,CharX);
    SMG$Paste_Virtual_Display (CommandsDisplay,Pasteboard,MonY,MonX);
    SMG$Paste_Virtual_Display (SpellsDisplay,Pasteboard,SpellsY,SpellsX);
@@ -478,7 +498,7 @@ Begin { Initialize }
 
          Kill_Save_File;
          SMG$Unpaste_Virtual_Display (ScreenDisplay,Pasteboard);
-         SMG$Erase_Display);
+         SMG$Erase_Display(ScreenDisplay);
       End
    Else
       SMG$Begin_Pasteboard_Update (Pasteboard);
