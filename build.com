@@ -64,6 +64,8 @@ $      write sys$output "Compiling PickPocket.pas"
 $      pas PickPocket
 $      write sys$output "Compiling PlaceStack.pas"
 $      pas PlaceStack
+$      write sys$output "Compiling PlayerUtils.pas"
+$      pas PlayerUtils
 $      write sys$output "Compiling PrintChar.pas"
 $      pas PrintChar
 $      write sys$output "Compiling PrintCharSpell.pas"
@@ -88,10 +90,10 @@ $      write sys$output "Compiling Treasure.pas"
 $      pas Treasure
 $      write sys$output "Compiling View.pas"
 $      pas View
+$      write sys$output "Compiling View3d.pas"
+$      pas View3d
 $      write sys$output "Compiling Windows.pas"
 $      pas Windows
-$      write sys$output "Compiling PlayerUtils.pas"
-$      pas PlayerUtils
 $      write sys$output "Assembling Handler.mar"
 $      mac Handler
 $!
@@ -102,7 +104,7 @@ $      write sys$output "Linking ..."
 $!
 $!
 $      Link Camp,Casino,Character,CharacterAttacks,Church,Compute,Craps,-
-       Demo,EditMaze,Encounter,Experience,Keyboard,Random,Files,-
+       Demo,EditMaze,Encounter,Experience,Keyboard,Random,Files,View3d,-
        GiveTreasure,Help,Hours,Inn,Io,Items,Tables,PrintCharSpell,-
        Kyrn,LibRtl,Maze,Messages,Monster,MonsterAttack,PicEdit,PickPocket,-
        PlaceStack,PrintChar,Scores,Shell_Out,Slots,SmgRtl,Stonequest,-
