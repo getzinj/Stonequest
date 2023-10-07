@@ -1,6 +1,7 @@
 [Inherit ('SYS$LIBRARY:STARLET','Types','SMGRTL','STRRTL')]Module Maze;
 
 Const
+   debug = true;
    CharY  = 17;  CharX  =  2;
    MonY   =  2;  MonX   = 26;
    SpellsY=  7;  SpellsX= 26;
@@ -345,7 +346,7 @@ Begin
    SMG$Erase_Display (ViewDisplay);
    Print_View (Direction,Member,Current_Party_Size);
    If Not Has_Light and (Minute_Counter<46) and (Minute_Counter>9) then
-      SMG$PUT_CHARS (ViewDisplay, ' A touch would be nice ',1,1);
+      SMG$PUT_CHARS (ViewDisplay, ' A torch would be nice ',1,1);
    SMG$End_Display_Update(ViewDisplay);
    If New_Spot then SMG$Erase_Display (MessageDisplay);
 End;
@@ -887,7 +888,7 @@ Begin
          SMG$Begin_Display_Update (CharacterDisplay);
          Update_Status (Member,Current_Party_Size,Party_Size,Leave_Maze,Rounds_Left);
          SMG$End_Display_Update (CharacterDisplay);
-         If Not (New_Spot or Leave_Maze or Dont_Draw) then
+         { If Not (New_Spot or Leave_Maze or Dont_Draw) then TODO: Debug only. }
             Draw_View (Direction,New_Spot,Member,Current_Party_Size);
          Dont_Draw:=False;
          Handle_Room_Special (New_Spot,Member,Current_Party_Size,Party_Size,Leave_Maze,Previous_Spot,Time_Delay);
