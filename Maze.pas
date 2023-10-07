@@ -675,7 +675,6 @@ End;  { Fix Compass }
 Procedure Update_Status (Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type;  Party_Size: Integer;
                                Var Leave_Maze: Boolean; Rounds_Left: Spell_Duration_List);
 
-
 Begin
    Spells_Box (Rounds_Left);
    Party_Box (Member,Current_Party_Size,Party_Size,Leave_Maze);
@@ -735,8 +734,8 @@ End;
 Procedure Turn_Left (Var Direction: Direction_Type);
 
 Begin
-   If Direction=West then Direction:=West
-   Else                   Direction:=Pred (Direction);
+   If Direction=North then Direction:=West
+   Else                    Direction:=Pred (Direction);
 End;
 
 (******************************************************************************)
@@ -765,7 +764,69 @@ Begin
    SMG$Erase_Display (MessageDisplay);
 End;
 
+
+Function Print_Exit (exit: Exit_Type): Line;
+Begin
+  case exit of
+    Passage: return 'Passage';
+    Wall: return 'Wall';
+    Door: return 'Door';
+    Secret: return 'Secret';
+    Transparent: return 'Transparent';
+    Walk_Through: return 'Walk_Through';
+    otherwise return 'Unknown';
+  end;
+End;
+
 (******************************************************************************)
+
+Procedure Print_Debug_Room_Info(PosX,PosY: Horizontal_Type);
+
+Var
+   Spot: Room_Record;
+
+Begin
+   Spot:=Maze.Room[PosX,PosY];
+   SMG$Put_Line (MessageDisplay,
+      'North: '
+      +Print_Exit(Spot.North)
+      +', South: '
+      +Print_Exit(Spot.South)
+      +', East: '
+      +Print_Exit(Spot.East)
+      +', West: '
+      +Print_Exit(Spot.West));
+End;
+
+function print_direction(Direction: Direction_Type): Line;
+
+Begin
+   Case Direction of
+      North: return 'North';
+      South: return 'South';
+      East: return 'East';
+      West: return 'West';
+      Otherwise return 'Unknown';
+   End;
+End;
+
+
+(******************************************************************************)
+
+Procedure Display_Location_Info (Direction: Direction_Type);
+
+Begin
+  SMG$Put_Line (MessageDisplay,
+      'Location is X:'
+      +String(PosX)
+      +', Y: '
+      +String(PosY)
+      +', Z: '
+      +String(PosZ));
+   SMG$Put_line(MessageDisplay,'Facing: ' + print_direction(direction));
+
+  Print_Debug_Room_Info(PosX,PosY);
+End;
 
 Procedure Make_Move (Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type;  Party_Size: Integer;
                              Var Leave_Maze: Boolean; Var Time_Delay: Integer;  Var Auto_Save: Boolean;
@@ -794,6 +855,10 @@ Begin
                     'T': Change_Time   (Time_Delay);
    End;
    If Not Auto_Save then Fix_Compass (Direction,Rounds_Left);
+   If debug then
+      Begin
+         Display_Location_Info (Direction);
+      End;
 End;
 
 (******************************************************************************)
