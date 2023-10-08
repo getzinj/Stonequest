@@ -17,6 +17,21 @@ Const
 Var
   ViewDisplay: [External]Unsigned;
 
+
+{********************************************************************************************************************}
+[External]Function getNearCenter(Direction: Direction_Type): ISpot;External;
+[External]Function getMiddleCenter(Direction: Direction_Type): ISpot;External;
+[External]Function getCenterFar(Direction: Direction_Type): ISpot;External;
+[External]Function getLeftFar(Direction: Direction_Type): ISpot;External;
+[External]Function getRightFar(Direction: Direction_Type): ISpot;External;
+[External]Function getCenterMiddle(Direction: Direction_Type): ISpot;External;
+[External]Function getLeftMiddle(Direction: Direction_Type): ISpot;External;
+[External]Function getRightMiddle(Direction: Direction_Type): ISpot;External;
+[External]Function getCenterNear(Direction: Direction_Type): ISpot;External;
+[External]Function getLeftNear(Direction: Direction_Type): ISpot;External;
+[External]Function getRightNear(Direction: Direction_Type): ISpot;External;
+{********************************************************************************************************************}
+
 {********************************************************************************************************************}
 {**************************************************** NEAR ROW ******************************************************}
 {********************************************************************************************************************}
@@ -386,47 +401,113 @@ End;
 
 {********************************************************************************************************************}
 
-Procedure far;
+Function looksLikeWall(exit: Exit_Type): Boolean;
 
 Begin
-  wallFarFrontLeft;
-  wallFarFrontCenter;
-  wallFarFrontRight;
+  return (exit in [Wall,Door,Walk_Through,Secret]);
+End;
+
+{********************************************************************************************************************}
+
+Procedure far(leftRoom: ISpot; centerRoom: ISpot; rightRoom: ISpot);
+
+Begin
+  if (looksLikeWall(leftRoom.front)) then
+    Begin
+      wallFarFrontLeft;
+    End;
+  if (looksLikeWall(centerRoom.front)) then
+    Begin
+      wallFarFrontCenter;
+    End;
+  if (looksLikeWall(rightRoom.front)) then
+    Begin
+      wallFarFrontRight;
+    End;
+
   wallFarLeftSide;
   wallFarRightSide;
 End;
 
 {********************************************************************************************************************}
 
-Procedure middle;
+
+Procedure middle(leftRoom: ISpot; centerRoom: ISpot; rightRoom: ISpot);
 
 Begin
-  wallMiddleFrontLeft;
-  wallMiddleFrontCenter;
-  wallMiddleFrontRight;
-  wallMiddleLeftSide;
-  wallMiddleRightSide;
+  if (looksLikeWall(leftRoom.front)) then
+    Begin
+      wallMiddleFrontLeft;
+    End;
+  if (looksLikeWall(centerRoom.front)) then
+    Begin
+      wallMiddleFrontCenter;
+    End;
+  if (looksLikeWall(rightRoom.front)) then
+    Begin
+      wallMiddleFrontRight;
+    End;
+
+  if (looksLikeWall(centerRoom.left)) then
+    Begin
+      wallMiddleLeftSide;
+    End;
+
+  if (looksLikeWall(centerRoom.right)) then
+    Begin
+      wallMiddleRightSide;
+    End;
 End;
 
 {********************************************************************************************************************}
 
-Procedure near;
+
+Procedure near(leftRoom: ISpot; centerRoom: ISpot; rightRoom: ISpot);
 
 Begin
-  wallNearFrontLeft;
-  wallNearFrontCenter;
-  wallNearFrontRight;
-  wallNearLeftSide;
-  wallNearRightSide;
+  if (looksLikeWall(leftRoom.front)) then
+    Begin
+      wallNearFrontLeft;
+    End;
+  if (looksLikeWall(centerRoom.front)) then
+    Begin
+      wallNearFrontCenter;
+    End;
+  if (looksLikeWall(rightRoom.front)) then
+    Begin
+      wallNearFrontRight;
+    End;
+  if (looksLikeWall(centerRoom.left)) then
+    Begin
+      wallNearLeftSide;
+    End;
+  if (looksLikeWall(centerRoom.right)) then
+    Begin
+      wallNearRightSide;
+    End;
 End;
 
 {********************************************************************************************************************}
 
-Procedure drawView;
+[Global]Procedure printView3D (Direction: Direction_Type; Member: Party_Type; Current_Party_Size: Party_Size_Type);
 
 Begin
-  far;
-  middle;
-  near;
+  SMG$Begin_Display_Update(ViewDisplay);
+  far(
+    getLeftFar(Direction),
+    getCenterFar(Direction),
+    getRightFar(Direction)
+  );
+  middle(
+    getLeftMiddle(Direction),
+    getCenterMiddle(Direction),
+    getRightMiddle(Direction)
+  );
+  near(
+    getLeftNear(Direction),
+    getCenterNear(Direction),
+    getRightNear(Direction)
+  );
+  SMG$End_Display_Update(ViewDisplay);
 End;
 End.

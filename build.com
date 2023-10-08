@@ -58,6 +58,8 @@ $      write sys$output "Compiling Monster.pas"
 $      pas Monster
 $      write sys$output "Compiling MonsterAttack.pas"
 $      pas MonsterAttack
+$      write sys$output "Compiling PerspectiveGeometry.pas"
+$      pas PerspectiveGeometry
 $      write sys$output "Compiling PicEdit.pas"
 $      pas PicEdit
 $      write sys$output "Compiling PickPocket.pas"
@@ -109,7 +111,7 @@ $      Link Camp,Casino,Character,CharacterAttacks,Church,Compute,Craps,-
        Kyrn,LibRtl,Maze,Messages,Monster,MonsterAttack,PicEdit,PickPocket,-
        PlaceStack,PrintChar,Scores,Shell_Out,Slots,SmgRtl,Stonequest,-
        AdminUtils,PlayerUtils,Store,StrRtl,Tavern,Training,Treasure,-
-       Types,View,Windows,Handler /EXE=StoneQuest.exe
+       PerspectiveGeometry,Types,View,Windows,Handler /EXE=StoneQuest.exe
 $!
 $      write sys$output "Purging old EXE files..."
 $      purge *.exe

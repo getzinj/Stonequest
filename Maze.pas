@@ -340,11 +340,13 @@ End;
 Procedure Draw_View (Direction: Direction_Type;  New_Spot: Boolean; Member: Party_Type; Current_Party_Size: Party_Size_Type);
 
 [External]Procedure Print_View (Direction: Direction_Type; Member: Party_Type;  Current_Party_Size: Party_Size_Type);External;
+[External]Procedure printView3D (Direction: Direction_Type; Member: Party_Type;  Current_Party_Size: Party_Size_Type);External;
 
 Begin
    SMG$Begin_Display_Update (ViewDisplay);
    SMG$Erase_Display (ViewDisplay);
-   Print_View (Direction,Member,Current_Party_Size);
+{   Print_View (Direction,Member,Current_Party_Size); }
+   printView3D (Direction,Member,Current_Party_Size);
    If Not Has_Light and (Minute_Counter<46) and (Minute_Counter>9) then
       SMG$PUT_CHARS (ViewDisplay, ' A torch would be nice ',1,1);
    SMG$End_Display_Update(ViewDisplay);

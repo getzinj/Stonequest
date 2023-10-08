@@ -542,6 +542,14 @@ Type
   Party_Flag      = Array [1..6] of Flag;
   Attack_String   = Varying [10] of Char;
 
+  ISpot = Record
+    front: Exit_Type;
+    left: Exit_Type;
+    right: Exit_Type;
+    contents: Integer;
+    kind: Area_Type;
+  End;
+
 Var
    Pas_Errors: [Global]Array [-1..128] of Line;
 
