@@ -81,7 +81,6 @@ Procedure clearQuadrilateral(
             if (isInsideQuadrilateral) then
               Begin
                  SMG$Erase_Chars(ViewDisplay, 1, row, col);
-                 SMG$Put_Chars (ViewDisplay, ' ', row, col);
               End;
         End;
  End;

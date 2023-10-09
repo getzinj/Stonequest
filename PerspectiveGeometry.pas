@@ -15,6 +15,80 @@ Var
    PosX,PosY,PosZ:                                  [Byte,External]0..20;
 
 
+Function getXToEast(x: integer): integer;
+
+Begin
+  If x < 20 then
+     return x + 1
+  Else
+     return 1;
+End;
+
+(******************************************************************************)
+
+Function GetXToWest(x: integer): integer;
+
+Begin
+  If x > 1 then
+     return x - 1
+  Else
+     return 20;
+End;
+
+(******************************************************************************)
+
+Function getXToNorth(x: integer): integer;
+
+Begin
+  return x;
+End;
+
+(******************************************************************************)
+
+Function GetXToSouth(x: integer): integer;
+
+Begin
+  return x;
+End;
+
+(******************************************************************************)
+
+Function getYToEast(y: integer): integer;
+
+Begin
+  return y;
+End;
+
+(******************************************************************************)
+
+Function GetYToWest(y: integer): integer;
+
+Begin
+  return y;
+End;
+
+(******************************************************************************)
+
+Function getYToNorth(y: integer): integer;
+
+Begin
+  If y > 1 then
+     return y - 1
+  Else
+     return 20;
+End;
+
+(******************************************************************************)
+
+Function GetYToSouth(y: integer): integer;
+
+Begin
+  If y < 20 then
+     return y + 1
+  Else
+     return 1;
+End;
+
 (******************************************************************************)
 
 Function getLocation(direction: Direction_Type; posX, posY: Integer): NewISpot;
@@ -60,130 +134,112 @@ Begin
   End;
 
   { After setting the properties, return the temporary record }
+
   getLocation := resultSpot;
 End;
+
+(******************************************************************************)
 
 Function getPositionToLeft(spot: NewISpot): NewISpot;
 
 Var
-  leftX, leftY: Integer;
+  newX, newY: Integer;
 
 Begin
-  leftX := spot.rowX;
-  leftY := spot.rowY;
-
+  newX := spot.rowX;
+  newY := spot.rowY;
   if (spot.direction = North) then
-  Begin
-    if spot.rowX > 1 then
-      leftX := spot.rowX - 1
-    else
-      leftX := 20;
-  End
+      Begin
+         newX:=getXToWest(spot.rowX);
+         newY:=getYToWest(spot.rowY);
+      End
   else if (spot.direction = South) then
-  Begin
-    if spot.rowX < 20 then
-      leftX := spot.rowX + 1
-    else
-      leftX := 1;
-  End
+      Begin
+         newX:=getXToEast(spot.rowX);
+         newY:=getYToEast(spot.rowY);
+      End
   else if (spot.direction = East) then
-  Begin
-    if spot.rowY > 1 then
-      leftY := spot.rowY - 1
-    else
-      leftY := 20;
-  End
+      Begin
+         newX:=getXToNorth(spot.rowX);
+         newY:=getYToNorth(spot.rowY);
+      End
   else if (spot.direction = West) then
-  Begin
-    if spot.rowY < 20 then
-      leftY := spot.rowY + 1
-    else
-      leftY := 1;
-  End;
+      Begin
+         newX:=getXToSouth(spot.rowX);
+         newY:=getYToSouth(spot.rowY);
+      End;
 
-  return getLocation(spot.direction, leftX, leftY);
+  return getLocation(spot.direction, newX, newY);
 End;
+
+(******************************************************************************)
 
 Function getPositionToRight(spot: NewISpot): NewISpot;
 
 Var
-  rightX, rightY: Integer;
+  newX, newY: Integer;
 
 Begin
-  rightX := spot.rowX;
-  rightY := spot.rowY;
+  newX := spot.rowX;
+  newY := spot.rowY;
 
   if (spot.direction = North) then
-  Begin
-    if spot.rowX < 20 then
-      rightX := spot.rowX + 1
-    else
-      rightX := 1;
-  End
+      Begin
+         newX:=getXToEast(spot.rowX);
+         newY:=getYToEast(spot.rowY);
+      End
   else if (spot.direction = South) then
-  Begin
-    if spot.rowX > 1 then
-      rightX := spot.rowX - 1
-    else
-      rightX := 20;
-  End
+      Begin
+         newX:=getXToWest(spot.rowX);
+         newY:=getYToWest(spot.rowY);
+      End
   else if (spot.direction = East) then
-  Begin
-    if spot.rowY < 20 then
-      rightY := spot.rowY + 1
-    else
-      rightY := 1;
-  End
+      Begin
+         newX:=getXToSouth(spot.rowX);
+         newY:=getYToSouth(spot.rowY);
+      End
   else if (spot.direction = West) then
-  Begin
-    if spot.rowY > 1 then
-      rightY := spot.rowY - 1
-    else
-      rightY := 20;
-  End;
+      Begin
+         newX:=getXToNorth(spot.rowX);
+         newY:=getYToNorth(spot.rowY);
+      End;
 
-  return getLocation(spot.direction, rightX, rightY);
+  return getLocation(spot.direction, newX, newY);
 End;
+
+(******************************************************************************)
 
 Function getPositionInFront(spot: NewISpot): NewISpot;
 
 Var
-  frontX, frontY: Integer;
+  newX, newY: Integer;
 
 Begin
-  frontX := spot.rowX;
-  frontY := spot.rowY;
+  newX := spot.rowX;
+  newY := spot.rowY;
 
   if (spot.direction = North) then
-  Begin
-    if spot.rowY > 1 then
-      frontY := spot.rowY - 1
-    else
-      frontY := 20;
-  End
+      Begin
+         newX:=getXToNorth(spot.rowX);
+         newY:=getYToNorth(spot.rowY);
+      End
   else if (spot.direction = South) then
-  Begin
-    if spot.rowY < 20 then
-      frontY := spot.rowY + 1
-    else
-      frontY := 1;
-  End
+      Begin
+         newX:=getXToSouth(spot.rowX);
+         newY:=getYToSouth(spot.rowY);
+      End
   else if (spot.direction = East) then
-  Begin
-    if spot.rowX < 20 then
-      frontX := spot.rowX + 1
-    else
-      frontX := 1;
-  End
+      Begin
+         newX:=getXToEast(spot.rowX);
+         newY:=getYToEast(spot.rowY);
+      End
   else if (spot.direction = West) then
-  Begin
-    if spot.rowX > 1 then
-      frontX := spot.rowX - 1
-    else
-      frontX := 20;
-  End;
+      Begin
+         newX:=getXToWest(spot.rowX);
+         newY:=getYToWest(spot.rowY);
+      End;
 
-  return getLocation(spot.direction, frontX, frontY);
+  return getLocation(spot.direction, newX, newY);
 End;
 
 (******************************************************************************)
