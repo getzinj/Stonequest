@@ -185,6 +185,38 @@ End;  { Show Special }
 
 (******************************************************************************)
 
+Procedure Swap_Characters (Char1,Char2: Character_Type);
+
+Var
+   Temp: Character_Type;
+
+Begin
+   Temp:=Char1;
+   Char1:=Char2;
+   Char2:=Temp;
+End;
+
+(******************************************************************************)
+
+[Global]Procedure Dead_Character (Position: Integer; Var Member: Party_Type; Party_Size: Integer);
+
+Var
+   Done: Boolean;
+
+Begin
+   Done:=False;
+   While (Position<Party_Size) and Not(Done) do
+      If Alive(Member[Position+1] then
+         Begin
+            Swap_Characters (Member[Position+1],Member[Position]);
+            Position:=Position+1;
+         End
+      Else
+         Done:=True;
+End;
+
+(******************************************************************************)
+
 { TODO: Enter this code }
 
 [Global]Procedure Time_Effects (Position: Integer; Var Member: Party_Type; Party_Size: Integer);
