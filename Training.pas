@@ -15,7 +15,7 @@ Var
    ClassName:                           [External]Array [Class_Type] of Varying [13] of char;
    Maze:                                [External]Level;
    PosX,PosY,PosZ:                      [External, Byte]0..20;
-   Rounds_Level:                        [External]Array [Spell_Name] of Unsigned;
+   Rounds_Left:                         [External]Array [Spell_Name] of Unsigned;
 
 Value
    Leave_Maze:=False;

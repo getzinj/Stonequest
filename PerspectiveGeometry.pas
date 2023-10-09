@@ -306,7 +306,7 @@ End;
 [Global]Function getLeftFar(Direction: Direction_Type): NewISpot;
 
 Begin
-  return getPositionToLeft(getCenterMiddle(Direction));
+  return getPositionToLeft(getCenterFar(Direction));
 End;
 
 (******************************************************************************)
@@ -322,7 +322,7 @@ End;
 [Global]Function getRightFar(Direction: Direction_Type): NewISpot;
 
 Begin
-  return getPositionToRight(getCenterMiddle(Direction));
+  return getPositionToRight(getCenterFar(Direction));
 End;
 
 (******************************************************************************)

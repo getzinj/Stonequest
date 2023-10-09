@@ -70,7 +70,7 @@ Procedure clearQuadrilateral(
       for col:=min(upperLeftX,upperRightX,lowerLeftX,lowerRightX) to max(upperLeftX,upperRightX,lowerLeftX,lowerRightX) do
         begin
             vertx[1]:=upperLeftX;  vertx[2]:=upperRightX; vertx[3]:=lowerRightX;  vertx[4]:=lowerLeftX;
-            verty[1]:=upperLeftY;  verty[2]:=upperRightY; verty[3]:=lowerRightY;  vertx[4]:=lowerLeftY;
+            verty[1]:=upperLeftY;  verty[2]:=upperRightY; verty[3]:=lowerRightY;  verty[4]:=lowerLeftY;
 
             isInsideQuadrilateral:=isPointInsideQuadrilateral(
               vertx,
