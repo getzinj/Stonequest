@@ -420,7 +420,7 @@ Begin { Print a Character Line }
    SMG$Put_Chars (CharacterDisplay,
        '   '
        +Pad(Character.Name,' ',20)
-       +'  ');
+       +'   ');
    SMG$Put_Chars (CharacterDisplay,
        '  '
        +String(Character.Level,3)
@@ -432,7 +432,7 @@ Begin { Print a Character Line }
            ' ',14));
    SMG$Put_Chars (CharacterDisplay,
        String(10-Character.Armor_Class,3)
-       +'     '
+       +'    '
        +String(Character.Curr_HP,5) );
    If Character.Regenerates>0 then
       SMG$Put_Chars (CharacterDisplay,
@@ -445,7 +445,7 @@ Begin { Print a Character Line }
          SMG$Put_Chars (CharacterDisplay,
              ' ');
    SMG$Put_Chars (CharacterDisplay,
-       '  ');
+       '    ');
    If (Character.Status=Healthy) then
       SMG$Put_Line (CharacterDisplay,
       Substr(String(Character.Max_HP,4),1,4),0 )
@@ -645,6 +645,13 @@ Begin { Initialize }
       End
    Else
       SMG$Begin_Pasteboard_Update (Pasteboard);
+
+   If debug then
+      Begin
+        Rounds_Left[CoLi]:=1000;
+        Rounds_Left[Comp]:=1000;
+      End;
+
    Insert_Place (PosX,PosY,PosZ,Places);
    Draw_Screen (TRUE,Member,Current_Party_Size,Party_Size);
    If Not Show_Place then Show_Image (37,ViewDisplay);
