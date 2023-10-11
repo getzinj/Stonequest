@@ -273,6 +273,123 @@ Type
 
 Var
    Keyboard: [External]Unsigned;
+   Options: Char_Set;
+   X1,Y1,Z1,Num,Loop: Integer;
+   Answer: Char;
+   Strng,T: Line;
+   AlignName: [External]Array [Align_Type] of Packed Array [1..73] of Char;
+
+Procedure Treasure_Types (Var Treasure: TreasureSet);
+
+Var
+  Pos: Integer;
+  Loop: T_Type;
+  T: Line;
+
+Begin
+  Repeat
+     Begin
+        SMG$Begin_Display_Update (ScreenDisplay);
+        SMG$Put_Line (ScreenDisplay,
+            'The monster has these treasure types');
+        Pos:=1;
+        T:='';
+        For Loop:=1 to 150 do
+           If Loop in Treasure then
+              Begin
+                 T:=T+String (Loop,0);
+                 If (Pos/4)<>(Pos div 4) then
+                    T:=T+'     '
+                 Else
+                    Begin
+                       SMG$Put_Line (ScreenDisplay,T);
+                       T:='';
+                    End;
+                 Pos:=Pos+1;
+              End;
+        SMG$Put_Line (ScreenDisplay,T,0);
+        SMG$End_Display_Update (ScreenDisplay);
+        SMG$Put_Chars (ScreenDisplay,
+            'Change which type? (1-150)',15,1);
+        Get_Num (Num, ScreenDisplay);
+        If Num>150 then
+           Num:=0
+        Else
+           If Num>0 then
+              If Num in Treasure then
+                 Treasure:=Treasure-[Num]
+              Else
+                 Treasure:=Treasure+[Num];
+     End;
+  Until Num=0;
+End;
+
+Begin
+   Loop:=0;
+   Monsters[Number].Monster_number:=Number;
+   Repeat
+      Begin { Initial repeat }
+         SMG$Begin_Display_Update (ScreenDisplay);
+         SMG$Erase_Display (ScreenDisplay);
+         SMG$Home_Cursor (ScreenDisplay);
+         SMG$Put_Line (ScreenDisplay,
+             'Monster #'
+             +String(Number,3) );
+         SMG$Put_Line (ScreenDisplay,
+             '------- ----',1,0);
+         For Loop:=1 to 12 do
+            Begin (* Do Loop *)
+                T:=CHR(Loop+64)
+                    +'  '
+                    +Cat[Loop]+': ';'
+                Case Loop of
+                    1: T:=T+String(Monsters[Number].Monster_Number,0);
+                    2: T:=T+Monsters(Number].Name;
+                    3: T:=T+Monsters(Number].Plural;
+                    4: T:=T+Monsters(Number].Real_Name;
+                    5: T:=T+Monsters(Number].Real_Plural;
+                    6: T:=T+AlignName[Monsters(Number].Alignment];
+                    7: Begin
+                          T:=T+String(Monsters[Number].Number_Appearing.X,0)
+                             +'D'
+                             +String(Monsters[Number].Number_Appearing.Y,0);
+                          If Monsters[Number].Number_Appearing.Z>=0 then
+                             T:=T+'+'
+                          Else
+                             T:=T+'-';
+                          T:=T+String(Monsters[Number].Number_Appearing.Z,0);
+                       End;
+                    8: Begin
+                          T:=T+String(Monsters[Number].Hit_Points.X,0)
+                             +'D'
+                             +String(Monsters[Number].Hit_Points.Y,0);
+                          If Monsters[Number].Hit_Points.Z>=0 then
+                             T:=T+'+'
+                          Else
+                             T:=T+'-';
+                          T:=T+String(Monsters[Number].Hit_Points.Z,0);
+                       End;
+                    9: T:=T+MonsterType[Monsters(Number].Kind];
+                    10: T:=T+String(Monsters[Number].Armor_Class,0);
+                    11: If Monster[Number].Treasure.In_Lair=[] then
+                         T:=T+'None'
+                       Else
+                         T:=T+'Type ''K'' to edit list';
+                    11: If Monster[Number].Treasure.Wandering=[] then
+                         T:=T+'None'
+                       Else
+                         T:=T+'Type ''L'' to edit list';
+                End;
+            SMG$Put_Line (ScreenDisplay,T);
+         End;  (* Do Loop *)
+         Options:=['A'..'N',' ' '];
+         SMG$Put_Line (ScreenDisplay, '');
+         SMG$End_Display_Update (ScreenDisplay);
+         Answer:=Make_Choice (Options);
+         Case ORD(Answer)-64 of
+             2,3,4,5:  Begin
+                         SMG$Set_Cursor_ABS (ScreenDisplay,15,1);
+
 { TODO: Enter this code }
 
 
