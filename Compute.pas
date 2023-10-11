@@ -100,7 +100,7 @@ End;  { Get Spell Level }
 
 Var
    Wizard_Level,Cleric_Level: 1..10;  { 10 being non existant }
-   Wiz_Point,Cler_Points: 0..9;
+   Wiz_Points,Cler_Points: 0..9;
 
 Begin { Find Spell Group }
    Wizard_Level:=10;  Cleric_Level:=10;  { So far, it can't be casted }
@@ -180,7 +180,7 @@ Begin { Get Class and Level }
                 End;
         Bard:   Begin
                    Cls:=Wizard;
-                   Lvl:Level-4;
+                   Lvl:=Level-4;
                 End;
         Ranger: Begin
                    Cls:=Wizard;
@@ -304,26 +304,26 @@ Begin { Critical Addition }
    If Crit>12 then
       For C1:=13 to Crit do
          Case Crit of
-            13:  If (SpellPoints[SpellType,1] in [1..8] then SpellPoints[SpellType,1]:=SpellPoints[SpellType,1]+1;
-            14:  If (SpellPoints[SpellType,1] in [1..8] then SpellPoints[SpellType,1]:=SpellPoints[SpellType,1]+1;
-            15:  If (SpellPoints[SpellType,2] in [1..8] then SpellPoints[SpellType,2]:=SpellPoints[SpellType,2]+1;
-            16:  If (SpellPoints[SpellType,2] in [1..8] then SpellPoints[SpellType,2]:=SpellPoints[SpellType,2]+1;
-            17:  If (SpellPoints[SpellType,3] in [1..8] then SpellPoints[SpellType,3]:=SpellPoints[SpellType,3]+1;
-            18:  If (SpellPoints[SpellType,2] in [1..8] then SpellPoints[SpellType,2]:=SpellPoints[SpellType,2]+1;
-            19:  If (SpellPoints[SpellType,1] in [1..8] then SpellPoints[SpellType,1]:=SpellPoints[SpellType,1]+1;
-            20:  If (SpellPoints[SpellType,4] in [1..8] then SpellPoints[SpellType,4]:=SpellPoints[SpellType,4]+1;
-            21:  If (SpellPoints[SpellType,2] in [1..8] then SpellPoints[SpellType,2]:=SpellPoints[SpellType,2]+1;
-            22:  If (SpellPoints[SpellType,4] in [1..8] then SpellPoints[SpellType,4]:=SpellPoints[SpellType,4]+1;
+            13:  If (SpellPoints[SpellType,1] in [1..8]) then SpellPoints[SpellType,1]:=SpellPoints[SpellType,1]+1;
+            14:  If (SpellPoints[SpellType,1] in [1..8]) then SpellPoints[SpellType,1]:=SpellPoints[SpellType,1]+1;
+            15:  If (SpellPoints[SpellType,2] in [1..8]) then SpellPoints[SpellType,2]:=SpellPoints[SpellType,2]+1;
+            16:  If (SpellPoints[SpellType,2] in [1..8]) then SpellPoints[SpellType,2]:=SpellPoints[SpellType,2]+1;
+            17:  If (SpellPoints[SpellType,3] in [1..8]) then SpellPoints[SpellType,3]:=SpellPoints[SpellType,3]+1;
+            18:  If (SpellPoints[SpellType,2] in [1..8]) then SpellPoints[SpellType,2]:=SpellPoints[SpellType,2]+1;
+            19:  If (SpellPoints[SpellType,1] in [1..8]) then SpellPoints[SpellType,1]:=SpellPoints[SpellType,1]+1;
+            20:  If (SpellPoints[SpellType,4] in [1..8]) then SpellPoints[SpellType,4]:=SpellPoints[SpellType,4]+1;
+            21:  If (SpellPoints[SpellType,2] in [1..8]) then SpellPoints[SpellType,2]:=SpellPoints[SpellType,2]+1;
+            22:  If (SpellPoints[SpellType,4] in [1..8]) then SpellPoints[SpellType,4]:=SpellPoints[SpellType,4]+1;
             33:  Begin
-                     If (SpellPoints[SpellType,3] in [1..8] then SpellPoints[SpellType,3]:=SpellPoints[SpellType,4]+1;
-                     If (SpellPoints[SpellType,5] in [1..8] then SpellPoints[SpellType,5]:=SpellPoints[SpellType,5]+1;
-                     If (SpellPoints[SpellType,4] in [1..8] then SpellPoints[SpellType,4]:=SpellPoints[SpellType,4]+1;
-                     If (SpellPoints[SpellType,5] in [1..7] then SpellPoints[SpellType,5]:=SpellPoints[SpellType,5]+2; { TODO: Bug: if points are 7 he should get 1 more point, not zero }
+                     If (SpellPoints[SpellType,3] in [1..8]) then SpellPoints[SpellType,3]:=SpellPoints[SpellType,4]+1;
+                     If (SpellPoints[SpellType,5] in [1..8]) then SpellPoints[SpellType,5]:=SpellPoints[SpellType,5]+1;
+                     If (SpellPoints[SpellType,4] in [1..8]) then SpellPoints[SpellType,4]:=SpellPoints[SpellType,4]+1;
+                     If (SpellPoints[SpellType,5] in [1..7]) then SpellPoints[SpellType,5]:=SpellPoints[SpellType,5]+2; { TODO: Bug: if points are 7 he should get 1 more point, not zero }
                  End;
-            24: If (SpellPoints[SpellType,6] in [1..7] then SpellPoints[SpellType,6]:=SpellPoints[SpellType,6]+2;      { TODO: Bug: if points are 7 he should get 1 more point, not zero }
+            24: If (SpellPoints[SpellType,6] in [1..7]) then SpellPoints[SpellType,6]:=SpellPoints[SpellType,6]+2;      { TODO: Bug: if points are 7 he should get 1 more point, not zero }
             25: Begin
-                    If (SpellPoints[SpellType,6] in [1..7] then SpellPoints[SpellType,6]:=SpellPoints[SpellType,6]+2;  { TODO: Bug: if points are 7 he should get 1 more point, not zero }
-                    If (SpellPoints[SpellType,7] in [1..7] then SpellPoints[SpellType,7]:=SpellPoints[SpellType,7]+2;  { TODO: Bug: if points are 7 he should get 1 more point, not zero }
+                    If (SpellPoints[SpellType,6] in [1..7]) then SpellPoints[SpellType,6]:=SpellPoints[SpellType,6]+2;  { TODO: Bug: if points are 7 he should get 1 more point, not zero }
+                    If (SpellPoints[SpellType,7] in [1..7]) then SpellPoints[SpellType,7]:=SpellPoints[SpellType,7]+2;  { TODO: Bug: if points are 7 he should get 1 more point, not zero }
                 End;
             Otherwise ;
          End;
@@ -349,7 +349,7 @@ Begin { Add Bonus }
         Otherwise   Crit:=0;
    End;
 
-   Caster.SpellPoints:=Critical_Addition (Caster,SpellPoints,SpellType,Crit);
+   Caster.SpellPoints:=Critical_Addition (Caster.SpellPoints,SpellType,Crit);
 
    { Make sure that there are no points above 9, which is the maximum, and none below 0, which is the minimum }
 
@@ -401,12 +401,12 @@ Begin { Con Adjustment }
         19,20: Con_Adjustment1:=5;
      21,22,23: Con_Adjustment1:=6;
         24,25: Con_Adjustment1:=7;
-           15: Con_Adjustment1:=0;
+        Otherwise Con_Adjustment1:=0;
    End;
 
    { Only fighters can get more than +2 on their dice for constitution }
 
-   If Not (Class in [Fighter,Paladin,Ranger,AntiPaladin,Samurai,Barabarian,Monk]) then
+   If Not (Class in [Fighter,Paladin,Ranger,AntiPaladin,Samurai,Barbarian,Monk]) then
       If Con_Adjustment1>2 then Con_Adjustment1:=2;
 
    Con_Adjustment:=Con_Adjustment1;
@@ -510,7 +510,7 @@ Begin { Regenerates }
          If Character.Item[Loop].Equipted then
             Begin
                Temp:=Item_List[Character.Item[Loop].Item_Num].Regenerates;
-               Place_Difference (Temp,PosZ);
+               Plane_Difference (Temp,PosZ);
                Regen:=Regen+Temp;
             End;
 
