@@ -159,36 +159,213 @@ Begin { Find Spell Group }
       End;  { Can't be casted }
 End;  { Find Spell Group }
 
+
+(******************************************************************************)
+
+Procedure Get_Class_And_Level (Class: Class_Type; Level: Integer; Var Cls: Class_Type; Var Lvl: Integer);
+
+{ This procedure determines what kind of spell caster the given class is, and what level in spell use as well.  If the
+  Given class and level can not cast a spell, then LVL is returned as zero, otherwise CLS contains the spell caster
+  type (CLERIC, or WIZARD) and LVL contains the equivalent caster-level }
+
+Begin { Get Class and Level }
+   Case Class of
+        Cleric: Begin
+                   Cls:=Cleric;
+                   Lvl:=Level;
+                End;
+        Paladin,AntiPaladin: Begin
+                   Cls:=Cleric;
+                   Lvl:=Level-7;
+                End;
+        Bard:   Begin
+                   Cls:=Wizard;
+                   Lvl:Level-4;
+                End;
+        Ranger: Begin
+                   Cls:=Wizard;
+                   Lvl:=Level-7;
+                End;
+        Wizard: Begin
+                   Cls:=Wizard;
+                   Lvl:=Level;
+                End;
+        Otherwise Lvl:=0;
+   End;
+   If Lvl<0 then lvl:=0;
+End;  { Get Class and Level }
+
 (******************************************************************************)
 
 [Global]Function Caster_Level (Cls: Integer; Character: Character_Type): Integer;
 
+{ This function returns the caster level of the character trying to cast a spell of type Cls (1=Cleric, 2=Wizard) }
+
+Var
+  Class1,Class2,Class: Class_Type;
+  Level1,Level2: Integer;
+
 Begin { Caster_Level }
-   { TODO: Enter this code }
-   Caster_Level:=0;
+   Level1:=0;  Level2:=0;
+
+   { Determine what spell class is specified }
+
+   If Cls=1 then Class:=Cleric
+   Else          Class:=Wizard;
+
+   { Get the primary class's level }
+
+   Get_Class_And_Level (Character.Class,        Character.Level,       Class1,Level1);
+   Get_Class_And_Level (Character.PreviousClass,Character.Previous_Lvl,Class2,Level2);
+
+   { Return the greater of the two levels if class-type are the same }
+
+   If (Class2=Class1) and (Class=Class1) then
+      Caster_Level:=Max(level1,level2)
+   Else
+      If Class=Class1 then
+         Caster_Level:=Level1
+      Else
+         Caster_Level:=Level2;
 End;  { Caster_Level }
+
+(******************************************************************************)
 
 [Global]Function Max_Spell_Level (Class: Class_Type; Level: Integer): Integer;
 
+{ This function returns the maximum spell level for class, CLASS, and level, LEVEL }
+
+Var
+   Max_Level: Integer;
+
 Begin { Max Spell Level }
-   { TODO: Enter this code }
-   Max_Spell_Level:=0;
+    Case Class of
+       Cleric,Wizard:   Max_Level:=Round (level/2);
+       Bard: Begin
+                Max_Level:=Round((Level-4)/2);
+                If Max_Level<0 then Max_Level:=0;
+             End;
+       AntiPaladin,Paladin,Ranger:
+             Begin
+                Max_Level:=Round((level - 7)/2);
+                If Max_Level<0 then Max_Level:=0;
+             End;
+       Otherwise Max_Level:=0;
+    End;
+    If Max_Level>9 then Max_Level:=9;
+    Max_Spell_Level:=Max_Level;
+    Max_Spell_Level:=0;
 End;  { Max Spell Level }
 
+(******************************************************************************)
 
 [Global]Function Spells_Known (Class: Class_Type; Level: Integer): Spell_Set;
 
+{ This function will return the set of all spells known by a character of class, CLASS, and of level, LEVEL }
+
+Var
+   SpellSet: Spell_Set;
+   Max_Lvl,Lvl: Integer;
+
 Begin { Spells Known }
-   { TODO: Enter this code }
-   Spells_Known:=[];
+   SpellSet:=[];       { No spells so far }
+
+   { Find the maximum level spell known }
+
+   Max_Lvl:=Max_Spell_Level (Class,Level);
+
+   { If the character has ANY spells, add them to the set by level }
+
+   If Max_Lvl>0 then   { If knows at least first level spells... }
+      For Lvl:=1 to Max_Lvl do    { ... for each level known ... }
+          Case Class of  { Add the spells of that level to the set }
+             Cleric,AntiPaladin,Paladin: Spellset:=Spellset+ClerSpells[Lvl];
+             Wizard,Ranger,Bard:         Spellset:=SpellSet+WizSpells[Lvl];
+             Otherwise ;
+          End;
+
+   { Remember: Antipaladins don't have healing spells, so ... }
+
+   If Class=Antipaladin then SpellSet:=SpellSet-[CrLt,CrPs,CrSe,CrVs,Raze,Ress,PaHe,Heal,CrPa,ReFe];
+
+   { Remove the spells not implemented at this time.  (May be added later) }
+
+   Spells_Known:=SpellSet-[ReDo];
 End;  { Spells Known }
+
+(******************************************************************************)
+
+Function Critical_Addition (SpellPoints: SpellPoints_Type;  SpellType,Crit: Integer): SpellPoints_Type;
+
+Var
+  C1: Integer;
+
+Begin { Critical Addition }
+   If Crit>12 then
+      For C1:=13 to Crit do
+         Case Crit of
+            13:  If (SpellPoints[SpellType,1] in [1..8] then SpellPoints[SpellType,1]:=SpellPoints[SpellType,1]+1;
+            14:  If (SpellPoints[SpellType,1] in [1..8] then SpellPoints[SpellType,1]:=SpellPoints[SpellType,1]+1;
+            15:  If (SpellPoints[SpellType,2] in [1..8] then SpellPoints[SpellType,2]:=SpellPoints[SpellType,2]+1;
+            16:  If (SpellPoints[SpellType,2] in [1..8] then SpellPoints[SpellType,2]:=SpellPoints[SpellType,2]+1;
+            17:  If (SpellPoints[SpellType,3] in [1..8] then SpellPoints[SpellType,3]:=SpellPoints[SpellType,3]+1;
+            18:  If (SpellPoints[SpellType,2] in [1..8] then SpellPoints[SpellType,2]:=SpellPoints[SpellType,2]+1;
+            19:  If (SpellPoints[SpellType,1] in [1..8] then SpellPoints[SpellType,1]:=SpellPoints[SpellType,1]+1;
+            20:  If (SpellPoints[SpellType,4] in [1..8] then SpellPoints[SpellType,4]:=SpellPoints[SpellType,4]+1;
+            21:  If (SpellPoints[SpellType,2] in [1..8] then SpellPoints[SpellType,2]:=SpellPoints[SpellType,2]+1;
+            22:  If (SpellPoints[SpellType,4] in [1..8] then SpellPoints[SpellType,4]:=SpellPoints[SpellType,4]+1;
+            33:  Begin
+                     If (SpellPoints[SpellType,3] in [1..8] then SpellPoints[SpellType,3]:=SpellPoints[SpellType,4]+1;
+                     If (SpellPoints[SpellType,5] in [1..8] then SpellPoints[SpellType,5]:=SpellPoints[SpellType,5]+1;
+                     If (SpellPoints[SpellType,4] in [1..8] then SpellPoints[SpellType,4]:=SpellPoints[SpellType,4]+1;
+                     If (SpellPoints[SpellType,5] in [1..7] then SpellPoints[SpellType,5]:=SpellPoints[SpellType,5]+2; { TODO: Bug: if points are 7 he should get 1 more point, not zero }
+                 End;
+            24: If (SpellPoints[SpellType,6] in [1..7] then SpellPoints[SpellType,6]:=SpellPoints[SpellType,6]+2;      { TODO: Bug: if points are 7 he should get 1 more point, not zero }
+            25: Begin
+                    If (SpellPoints[SpellType,6] in [1..7] then SpellPoints[SpellType,6]:=SpellPoints[SpellType,6]+2;  { TODO: Bug: if points are 7 he should get 1 more point, not zero }
+                    If (SpellPoints[SpellType,7] in [1..7] then SpellPoints[SpellType,7]:=SpellPoints[SpellType,7]+2;  { TODO: Bug: if points are 7 he should get 1 more point, not zero }
+                End;
+            Otherwise ;
+         End;
+   Critical_Addition:=SpellPoints;
+End;  { Critical Addition }
+
+(******************************************************************************)
 
 [Global]Procedure Add_Bonus (Var Caster: Character_Type; SpellType,Max: Integer);
 
+{ This procedure will add the bonus spell points a character gets when his or her primary ability (determined by the class) is very
+  high. }
+
+Var
+  Crit,Level: Integer;
+
 Begin { Add Bonus }
-   { TODO: Enter this code }
+   { Determine what the CRITical ability score is for the SPELLTYPE }
+
+   Case SpellType of
+        Cler_Spell: Crit:=Caster.Abilities[3]; { For Clerics, it's Wisdom }
+        Wiz_Spell:  Crit:=Caster.Abilities[2]; { For Wizards, it's Intelligence }
+        Otherwise   Crit:=0;
+   End;
+
+   Caster.SpellPoints:=Critical_Addition (Caster,SpellPoints,SpellType,Crit);
+
+   { Make sure that there are no points above 9, which is the maximum, and none below 0, which is the minimum }
+
+   For Level:=1 to 9 do
+      If Caster.SpellPoints[SpellType,Level]>9 then
+         Caster.SpellPoints[SpellType,Level]:=9
+      Else
+         If Caster.SpellPoints[SpellType,Level]<0 then
+            Caster.SpellPoints[SpellType,Level]:=0;
 End;  { Add Bonus }
 
+(******************************************************************************)
+
+{ TODO: Add this code }
+
+(******************************************************************************)
 
 [Global]Procedure Restore_Spells (Var Character: Character_Type);
 
@@ -196,6 +373,7 @@ Begin { Restore_Spells }
    { TODO: Enter this code }
 End;  { Restore_Spells }
 
+{ TODO: Enter this code }
 
 [Global]Function Compute_AC (Character: Character_Type; POSZ: Integer:=0): Integer;
 

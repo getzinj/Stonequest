@@ -38,11 +38,22 @@ Begin
     j:=4;
     Repeat
        Begin
-          If (
-            ((verty[i] > testy) <> (verty[j] > testy)) and
-            (testx < (vertx[j] - vertx[i]) * (testy - verty[i]) / (verty[j] - verty[i]) + vertx[i])
-          ) then
-            result:=not result;
+          If ((verty[j] - verty[i]) <> 0) then
+             Begin
+              If (
+                ((verty[i] > testy) <> (verty[j] > testy)) and
+                (testx < (vertx[j] - vertx[i]) * (testy - verty[i]) / (verty[j] - verty[i]) + vertx[i])
+              ) then
+                result:=not result;
+             End
+          Else if (testy = verty[i]) then
+             Begin
+                result:=true;
+             End
+          Else
+             Begin
+               result:=false;
+             End;
 
           j:=i;
           i:=i + 1;

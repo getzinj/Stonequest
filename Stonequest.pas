@@ -545,7 +545,7 @@ End;  { Log Player Out }
 [External]Function Read_Messages: Message_Group;external;
 [External]Function Read_Roster: Roster_Type;external;
 [External]Function Get_Maze_File_Name (levelCharacter: Char): Line;External;
-[External]Function Read_Level_from_Maze_File(Var fileVar: LevelFile; filename: Line): Level;External;
+[External]Function Read_Level_from_Maze_File(Var fileVar: LevelFile; levelNumber: Integer): Level;External;
 [External]Function Read_Treasures: List_of_Treasures;external;
 [External]Function Read_Monsters: List_of_monsters;External;
 [External]Procedure Write_Roster (Roster: Roster_Type);External;
@@ -562,21 +562,10 @@ End;  { Log Player Out }
   current level will be returned.  If POSZ is omitted, this will ALWAYS load a new level even if it's simply loading the same level
   as the one in memory }
 
-Var
-   Letter:  Char;
-   Filename: Line;
-   Temp: Level;
-
 Begin { Get Level }
    If (Level_Number<>PosZ) and (Level_Number>0) then
       Begin { If we need to load one ... }
-
-         { Calculate the file name's suffix }
-
-          Letter:=CHR(Level_Number+64);
-          FileName:=Get_Maze_File_Name(Letter);
-
-          Get_Level:=Read_Level_from_Maze_File(MazeFile,FileName);
+          Get_Level:=Read_Level_from_Maze_File(MazeFile,Level_Number);
       End
    Else
       Get_Level:=Maze;  { Otherwise, return the current level }

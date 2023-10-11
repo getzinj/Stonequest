@@ -723,7 +723,144 @@ Begin { Create Character }
       No_Room_in_Roster;
 End;  { Create Character }
 
+{******************************************************************************)
+
+Procedure New_Stats (Var Character: Character_Type);
+
+{ This procedure adds the benefit of the new class to CHARACTER }
+
+[External]Function Spells_Known (Class: Class_Type; Level: Integer): Spell_Set;external;
+[Externa]Function Compute_AC (Character: Character_Type; PosZ: Integer:=0): Integer;external;
+
+Begin { New Stats }
+
+  { New spell books }
+
+  If (Character.Class in [Wizard,Bard,Ranger]) then
+     Character.Wizard_Spells:=Character.Wizard_Spells+Spells_Known(Character.Class,Character.Level)
+  Else
+     If (Character.Class in [Cleric,Paladin,Antipaladin]) then
+        Character.Cleric_Spells:=Character.Cleric_Spells+Spells_Known(Character.Class,Character.Level);
+
+  { Compute misc. other factors }
+
+  Character.Armor_Class:=Compute_AC(Character);
+  Character.Regenerates:=Regenerates(Character);
+  Restore_Spells(Character);
+End;  { New Status }
+
+{******************************************************************************)
+
+Function Choose_Change_Class (Possibilities: Class_Set): [Volatile]Class_Type;
+
+{ This procedure allows the character to select one or none of the classes in POSSIBILITIES. If a class is selected, it is returned.
+  Otherwise NOCLASS is returned. }
+
+Var
+   Answer: Char;
+   Options: Char_Set;
+   Choice_Loop: Class_Type;
+   Max_Num: Integer;
+   Choices: Array [1..11] of Class_Type;
+
+Begin { Choose Change Class }
+   Max_Num:=0;  Options:=[];  Choices:=Zero;
+
+   { Print choices }
+
+   SMG$Begin_Display_Update (ScreenDisplay);
+   SMG$Set_Cursor_ABS (ScreenDisplay,,19);
+   SMG$Put_Line (ScreenDisplay,
+       'Choose a class:');
+   For Choice_Loop:=Cleric to Barbarian do
+      If Choice_Loop in Possibilities then
+         Begin
+            Max_Num:=Max_Num+1;
+            Options:=Options+[CHR(Max_Num+64)];
+            Choices[MAX_Num]:=Choice_Loop;
+            SMG$Put_Chars (ScreenDisplay,
+                '['
+                +CHR(Max_Num+64)
+                +']    '
+                +ClassName[Choices[Max_Num]],,17);
+            SMG$PutLine (ScreenDisplay,'');
+         End;
+   SMG$Put_Line (ScreenDisplay,'');
+   SMG$Put_Line (ScreenDisplay,'Which? ([RET] aborts)',1);
+   SMG$End_Display_Update (ScreenDisplay);
+   Options:=Options+[CHR(13];
+
+   { Get the choice }
+
+   Answer:=Make_Choice(Options);
+
+   { Return the proper value }
+
+   If Answer=CHR(13) then
+      Choose_Change_Class:=NoClass
+   Else
+      Choose_Change_Class:=Choices[Ord(Answer)-64];
+End;  { Choose Change Class }
+
+
+{******************************************************************************)
+
+Procedure Change_Class (Var Character: Character_Type);
+
+{ This procedure allows a character to change his or her class }
+
+Var
+   Possibilities: Class_Set;
+   Chosen: Class_Type;
+
+Begin { Change Class }
+   Chosen:=Fighter;
+
+   { Find the possible choices to change to }
+
+   Possibilities:=Class_Choices (Character)-[Character.Class];
+
+   { If there ARE some choices... }
+
+   If Possibilities<>[] then
+      Begin { Choices available }
+
+         { Have the player select the one he/she wants }
+
+         SMG$Put_Line (ScreenDisplay,
+             'WARNING:  Your character can'
+             +' only change his/her class once.',2);
+         Chosen:=Choose_Change_Class(Possibilities);
+
+         { If the player chose a class, instead of [RETURN]... }
+
+         If Chosen<>NoClass then
+            Begin { Change the class }
+
+            Character.PreviousClass:=Character.Class;
+            Character.Previous_Lvl:=Character.Level;
+
+            { And the character is now a first level whatever... }
+
+            Character.Level:=1 Character.Experience:=0;
+            Character.Class:=Chosen;
+            SMG$Put_Line (ScreenDisplay,
+                'Class switched.');
+
+            { Add whatever new abilities }
+
+            New_Stats (Character);
+         End;
+      End
+   Else
+      SMG$Put_Line (ScreenDisplay,
+          'There are no classes for '
+          +'which thou art qualified.');
+   If Chosen<>NoClass then Delay(2);
+End; { Change Class }
+
 { TODO: Enter this code }
+
 {******************************************************************************)
 
 Procedure Print_Available_Characters;

@@ -1,101 +1,103 @@
 $      write sys$output "Compiling LibRtl.pas"
-$      pas LibRtl
+$      pas/DEBUG/NOOPTIMIZE LibRtl
 $      write sys$output "Compiling SmgRtl.pas"
-$      pas SmgRtl
+$      pas/DEBUG/NOOPTIMIZE SmgRtl
 $      write sys$output "Compiling StrRtl.pas"
-$      pas StrRtl
+$      pas/DEBUG/NOOPTIMIZE StrRtl
 $      write sys$output "Compiling Types.pas"
-$      pas Types
+$      pas/DEBUG/NOOPTIMIZE Types
 $      write sys$output "Compiling Stonequest.pas"
-$      pas Stonequest
+$      pas/DEBUG/NOOPTIMIZE Stonequest
 $      write sys$output "Compiling AdminUtils.pas"
-$      pas AdminUtils
+$      pas/DEBUG/NOOPTIMIZE AdminUtils
 $      write sys$output "Compiling Camp.pas"
-$      pas Camp
+$      pas/DEBUG/NOOPTIMIZE Camp
 $      write sys$output "Compiling Casino.pas"
-$      pas Casino
+$      pas/DEBUG/NOOPTIMIZE Casino
 $      write sys$output "Compiling Character.pas"
-$      pas Character
+$      pas/DEBUG/NOOPTIMIZE Character
 $      write sys$output "Compiling CharacterAttacks.pas"
-$      pas CharacterAttacks
+$      pas/DEBUG/NOOPTIMIZE CharacterAttacks
 $      write sys$output "Compiling Church.pas"
-$      pas Church
+$      pas/DEBUG/NOOPTIMIZE Church
 $      write sys$output "Compiling Compute.pas"
-$      pas Compute
+$      pas/DEBUG/NOOPTIMIZE Compute
 $      write sys$output "Compiling Craps.pas"
-$      pas Craps
+$      pas/DEBUG/NOOPTIMIZE Craps
 $      write sys$output "Compiling Demo.pas"
-$      pas Demo
+$      pas/DEBUG/NOOPTIMIZE Demo
 $      write sys$output "Compiling EditMaze.pas"
-$      pas EditMaze
+$      pas/DEBUG/NOOPTIMIZE EditMaze
 $      write sys$output "Compiling Encounter.pas"
-$      pas Encounter
+$      pas/DEBUG/NOOPTIMIZE Encounter
 $      write sys$output "Compiling Experience.pas"
-$      pas Experience
+$      pas/DEBUG/NOOPTIMIZE Experience
 $      write sys$output "Compiling Files.pas"
-$      pas Files
+$      pas/DEBUG/NOOPTIMIZE Files
 $      write sys$output "Compiling GiveTreasure.pas"
-$      pas GiveTreasure
+$      pas/DEBUG/NOOPTIMIZE GiveTreasure
 $      write sys$output "Compiling Help.pas"
-$      pas Help
+$      pas/DEBUG/NOOPTIMIZE Help
 $      write sys$output "Compiling Hours.pas"
-$      pas Hours
+$      pas/DEBUG/NOOPTIMIZE Hours
 $      write sys$output "Compiling Inn.pas"
-$      pas Inn
+$      pas/DEBUG/NOOPTIMIZE Inn
 $      write sys$output "Compiling Io.pas"
-$      pas Io
+$      pas/DEBUG/NOOPTIMIZE Io
 $      write sys$output "Compiling Items.pas"
-$      pas Items
+$      pas/DEBUG/NOOPTIMIZE Items
 $      write sys$output "Compiling Keyboard.pas"
-$      pas Keyboard
+$      pas/DEBUG/NOOPTIMIZE Keyboard
 $      write sys$output "Compiling Kyrn.pas"
-$      pas Kyrn
+$      pas/DEBUG/NOOPTIMIZE Kyrn
 $      write sys$output "Compiling Maze.pas"
-$      pas Maze
+$      pas/DEBUG/NOOPTIMIZE Maze
 $      write sys$output "Compiling Messages.pas"
-$      pas Messages
+$      pas/DEBUG/NOOPTIMIZE Messages
 $      write sys$output "Compiling Monster.pas"
-$      pas Monster
+$      pas/DEBUG/NOOPTIMIZE Monster
 $      write sys$output "Compiling MonsterAttack.pas"
-$      pas MonsterAttack
+$      pas/DEBUG/NOOPTIMIZE MonsterAttack
 $      write sys$output "Compiling PerspectiveGeometry.pas"
-$      pas PerspectiveGeometry
+$      pas/DEBUG/NOOPTIMIZE PerspectiveGeometry
 $      write sys$output "Compiling PicEdit.pas"
-$      pas PicEdit
+$      pas/DEBUG/NOOPTIMIZE PicEdit
 $      write sys$output "Compiling PickPocket.pas"
-$      pas PickPocket
+$      pas/DEBUG/NOOPTIMIZE PickPocket
 $      write sys$output "Compiling PlaceStack.pas"
-$      pas PlaceStack
+$      pas/DEBUG/NOOPTIMIZE PlaceStack
 $      write sys$output "Compiling PlayerUtils.pas"
-$      pas PlayerUtils
+$      pas/DEBUG/NOOPTIMIZE PlayerUtils
 $      write sys$output "Compiling PrintChar.pas"
-$      pas PrintChar
+$      pas/DEBUG/NOOPTIMIZE PrintChar
 $      write sys$output "Compiling PrintCharSpell.pas"
-$      pas PrintCharSpell
+$      pas/DEBUG/NOOPTIMIZE PrintCharSpell
 $      write sys$output "Compiling Random.pas"
-$      pas Random
+$      pas/DEBUG/NOOPTIMIZE Random
 $      write sys$output "Compiling Scores.pas"
-$      pas Scores
+$      pas/DEBUG/NOOPTIMIZE Scores
 $      write sys$output "Compiling Shell_Out.pas"
-$      pas Shell_Out
+$      pas/DEBUG/NOOPTIMIZE Shell_Out
 $      write sys$output "Compiling Slots.pas"
-$      pas Slots
+$      pas/DEBUG/NOOPTIMIZE Slots
 $      write sys$output "Compiling Store.pas"
-$      pas Store
+$      pas/DEBUG/NOOPTIMIZE Store
 $      write sys$output "Compiling Tables.pas"
-$      pas Tables
+$      pas/DEBUG/NOOPTIMIZE Tables
 $      write sys$output "Compiling Tavern.pas"
-$      pas Tavern
+$      pas/DEBUG/NOOPTIMIZE Tavern
 $      write sys$output "Compiling Training.pas"
-$      pas Training
+$      pas/DEBUG/NOOPTIMIZE Training
 $      write sys$output "Compiling Treasure.pas"
-$      pas Treasure
+$      pas/DEBUG/NOOPTIMIZE Treasure
 $      write sys$output "Compiling View.pas"
-$      pas View
+$      pas/DEBUG/NOOPTIMIZE View
 $      write sys$output "Compiling View3d.pas"
-$      pas View3d
+$      pas/DEBUG/NOOPTIMIZE View3d
+$      write sys$output "Compiling ViewShared.pas"
+$      pas/DEBUG/NOOPTIMIZE ViewShared
 $      write sys$output "Compiling Windows.pas"
-$      pas Windows
+$      pas/DEBUG/NOOPTIMIZE Windows
 $      write sys$output "Assembling Handler.mar"
 $      mac Handler
 $!
@@ -105,12 +107,12 @@ $!
 $      write sys$output "Linking ..."
 $!
 $!
-$      Link Camp,Casino,Character,CharacterAttacks,Church,Compute,Craps,-
+$      Link/debug Camp,Casino,Character,CharacterAttacks,Church,Compute,Craps,-
        Demo,EditMaze,Encounter,Experience,Keyboard,Random,Files,View3d,-
        GiveTreasure,Help,Hours,Inn,Io,Items,Tables,PrintCharSpell,-
        Kyrn,LibRtl,Maze,Messages,Monster,MonsterAttack,PicEdit,PickPocket,-
        PlaceStack,PrintChar,Scores,Shell_Out,Slots,SmgRtl,Stonequest,-
-       AdminUtils,PlayerUtils,Store,StrRtl,Tavern,Training,Treasure,-
+       AdminUtils,PlayerUtils,Store,StrRtl,Tavern,Training,Treasure,ViewShared,-
        PerspectiveGeometry,Types,View,Windows,Handler /EXE=StoneQuest.exe
 $!
 $      write sys$output "Purging old EXE files..."

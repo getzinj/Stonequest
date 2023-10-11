@@ -206,7 +206,7 @@ Var
 Begin
    Done:=False;
    While (Position<Party_Size) and Not(Done) do
-      If Alive(Member[Position+1] then
+      If Alive(Member[Position+1]) then
          Begin
             Swap_Characters (Member[Position+1],Member[Position]);
             Position:=Position+1;

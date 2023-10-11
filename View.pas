@@ -22,62 +22,10 @@ Var
 [External]Function Show_Special (Member: [Unsafe]Party_Type:=0;  Current_Party_Size: Integer:=0):Boolean;External;
 [External]Function Detected_Secret_Door (Member: Party_Type;  Current_Party_Size: Party_Size_Type;Rounds_Left: Spell_Duration_List):[Volatile]Boolean;External;
 (******************************************************************************)
-
-Function Sight_Blocked (Exit: Exit_Type): Boolean;
-
-Begin
-   Sight_Blocked:=Not debug and Not (Exit in [Transparent,Passage]);
-End;
-
-(******************************************************************************)
-
-Function Is_Special (Spot: Room_Record): Boolean;
-
-Begin
-   Is_Special:=(Maze.Special_Table[Spot.Contents].Special<>Nothing);
-End;
-
-(******************************************************************************)
-
-Function Is_Stairs (Spot: Room_Record): Boolean;
-
-Begin
-   Is_Stairs:=(Maze.Special_Table[Spot.Contents].Special=Stairs);
-End;
-
-(******************************************************************************)
-
-Procedure Get_Bearings (Spot: Room_Record; Var Up,Down,Left,Right: Exit_Type);
-
-Begin
-   Case Direction of
-        North: Begin
-                  Up:=Spot.North;
-                  Down:=Spot.South;
-                  Left:=Spot.West;
-                  Right:=Spot.East;
-               End;
-        South: Begin
-                  Up:=Spot.South;
-                  Down:=Spot.North;
-                  Left:=Spot.East;
-                  Right:=Spot.West;
-               End;
-        East: Begin
-                  Up:=Spot.East;
-                  Down:=Spot.West;
-                  Left:=Spot.North;
-                  Right:=Spot.South;
-               End;
-        West: Begin
-                  Up:=Spot.West;
-                  Down:=Spot.East;
-                  Left:=Spot.South;
-                  Right:=Spot.North;
-               End;
-   End;
-End;
-
+[External]Function Sight_Blocked (Exit: Exit_Type): Boolean;external;
+[External]Function Is_Special (Spot: Room_Record): Boolean;External;
+[External]Function Is_Stairs (Spot: Room_Record): Boolean;external;
+[External]Procedure Get_Bearings (Spot: Room_Record; Var Up,Down,Left,Right: Exit_Type);external;
 (******************************************************************************)
 
 Function Symbol_Type (Symbol: Exit_Type; Member: Party_Type;  Current_Party_Size: Integer): [Volatile]Char;
@@ -214,11 +162,7 @@ End;
 
 (******************************************************************************)
 
-Function Has_Light: [Volatile]Boolean;
-
-Begin
-   Has_Light:=debug or (Rounds_Left[Lght]>0) or (Rounds_Left[CoLi]>0);
-End;
+[External]Function Has_Light: [Volatile]Boolean;External;
 
 
 Function Minus(ordinate: Horizontal_Type): Horizontal_Type;

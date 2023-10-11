@@ -145,7 +145,7 @@ Begin { Print Load Choices }
 End;  { Print Load Choices }
 
 (******************************************************************************)
-[External]Function Read_Level_from_Maze_File(Var fileVar: LevelFile; filename: Line): Level;External;
+[External]Function Read_Level_from_Maze_File(Var fileVar: LevelFile; levelNumber: Integer): Level;External;
 [External]Procedure Save_Level_to_Maze_File(Var fileVar: LevelFile; filename: Line; Floor: Level);External;
 [External]Function Get_Maze_File_Name (levelCharacter: Char): Line;External;
 (******************************************************************************)
@@ -155,19 +155,15 @@ Procedure Load_Floor (Number: Integer; Typed_Char: Char);
 { This procedure will load a specified floor.  If the floor file doesn't
   exist, a blank one will be created. }
 
-Var
-   Name: Line;
-
 Begin { Load Floor }
 
   { Set the appropriate flags, and build the filename for the specified level }
 
    Floor_Number:=Number;  Level_Loaded:=Number;  Need_to_Load:=False;
-   Name:=Get_Maze_File_Name(Typed_Char);
 
   { Attempt to open the level file }
 
-  Floor:=Read_Level_from_Maze_File(MazeFile,Name);
+  Floor:=Read_Level_from_Maze_File(MazeFile,Number);
 
   SMG$Put_Chars (ScreenDisplay,
       'Loaded.',23,36,,1);

@@ -518,15 +518,61 @@ Begin
       +'.DAT;1'
 End;
 
-
 (******************************************************************************)
 
-[Global]Function Read_Level_from_Maze_File(Var fileVar: LevelFile; filename: Line): Level;
+Function createEmptyLevel(levelNumber: Integer): Level;
 
 Var
   returnValue: Level;
+  x,y: 1..20;
+  encounterIndex: 1..3;
+  specialNumber: 0..15;
 
 Begin
+  returnValue:=Zero;
+  returnValue.Level_Number:=levelNumber;
+
+  for x:=1 to 20 do
+    for y:=1 to 20 do
+       begin
+         returnValue.Room[x][y].North:=Passage;
+         returnValue.Room[x][y].South:=Passage;
+         returnValue.Room[x][y].East:=Passage;
+         returnValue.Room[x][y].West:=Passage;
+         returnValue.Room[x][y].Contents:=0;
+         returnValue.Room[x][y].Kind:=Corridor;
+       end;
+
+  for encounterIndex:=1 to 3 do
+     Begin
+       returnValue.Monsters[encounterIndex].Base_Monster_Number:=0;
+       returnValue.Monsters[encounterIndex].Addition.X:=0;
+       returnValue.Monsters[encounterIndex].Addition.Y:=0;
+       returnValue.Monsters[encounterIndex].Addition.Z:=0;
+       returnValue.Monsters[encounterIndex].Probability:=0;
+     End;
+
+  for specialNumber:=0 to 15 do
+    Begin
+      returnValue.Special_Table[specialNumber].Pointer1:=0;
+      returnValue.Special_Table[specialNumber].Pointer2:=0;
+      returnValue.Special_Table[specialNumber].Pointer3:=0;
+      returnValue.Special_Table[specialNumber].Special:=Nothing;
+    End;
+
+  createEmptyLevel:=returnValue;
+End;
+
+(******************************************************************************)
+
+[Global]Function Read_Level_from_Maze_File(Var fileVar: LevelFile; levelNumber: Integer): Level;
+
+Var
+  returnValue: Level;
+  filename: Line;
+
+Begin
+  filename:=Get_Maze_File_Name(CHR(levelNumber + 64));
   Open (fileVar,File_Name:=filename,History:=READONLY,Error:=CONTINUE,Sharing:=READONLY);
   If (Status(fileVar) = 0) then
      Begin { successful read }
@@ -540,7 +586,7 @@ Begin
          Open (fileVar,file_name:=filename,History:=NEW,Error:=CONTINUE,Sharing:=READONLY);
          If (Status(fileVar) = 0) then
             Begin
-               returnValue:=Zero;
+               returnValue:=createEmptyLevel(levelNumber);
                ReWrite(fileVar,error:=Continue);
                Write (fileVar,returnValue);
                Close (fileVar);
