@@ -65,7 +65,7 @@ Var
 [External]Function Random_Number (Die: Die_Type): [Volatile]Integer;External;
 [External]Function  Made_Roll (Needed: Integer): [Volatile]Boolean;external;
 [External]Function  Compute_AC (Character: Character_Type; PosZ: Integer:=0): Integer;external;
-[External]Function  Regenerates (Character: Character_Type):Integer;external;
+[External]Function  Regenerates (Character: Character_Type, Posz: Integer:=0):Integer;external;
 [External]Function Alive (Character: Character_Type): Boolean;External;
 [External]Procedure Find_Spell_Group (Spell: Spell_Name;  Character: Character_Type;  Var Class,Level: Integer);External;
 [External]Function Caster_Level (Cls: Integer; Character: Character_Type): Integer;External;

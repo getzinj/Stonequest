@@ -130,7 +130,7 @@ Begin
   T:=Symbol[Number];
   L:=T.Length;
   If L<10 then
-     For P:=1 to (5-(1 div 2)) do
+     For P:=1 to (5-(L div 2)) do
         T:=' ' + T;
  L:=t.Length;
  If L<10 then
@@ -252,6 +252,7 @@ Begin
         If Roll=Rolls div 2 then got1:=True;
         If Roll=(Rolls * 3) div 4 then got2:=True;
         Print_Roll (First,Second,Third);
+        Delay(1/16);
      End;
   SMG$Put_Chars (MachineDisplay,String(Pays(First,Second,Third),2),7,18);
 End;
