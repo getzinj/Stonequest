@@ -730,7 +730,7 @@ Procedure New_Stats (Var Character: Character_Type);
 { This procedure adds the benefit of the new class to CHARACTER }
 
 [External]Function Spells_Known (Class: Class_Type; Level: Integer): Spell_Set;external;
-[Externa]Function Compute_AC (Character: Character_Type; PosZ: Integer:=0): Integer;external;
+[External]Function Compute_AC (Character: Character_Type; PosZ: Integer:=0): Integer;external;
 
 Begin { New Stats }
 
@@ -783,12 +783,12 @@ Begin { Choose Change Class }
                 +CHR(Max_Num+64)
                 +']    '
                 +ClassName[Choices[Max_Num]],,17);
-            SMG$PutLine (ScreenDisplay,'');
+            SMG$Put_Line (ScreenDisplay,'');
          End;
    SMG$Put_Line (ScreenDisplay,'');
    SMG$Put_Line (ScreenDisplay,'Which? ([RET] aborts)',1);
    SMG$End_Display_Update (ScreenDisplay);
-   Options:=Options+[CHR(13];
+   Options:=Options+[CHR(13)];
 
    { Get the choice }
 
@@ -842,7 +842,7 @@ Begin { Change Class }
 
             { And the character is now a first level whatever... }
 
-            Character.Level:=1 Character.Experience:=0;
+            Character.Level:=1; Character.Experience:=0;
             Character.Class:=Chosen;
             SMG$Put_Line (ScreenDisplay,
                 'Class switched.');
@@ -858,6 +858,40 @@ Begin { Change Class }
           +'which thou art qualified.');
    If Chosen<>NoClass then Delay(2);
 End; { Change Class }
+
+{******************************************************************************)
+
+Procedure Delete_Character (Var Character: Character_Type; Var Done: Boolean);
+
+{ This procedure will delete CHARACTER from the roster.  The Var parameter, Done indicates whether or not the character was actually
+  deleted. }
+
+Var
+   Confirm: Char;
+
+Begin { Delete Character }
+   Done:=False;  { Not deleted yet... }
+
+   { Confirm the deletion }
+
+   SMG$Put_Line(ScreenDisplay,
+       'Delete'
+       +Character.Name
+       +': Confirm? (Y/N)');
+   Confirm:=Yes_or_No;
+
+   { If confirmed, do the deletetion. }
+
+   If Confirm='Y' then
+      Begin
+         Character.Status:=Deleted;  Done:=True;
+         SMG$Put_Line (ScreenDisplay,
+             'Character deleted.',0);
+         Delay (2);
+      End;
+End;  { Delete Character }
+
+{******************************************************************************)
 
 { TODO: Enter this code }
 
