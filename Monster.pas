@@ -75,7 +75,7 @@ Value
 
    Attack_Name[Fire]:='Fire';
    Attack_Name[Frost]:='Cold';
-   Attack_Name[Poison]:='Poison';
+   Attack_Name[Poisons]:='Poison';
    Attack_Name[LvlDrain]:='Level Drain';
    Attack_Name[Stoning]:='Stoning';
    Attack_Name[Magic]:='Magic';
@@ -174,7 +174,7 @@ Begin
                             If Loop<>NoClass then Name:=ClassName[Loop]
                             Else Name:='No-class';
                             T:=T
-                                +(CHR(Ord(Loop)+65)
+                                +CHR(Ord(Loop)+65)
                                 +'  '
                                 +Pad(Name,' ',20);
                             If Odd(Pos) then
@@ -193,7 +193,7 @@ Begin
                  Begin
                     ClassNum:=Ord(Answer)-65;
                     Temp:=NoClass;
-                    While Ord(Temp)<>ClassNMum do Temp:=Succ(Temp);
+                    While Ord(Temp)<>ClassNum do Temp:=Succ(Temp);
                     If Temp in ClassSet then
                        ClassSet:=ClassSet-[Temp]
                     Else
@@ -209,7 +209,7 @@ End;
 
 Var
    Name: Line;
-   Pos,ClassNum: Integer;
+   Pos,AttackNum: Integer;
    Temp,Loop: Attack_Type;
    Answer: Char;
 
@@ -233,17 +233,17 @@ Begin
                             Pos:=Pos+1;
                          End;
          SMG$Set_Cursor_ABS (ScreenDisplay,15,1);
-         SMG$Put_Line (ScreenDisplay,T);
+         SMG$Put_Line (ScreenDisplay,
              'Change which attack?');
          Pos:=1;
-         For Loop:=NoClass to Barbarian do
-                 If Loop in ClassSet then
+         For Loop:=Fire to Sleep do
+                 If Loop in AttackSet then
                          Begin
-                            SMG$Put_Chars (ScreenDisplay,(CHR(Ord(Loop)+65)
+                            SMG$Put_Chars (ScreenDisplay,CHR(Ord(Loop)+65)
                                  +'  '
                                  +Pad(Attack_Name[Loop],' ',20);
                             If Odd(Pos) then
-                               SMG$Put_Chars (ScreenDisplay,'    ');
+                               SMG$Put_Chars (ScreenDisplay,'    ')
                             Else
                                SMG$Put_Line (ScreenDisplay,'');
                             Pos:=Pos+1;
@@ -254,7 +254,7 @@ Begin
                  Begin
                     AttackNum:=Ord(Answer)-65;
                     Temp:=Fire;
-                    While Ord(Temp)<>ClassNMum do Temp:=Succ(Temp);
+                    While Ord(Temp)<>ClassNum do Temp:=Succ(Temp);
                     If Temp in AttackSet then
                        AttackSet:=AttackSet-[Temp]
                     Else
@@ -341,14 +341,14 @@ Begin
             Begin (* Do Loop *)
                 T:=CHR(Loop+64)
                     +'  '
-                    +Cat[Loop]+': ';'
+                    +Cat[Loop]+': ';
                 Case Loop of
                     1: T:=T+String(Monsters[Number].Monster_Number,0);
                     2: T:=T+Monsters(Number].Name;
                     3: T:=T+Monsters(Number].Plural;
                     4: T:=T+Monsters(Number].Real_Name;
                     5: T:=T+Monsters(Number].Real_Plural;
-                    6: T:=T+AlignName[Monsters(Number].Alignment];
+                    6: T:=T+AlignName[Monsters[Number].Alignment];
                     7: Begin
                           T:=T+String(Monsters[Number].Number_Appearing.X,0)
                              +'D'
@@ -369,26 +369,111 @@ Begin
                              T:=T+'-';
                           T:=T+String(Monsters[Number].Hit_Points.Z,0);
                        End;
-                    9: T:=T+MonsterType[Monsters(Number].Kind];
+                    9: T:=T+MonsterType[Monsters[Number].Kind];
                     10: T:=T+String(Monsters[Number].Armor_Class,0);
-                    11: If Monster[Number].Treasure.In_Lair=[] then
+                    11: If Monsters[Number].Treasure.In_Lair=[] then
                          T:=T+'None'
                        Else
                          T:=T+'Type ''K'' to edit list';
-                    11: If Monster[Number].Treasure.Wandering=[] then
+                    12: If Monsters[Number].Treasure.Wandering=[] then
                          T:=T+'None'
                        Else
                          T:=T+'Type ''L'' to edit list';
                 End;
             SMG$Put_Line (ScreenDisplay,T);
          End;  (* Do Loop *)
-         Options:=['A'..'N',' ' '];
+         Options:=['A'..'N',' '];
          SMG$Put_Line (ScreenDisplay, '');
          SMG$End_Display_Update (ScreenDisplay);
          Answer:=Make_Choice (Options);
          Case ORD(Answer)-64 of
              2,3,4,5:  Begin
                          SMG$Set_Cursor_ABS (ScreenDisplay,15,1);
+                         SMG$Put_Line (ScreenDisplay
+                             'Enter a string of'
+                             +' up to 60 characters',1,0);
+                         Cursor;
+                         SMG$Read_String (Keyboard,Strng,Display_ID:=ScreenDisplay);
+                         No_Cursor;
+                         If Strng.length>60 then
+                            Strng:=Substr (Strng,1,60);
+                         Case Ord(Answer)-64 of
+                                 2: Monsters[Number].Name:=Strng;
+                                 3: Monsters[Number].Plural:=Strng;
+                                 4: Monsters[Number].Real_Name:=Strng;
+                                 5: Monsters[Number].Real_Plural:=Strng;
+                         End;
+                       End;  (* 2, 3, 4, 5 *)
+             11,12:    If Ord(answer)-64=11 then
+                          Treasure_Types(Monsters[Number].Treasure.In_Lair)
+                       Else
+                          Treasure_Types(Monsters[Number].Treasure.Wandering);
+             10: Begin
+                    SMG$Set_Cursor_ABS (ScreenDisplay,16,1);
+                    SMG$Put_Line (ScreenDisplay,
+                        'Enter an integer ');
+                    Get_Num (Num,ScreenDisplay);
+                    IF ABS(num)<128 then Monsters[Number].Armor_Class:=Num;
+                 End;
+             6:   If Monsters[Number].Alignment=Evil then
+                     Monsters[Number].Alignment:=NoAlign
+                  Else
+                     Monsters[Number].Alignment:=Succ(Monsters[Number].Alignment);
+             9:   If Monsters[Number].Kind=Enchanted then
+                     Monsters[Number].Kind:=Warrior
+                  Else
+                     Monsters[Number].Kind:=Succ(Monsters[Number].Kind);
+            7,8: Begin
+                      SMG$Put_Chars (ScreenDisplay, 'Enter X: ',15,1);
+                      Get_Num (X1,ScreenDisplay);
+                      SMG$Put_Chars (ScreenDisplay, 'Enter Y: ',15,1);
+                      Get_Num (Y1,ScreenDisplay);
+                      SMG$Put_Chars (ScreenDisplay, 'Enter Z: ',15,1);
+                      Get_Num (Z1,ScreenDisplay);
+                      Case Ord(Answer)-64 of
+                          8: Begin
+                                Monsters[Number].Hit_Points.X:=X1;
+                                Monsters[Number].Hit_Points.Y:=Y1;
+                                Monsters[Number].Hit_Points.Z:=Z1;
+                            End;
+                          7: Begin
+                                Monsters[Number].Number_Appearing.X:=X1;
+                                Monsters[Number].Number_Appearing.Y:=Y1;
+                                Monsters[Number].Number_Appearing.Z:=Z1;
+                            End;
+                      End;
+                 End;
+         End;  (* Other case *)
+      End;  (* Initial Repeat *)
+   Until Answer=' ';
+End;  (* Screen1 *)
+
+(******************************************************************************)
+
+Procedure Change_Screen2 (Number: Integer);
+
+Type
+   Property_Set=Set of Property_Type;
+   Damagetypes = Array [1..20] of die_type;
+
+Var
+   Options: Char_Set;
+   Num,Loop: Integer;
+   Answer: Char;
+   T: Line;
+
+Procedure PropertiesP (Var Props: Property_Set);
+
+Var
+  Pos: Integer;
+  Loop: Property_Type;
+  Temp: Property_Type;
+  AttackNum: Integer;
+  Answer: Char;
+  T: Line;
+
+Begin
+
 
 { TODO: Enter this code }
 
