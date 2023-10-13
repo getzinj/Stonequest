@@ -94,7 +94,7 @@ Begin { Fix Eyes }
         Else
            If (Pic.Right_Eye.Y<0) or (Pic.Right_Eye.Y>23) then
               Initialize_Eyes(Pic);
-  If Not (Pic.Eye_Type in [CHR(32)..CHR(126) then
+  If Not (Pic.Eye_Type in [CHR(32)..CHR(126)]) then
       Pic.Eye_Type:=' ';
 End;  { Fix Eyes }
 
@@ -105,7 +105,7 @@ Procedure Fix_Pic (Var Pic: Picture);
 { This procedure initializes am non-initialized pictures }
 
 Begin { Fix Pic }
-   Fix_Image (Pic, Image);
+   Fix_Image (Pic,Image);
    Fix_Eyes (Pic);
 End;  { Fix Pic }
 
