@@ -473,7 +473,253 @@ Var
   T: Line;
 
 Begin
+   Repeat
+      Begin
+        SMG$Begin_Display_Update (ScreenDisplay);
+        SMG$Erase_Display (ScreenDisplay);
+        SMG$Put_Line (ScreenDisplay,
+            'The monster has these properties');
+        Pos:=1;
+        T:=''
+        For Loop:=Stones to Cause_Fear do
+                If Loop in props then
+                        Begin
+                           T:=T+Pad(Propty[Ord(Loop)]
+                               ,' ',20);
+                           If Odd(Pos) then
+                              T:=T+'    '
+                           Else
+                              Begin
+                                 SMG$Put_Line (ScreenDisplay,T);
+                                 T:='';
+                              End;
+                           Pos:=Pos+1;
+                        End;
+        SMG$Put_Line (ScreenDisplay,T,0);
+        SMG$Set_Cursor_ABS (ScreenDisplay,15,1);
+        SMG$Put_Line (ScreenDisplay,'Change which property?');
+        Pos:=1;
+        T:='';
+        For Loop:=Stones to Cause_Fear do
+           Begin
+                T:=T+CHR(Ord(Loop)+65)
+                   +'  '
+                   +Pad(Propty[Ord(Loop)],' ',20);
+                If Odd(Pos) then
+                   T:=T+'    '
+                Else
+                   Begin
+                      SMG$Put_Line (ScreenDisplay,T);
+                      T:='';
+                   End;
+                Pos:=Pos+1;
+           End;
+        SMG$Put_Line (ScreenDisplay,T,1,0);
+        SMG$End_Display_Update (ScreenDisplay);
+        Answer:=Make_Choice(['A'..CHR(Ord(Cause_Fear)+65,CHR(32)]);
+        IF Answer<>CHR(32) then
+               Begin
+                   AttackNum:=Ord(Answer)-65;
+                   Temp:=stones;
+                   While Ord(Temp)<>AttackNum do
+                       Temp:=Succ(Temp);
+                   If Temp in props then
+                      Props:=Props-[Temp]
+                   Else
+                      Props:=Props+[Temp];
+               End;
+      End;
+   Until Answer=' ';
+End;
 
+
+Procedure Edit_Attacks (Var Attack: DamageTypes);
+
+Var
+  X1,Y1,Z1,Number,Loop: Integer;
+  T: Line;
+
+Begin
+   Repeat
+      Begin
+         SMG$Begin_Display_Update (ScreenDisplay);
+         SMG$Erase_Display (ScreenDisplay);
+         SMG$Put_Line (ScreenDisplay,'Edit Attacks',,1);
+         SMG$Put_Line (ScreenDisplay,'---- -------',,1);
+         For Loop:=1 to 20 do
+            Begin
+               T:=String(Loop,1)
+                   +') ';
+               T:=T+String(Attack[Loop].X,0)
+                   +'D';
+               T:=T+String(Attack[Loop].Y,0)
+                   +'+';
+               T:=T+String(Attack[Loop].Z,0);
+               If Odd (Loop) then
+                  SMG$Set_Cursor_ABS (ScreenDisplay, (Loop div 2) + 1, 1)
+               Else
+                  SMG$Set_Cursor_ABS (ScreenDisplay, (Loop div 2), 40);
+               SMG$Put_Line (ScreenDisplay,T,0);
+            End;
+         SMG$End_Display_Update (ScreenDisplay);
+         SMG$Put_Chars (ScreenDisplay,
+             'Change which attack? >',1,4,1);
+         Get_Num (Number,ScreenDisplay);
+         If (Number<=20) and (Number>=1) then
+            Begin
+               SMG$Put_Chars (ScreenDisplay,
+                   'Enter X: ',16,1);
+               Get_Num (X1,ScreenDisplay);
+               SMG$Put_Chars (ScreenDisplay,
+                   'Enter Y: ',17,1);
+               Get_Num (Y1,ScreenDisplay);
+               SMG$Put_Chars (ScreenDisplay,
+                   'Enter Z: ',18,1);
+               Get_Num (Z1,ScreenDisplay);
+               Attack[Number].X:=X1;
+               Attack[Number].Y:=Y1;
+               Attack[Number].Z:=Z1;
+            End;
+      End;
+   Until Number=0;
+End;
+
+
+Begin
+   Loop:=0;
+   Repeat
+      Begin (* Initial Repeat *)
+         SMG$Begin_Display_Update (ScreenDisplay);
+         SMG$Erase_Display (ScreenDisplay);
+         SMG$Home_Cursor (ScreenDisplay);
+         SMG$Put_Line (ScreenDisplay,
+             'Monster #'
+             +String(Number,3)
+             +' ('
+             +Monsters[Number].Real_Name
+             +')';
+         SMG$Put_Line (ScreenDisplay,
+             '------- ----');
+         For Loop:=13 to 29 do
+            Begin (* Do Loop *)
+                T:=CHR(Loop+52)
+                    +'  '
+                    +Cat[Loop]+':';
+                Case Loop of
+                    13: T:=T+String(Monsters[Number].Levels_Drained);
+                    14: T:=T+String(Monsters[Number].Years_ages);
+                    15: T:=T+String(Monsters[Number].Regenerates)
+                        +' HP/Round';
+                    16: T:=T+String(Monsters[Number].Highest.Cleric_Spell);
+                    17: T:=T+String(Monsters[Number].Highest.Wizard_Spell);
+                    18: T:=T+String(Monsters[Number].Magic_Resistance)
+                        + '%';
+                    19: T:=T+String(Monsters[Number].gate_Success_percentage,0)
+                        + '%';
+                    20: If Monsters[Number].Monster_Called=0 then
+                            T:=T+'None'
+                        Else
+                            T:=T+'('+String(Monsters[Number].Monster_Called)+')'+Monsters[Monsters[Number].Monster_Called].Real_Name);
+                    21: If Monsters[Number].Breath_Weapon=Charming then
+                            T:=T+'None'
+                        Else
+                            T:=T+Attack_Name[Monsters[Number].Breath_Weapon];
+                    22: If Monsters[Number].No_of_Attacks>0 then
+                            T:=T+String(Monsters[Number].No_of_Attacks)
+                        Else
+                            T:=T+'None';
+                    23: If Monsters[Number].No_of_Attacks=0 then
+                            T:=T+'None'
+                        Else
+                            T:=T+'Type ''K'' to edit list';
+                    24: If Monsters[Number].Resists=[] then
+                            T:=T+'Nothing'
+                        Else
+                            T:=T+'Type ''L'' to edit list';
+                    25: If Monsters[Number].Properties=[] then
+                            T:=T+'Nothing'
+                        Else
+                            T:=T+'Type ''M'' to edit list';
+                    26: T:=T+String(Monsters[Number].Picture_Number);
+                    27: If Monsters[Number].Extra_Damage=[] then
+                            T:=T+'Nobody'
+                        Else
+                            T:=T+'Type ''O'' to edit list';
+                    28: If Monsters[Number].Gaze_Weapon=Charming then
+                            T:=T+'None' (* TODO: Vampires charm with their gaze, don't they? *)
+                        Else
+                            T:=T+Attack_Name[Monsters[Number].Gaze_Weapon];
+                    29: T:=T+String(Monsters[Number].Weapon_Plus_Needed);
+                End; (* Case )
+            SMG$Put_Line (ScreenDisplay, T);
+         End; (* Do Loop *)
+         SMG$Put_Line (ScreenDisplay,'');
+         Display_Image (Pics[Monsters[Number].Picture_Number].Image);
+         SMG$End_Display_Update (ScreenDisplay);
+
+         Options:=['A'..'Q',' '];
+         Answer:=Make_Choice (Options);
+         Case ORD(Answer)-52 of
+            13,14,15,16,17,18,19,20,22,26,29: Begin
+                 SMG$Set_Cursor_ABS (ScreenDisplay,22,1);
+                 SMG$Put_Line (ScreenDisplay,
+                     'Enter an Integer.');
+                 Get_Num (Num,ScreenDisplay);
+                 Case ORD(Answer)-52 of
+                        13: If ABS(Num)<32768 then
+                               Monsters[Number].Levels_Drained:=Num;
+                        14: Monsters[Number].Years_ages:=Num;
+                        15: If ABS(Num)<32768 then
+                               Monsters[Number].Regenerates:=Num;
+                        16: If (Num>-1) and (Num<10) then
+                               Monsters[Number].Highest.Cleric_Spell:=Num;
+                        17: If (Num>-1) and (Num<10) then
+                               Monsters[Number].Highest.Wizard_Spell:=Num;
+                        18: If (Num>-1) and (Num<201) then
+                               Monsters[Number].Magic_Resistance:=Num;
+                        19: If (Num>-1) and (Num<101) then
+                               Monsters[Number].Gate_Success_Percentage:=Num;
+                        20: If (Num>-1) and (Num<451) then
+                               Monsters[Number].Monster_Called:=Num;
+                        22: If (Num>-1) and (Num<21) then
+                               Monsters[Number].No_of_Attacks:=Num;
+                        26: If (Num>-1) and (Num<251) then
+                               Monsters[Number].Picture_Number:=Num;
+                        29: Monsters[Number].Weapon_Plus_Needed:=Num;
+                 End; (* Case ord *)
+                 End;
+            21:  If Monsters[Number].Breath_Weapon=Sleep then
+                    Monsters[Number].Breath_Weapon:=Fire
+                 Else
+                    Monsters[Number].Breath_Weapon:=Succ(Monsters[Number].Breath_Weapon);
+            23:  Edit_Attacks (Monsters[Number].Damage);
+            24:  Change_Attack_Set (Monsters[Number].Resists,
+                'The monster is resistant to these attack forms');
+            25: Propertiesp (Monsters[Number].Properties);
+            27: Change_Class_Set (Monsters[Number].Extra_Damage,
+                'The monster does more damage on these classes');
+            28:  If Monsters[Number].Gaze_Weapon=Sleep then
+                    Monsters[Number].Gaze_Weapon:=Fire
+                 Else
+                    Monsters[Number].Gaze_Weapon:=Succ(Monsters[Number].Gaze_Weapon);
+         End; (* Other case *)
+      End;  (* initial repeat *)
+   Until Answer=' ';
+End; (* Screen2 *)
+
+(******************************************************************************)
+
+Procedure Change_Monster (Number: Integer);
+
+Var
+   Answer: Char;
+   Options: Char_Set;
+
+Begin
+   Repeat
+      Begin
+         SMG$Begin_Display_Update (ScreenDisplay);
+         SMG$Erase_Display (ScreenDisplay);
 
 { TODO: Enter this code }
 
