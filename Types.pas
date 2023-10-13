@@ -364,7 +364,7 @@ Type
                           Years_Ages:              Integer;
                           Weapon_Plus_Needed:      Integer;
                           No_of_attacks:           [Byte]0..20;
-                          Damage:                  Array [1..200] of Die_Type;
+                          Damage:                  Array [1..20] of Die_Type;
                           Extra_Damage:            Set of Class_Type;
                           Resists:                 Set of Attack_Type;
                           Properties:              Set of Property_Type;
