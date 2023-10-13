@@ -720,10 +720,139 @@ Begin
       Begin
          SMG$Begin_Display_Update (ScreenDisplay);
          SMG$Erase_Display (ScreenDisplay);
+         If Monsters[Number].Monster_number<>Number then Monsters[Number].Breath_Weapon:=Charming;
+         SMG$Put_Line(ScreenDisplay,
+             'Monster #'
+             +String(Number,0)
+             +'  '
+             +Monsters[Number].Real_Name,1,0);
+         SMG$Put_Line (ScreenDisplay,
+            'Which screen? (1 or 2, <SPACE> exits)',0,0);
+         SMG$End_Display_Update (ScreenDisplay);
+         Options:=['1','2',' '];
+         Answer:=Make_Choice (Options);
+         If Answer='1' then
+            Change_Screen1 (Number)
+        Else
+            If Answer='2' then
+                Change_Screen2 (Number);
+      End;
+   Until Answer=' ';
+End;
 
-{ TODO: Enter this code }
+(******************************************************************************)
+
+Procedure Print_Table;
+
+Var
+   Options: Char_Set;
+   Loop,First,Last: Integer;
+   Answer: Char;
+
+Begin
+   Answer:=' ';
+   First:=1;
+   Last:=First+18;
+   Repeat
+      Begin
+         SMG$Begin_Display_Update (ScreenDisplay);
+         SMG$Erase_Display (ScreenDisplay);
+         For Loop:=First to Last do
+            Begin
+               SMG$Put_Chars (ScreenDisplay,
+                  String(Loop,3)
+                  +' '
+                  +Pad(Monsters[Loop].Real_Name,' ',62));
+               SMG$Put_Chars (ScreenDisplay,
+                  String(Monsters[Loop].Hit_Points.X,3)
+                  +' HD');
+               SMG$Put_Line (ScreenDisplay,
+                  ' '
+                  +MonsterType[Monsters[Loop].Kind);
+            End;
+         SMG$Put_Line (ScreenDisplay,'F)orward, B)ack, E)xit, C)hange',0);
+         SMG$End_Display_Update (ScreenDisplay);
+         Options:=['F','B','E','C'];
+         Answer:=Make_Choice (options);
+         If (Answer='F') and (Last<450) then
+            Begin
+               First:=Last;
+               Last:=First+18;
+               If Last>450 then Last:=450;
+            End
+         Else
+           If (Answer='F') then
+              Begin
+                 First:=1;  Last:=First+18;
+              End
+           Else
+              If (Answer='B') and (First>=18) then
+                 Begin
+                    Last:=First;
+                    First:=First-18;
+                    If First<1 then First:=1;
+                 End
+              Else
+                 If (Answer='B') then
+                    Begin
+                       Last:=450;
+                       First:=Last-18;
+                    End
+                 Else
+                    If (Answer='C') then
+                       Begin
+                          SMG$Put_Chars (ScreenDisplay,
+                              'Change which monster? --->',24,1,1);
+                          Get_Num (Number,ScreenDisplay);
+                          If (Number>0) and (Number<451) then
+                             Change_Monster (Number);
+                       End;
+      End;
+   Until Answer='E';
+End;
+
+(******************************************************************************)
+
+Procedure Swap_Records;
+
+Var
+  Old_Slot,New_Slot: Integer;
+  Temp_Record: Monster_Record;
+
+Begin
+   SMG$Put_Chars (ScreenDisplay,
+       'Swap record A ->');
+   Repeat
+      Get_Num (Old_Slot,ScreenDisplay)
+   Until (Old_Slot>-1) and (Old_Slot<451);
+
+   SMG$Put_Chars (ScreenDisplay,
+      'Swap record B ->');
+   Repeat
+      Get_Num (New_Slot,ScreenDisplay)
+   Until (New_Slot>-1) and (New_Slot<451);
+
+   SMG$Put_Line (ScreenDisplay,
+      'Swap: '
+      +Monsters[New_Slot].Real_Name
+      +' with '
+      +Monsters[Old_Slot].Real_Name);
+   SMG$Put_Line (ScreenDisplay, 'Confirm? (Y/N)');
+
+   If Yes_or_No='Y' then
+      Begin
+         Temp_Record:=Monsters[Old_Slot];
+         Monsters[Old_Slot]:=Monsters[New_Slot];
+         Monsters[New_Slot]:=Temp_Record;
+         Monsters[New_Slot].Monster_Number:=New_Slot;
+         Monsters[Old_Slot].Monster_Number:=Old_Slot;
+      End;
+End;
+
+(******************************************************************************)
 
 
+ { TODO: Enter this code }
 
 
 (******************************************************************************)
