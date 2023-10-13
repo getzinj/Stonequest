@@ -277,7 +277,7 @@ Var
    X1,Y1,Z1,Num,Loop: Integer;
    Answer: Char;
    Strng,T: Line;
-   AlignName: [External]Array [Align_Type] of Packed Array [1..73] of Char;
+   AlignName: [External]Array [Align_Type] of Packed Array [1..7] of Char;
 
 Procedure Treasure_Types (Var Treasure: TreasureSet);
 
@@ -556,15 +556,16 @@ Begin (* Edit_Attacks *)
                    +'+';
                T:=T+String(Attack[Loop].Z,0);
                If Odd (Loop) then
-                  SMG$Set_Cursor_ABS (ScreenDisplay, (Loop div 2) + 1, 1)
+                  SMG$Put_Chars (ScreenDisplay,T);
                Else
-                  SMG$Set_Cursor_ABS (ScreenDisplay, (Loop div 2), 40);
-               SMG$Put_Line (ScreenDisplay,T,0);
+                  SMG$Put_Line (ScreenDisplay,T);
+               SMG$Put_Line (ScreenDisplay, '');
             End; (* For *)
          SMG$End_Display_Update (ScreenDisplay);
          SMG$Put_Chars (ScreenDisplay,
-             'Change which attack? >',1,4,1);
+             'Change which attack? >',,1,1);
          Get_Num (Number,ScreenDisplay);
+         SMG$Put_Line (ScreenDisplay, '');
          If (Number<=20) and (Number>=1) then
             Begin (* If in range *)
                SMG$Put_Chars (ScreenDisplay,

@@ -207,11 +207,6 @@ Type
 
   Item_Number_Type = [Byte]0..250;
 
-  Old_Equipment_Type = record
-                      Item: Item_Record;                        { The item itself }
-                      Ident,Equipted,Usable,Cursed: Boolean;    { Identified? Equipted? Usable? Cursed? }
-                   End;
-
   Equipment_Type = record
                       Item_Num: Item_Number_Type;                        { The item itself }
                       Ident,Equipted,Usable,Cursed: Boolean;    { Identified? Equipted? Usable? Cursed? }
@@ -219,47 +214,7 @@ Type
 
   { The information concerning a character }
 
-  Old_Equipments = Array [1..8] of Old_Equipment_Type;
   Equipments = Array [1..8] of Equipment_Type;
-
-  Old_Character_Type = Record
-                      Name:            Name_Type;                { The name }
-                      Username:        Varying [6] of char;      { Username 6 chars }
-                      Lock:            Boolean;                  { Is the character in use? }
-                      Race:            Race_Type;                { Human, elven, et al }
-                      Sex:             Sex_Type;                 { The sex }
-                      Age:             Integer;                  { Age in days }
-                      Age_Status:      Age_Type;                 { Young, mature, et al }
-                      Class,PreviousClass:  Class_Type;          { The class }
-                      Level,Previous_Lvl:   [Word]-32767..32767; { The level }
-                      Alignment:       Align_Type;               { Good, evil, neutral }
-                      Experience:      Real;                     { Experience points }
-                      Curr_HP,MAX_HP:  Integer;                  { Hit points }
-                      Armor_Class:     [Byte]-127..127;          { How hard is the character to hit? }
-                      Regenerates:     Integer;                  { Healing abilities }
-                      Abilities:       Array [1..7] of Ability_Score;
-                      Status:          Status_Type;              { Healthy, asleep, etc }
-                      Gold:            Integer;                  { Money }
-                      No_of_Items:     [Byte]0..8;               { # of items }
-                      Item:            Old_Equipments;
-                      SpellPoints:     Packed Array [1..2, 1..9] of [Byte]0..9;
-                      Wizard_Spells:   Set of Spell_Name;        { spells known }
-                      Cleric_Spells:   Set of Spell_Name;
-                      Items_Seen:      Int_Set;                  { What items can be identified }
-                      Monsters_Seen:   Int_Set;                  {  ""  monsters  ""     ""     }
-                      Scenarios_Won:   Int_Set;                  { What scenarios have been won }
-                      Attack:          Record
-                                          WeaponUsed:  [Byte]0..8;
-                                          ArmorWorn:   [Byte]0..8;
-                                          Autokill:    Boolean;
-                                          Berserk:     Boolean;
-                                       End;
-                      Magic_Resistance: Integer;                 { What chance does the character have of resisting magic? }
-                      Case Psionics: Boolean of
-                           True: (DetectTrap:     Integer;
-                                  Regenerate:     Integer;
-                                  DetectSecret:   Integer);
-                  End;
 
   Character_Type = Record
                       Name:            Name_Type;                { The name }
