@@ -851,20 +851,135 @@ End;
 
 (******************************************************************************)
 
+Procedure Copy_Records;
 
- { TODO: Enter this code }
+Var
+  Old_Slot,New_Slot: Integer;
 
+Begin
+   Repeat
+      Begin
+         SMG$Put_Chars (ScreenDisplay,
+             'Record to copy ->',1,1);
+         Get_Num (Old_Slot,ScreenDisplay);
+      End;
+   Until (Old_Slot>-1) and (Old_Slot<451);
+
+   Repeat
+      Begin
+         SMG$Put_Chars (ScreenDisplay,
+             'Record to copy over ->',1,1);
+         Get_Num (New_Slot,ScreenDisplay);
+      End;
+   Until (New_Slot>-1) and (New_Slot<451);
+
+   SMG$Put_Line (ScreenDisplay,
+       'Copy:  '
+       +Monsters[New_Slot].Real_Name
+       +' over '
+       +Monsters[Old_Slot].Real_Name);
+   SMG$Put_Line (ScreenDisplay,
+       'Confirm? (Y/N)');
+
+   If Yes_or_No='Y' then
+      Begin
+         Monsters[New_Slot]:=Monsters[Old_Slot];
+         Monsters[New_Slot].Monster_Number:=New_Slot;
+      End;
+End;
 
 (******************************************************************************)
 
+Procedure Insert_Record;
 
-{ TODO: Enter this code }
+Var
+   Answer: Char;
+   New,X: Integer;
+
+Begin
+   Repeat
+      Begin
+         SMG$Put_Chars (ScreenDisplay,
+            'Slot to insert monster ->');
+            Get_Num (New,ScreenDisplay);
+      End;
+   Until (New>-1) and (New<451);
+
+   SMG$Put_Line (ScreenDisplay,
+       'Kill: '
+       +Monsters[450].Real_Name
+       +'?');
+   SMG$Put_Line (ScreenDisplay,
+       'Confirm? (Y/N)');
+   Answer:=Yes_or_No;
+
+   If Answer='Y' then
+      Begin
+         If new<450 then
+            For X:=450 downto New+1 do
+               Monsters[X]:=Monsters[X-1];
+         Monsters[New]:=Zero;
+      End;
+End;
+
+(******************************************************************************)
+
+Procedure Delete_Record;
+
+Var
+   Answer: Char;
+   Old,X: Integer;
+
+Begin
+   SMG$Put_Chars (ScreenDisplay,
+       'Slot to delete monster ->');
+   Repeat
+      Get_Num (Old,ScreenDisplay);
+   Until (Old>-1) and (Old<451);
+
+   SMG$Put_Line (ScreenDisplay,
+       'Kill: '
+       +Monsters[Old].Real_Name
+       +'?');
+   SMG$Put_Line (ScreenDisplay,
+      'Confirm? (Y/N)');
+   Answer:=Yes_or_No;
+
+   If Answer='Y' then
+      Begin
+         If Old<450 then
+            For X:=Old to 449 do
+               Monsters[X]:=Monsters[X+1];
+         Monsters[450]:=Zero;
+      End;
+End;
+
+(******************************************************************************)
 
 [Global]Procedure Edit_Monster;
-  { TODO: Enter this code }
-Begin
-
-{ TODO: Enter this code }
-
+   Read_Monsters (Monsters);
+   Repeat
+      Begin
+         SMG$Begin_Display_Update (ScreenDisplay);
+         SMG$Erase_Display (ScreenDisplay);
+         SMG$Put_Line (ScreenDisplay,
+             'Edit Monster',,1);
+         SMG$Put_Line (ScreenDisplay,
+             'Edit which monster?');
+         SMG$End_Display_Update (ScreenDisplay);
+         SMG$Put_Chars (ScreenDisplay,'(1-450, -6 copies, -5 swaps, -4 inserts, -3 deletes, -2 lists, -1 exits)',3,1);
+         SMG$Put_Chars (ScreenDisplay,'--->',4,1);
+         Get_Num (Number,ScreenDisplay);
+         SMG$Set_Cursor_ABS (ScreenDisplay,4,1);
+         If (Number > 0) and (Number < 451) then Change_Monster (Number);
+         If Number=-2 then Print_Table;
+         If Number=-3 then Delete_Record;
+         If Number=-4 then Insert_Record;
+         If Number=-5 then Swap_Records;
+         If Number=-6 then Copy_Records;
+      End;
+   Until Number=-1;
+   Save_Monsters (Monsters);
+   Monsters:=Zero;
 End;
 End.  { Edit Monster }
