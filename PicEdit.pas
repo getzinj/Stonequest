@@ -25,7 +25,7 @@ Var
 
 Begin { Display Image }
    SMG$Begin_Display_Update (ScreenDisplay);
-   SMG$Put_Chars (ScreenDisplay,'+------------------------+',Start_Row,Start_Column);
+   SMG$Put_Chars (ScreenDisplay,'+-----------------------+',Start_Row,Start_Column);
    For Y:=1 to 9 do
       Begin
          SMG$Put_Chars (ScreenDisplay,'|',Start_Row+Y,Start_Column);
@@ -43,7 +43,7 @@ Begin { Display Image }
              End;
          SMG$Put_Chars (ScreenDisplay,'|',Start_Row+Y,Start_Column+24);
       End;
-   SMG$Put_Chars (ScreenDisplay,'+------------------------+',Start_Row+10,Start_Column);
+   SMG$Put_Chars (ScreenDisplay,'+-----------------------+',Start_Row+10,Start_Column);
    SMG$End_Display_Update (ScreenDisplay);
 End;  { Display Image }
 
@@ -273,7 +273,7 @@ Begin { Display Image with Eyes }
    Add_Eyes (Pic,Image);
 
    SMG$Begin_Display_Update (ScreenDisplay);
-   SMG$Put_Chars (ScreenDisplay,'+------------------------+',Start_Row,Start_Column);
+   SMG$Put_Chars (ScreenDisplay,'+-----------------------+',Start_Row,Start_Column);
    For Y:=1 to 9 do
       Begin
          SMG$Put_Chars (ScreenDisplay,'|',Start_Row+Y,Start_Column);
@@ -291,7 +291,7 @@ Begin { Display Image with Eyes }
              End;
          SMG$Put_Chars (ScreenDisplay,'|',Start_Row+Y,Start_Column+24);
       End;
-   SMG$Put_Chars (ScreenDisplay,'+------------------------+',Start_Row+10,Start_Column);
+   SMG$Put_Chars (ScreenDisplay,'+-----------------------+',Start_Row+10,Start_Column);
    SMG$End_Display_Update (ScreenDisplay);
 End;  { Display Image with Eyes }
 
@@ -340,6 +340,7 @@ Begin { Get Eye Location }
          SMG$Put_Chars (ScreenDisplay,
              'Y: '
              +String(CursorY,3),24,1);
+         SMG$End_Display_Update (ScreenDisplay);
          Answer:=Make_Choice ([
              Up_Arrow,
              Down_Arrow,
