@@ -105,7 +105,7 @@ Procedure Fix_Pic (Var Pic: Picture);
 { This procedure initializes am non-initialized pictures }
 
 Begin { Fix Pic }
-   Fix_Image (Pic,Image);
+   Fix_Image (Pic.Image);
    Fix_Eyes (Pic);
 End;  { Fix Pic }
 
@@ -205,7 +205,8 @@ Begin { Edit Image }
          Display_Image (Image,4,1);
          SMG$Put_Chars (ScreenDisplay,
              '[RETURN] exits',16,1);
-         SMG$End_Display_Update ([CHR(13),Up_Arrow,Down_Arrow,Left_Arrow,Right_Arrow,CHR(32)..CHR(127)]);
+         SMG$End_Display_Update (ScreenDisplay);
+         Answer:=Make_Choice ([CHR(13),Up_Arrow,Down_Arrow,Left_Arrow,Right_Arrow,CHR(32)..CHR(127)]);
          Case Answer of
             CHR(13):  ;
             Left_Arrow:  Move_Left (CursorX,CursorY);
@@ -247,7 +248,7 @@ End;  { Coordinate Used }
 
 (******************************************************************************)
 
-Procedure Add_Eyes (Pic: Picture, Var Image: Image_Type);
+Procedure Add_Eyes (Pic: Picture; Var Image: Image_Type);
 
 { This procedure tacks the bug eyes onto the image }
 
@@ -258,7 +259,7 @@ End;  { Add Eyes }
 
 (******************************************************************************)
 
-Procedure Display_Image_With_Eyes (Image: Image_Type;  Start_Row, Start_Column: Integer:=1);
+Procedure Display_Image_With_Eyes (Pic: Picture;  Start_Row, Start_Column: Integer:=1);
 
 { This procedure will display the image with bug-eyes at 1,1 }
 
@@ -269,8 +270,7 @@ Var
 
 Begin { Display Image with Eyes }
    Image:=Pic.Image;
-   Add_Eyes (Pic.Image);
-
+   Add_Eyes (Pic,Image);
 
    SMG$Begin_Display_Update (ScreenDisplay);
    SMG$Put_Chars (ScreenDisplay,'+------------------------+',Start_Row,Start_Column);
@@ -340,7 +340,12 @@ Begin { Get Eye Location }
          SMG$Put_Chars (ScreenDisplay,
              'Y: '
              +String(CursorY,3),24,1);
-         Answer:=Make_Choice ([Up_Arrow,Down_Arrow,Left_Arrow,Right_Arrow,' ']);
+         Answer:=Make_Choice ([
+             Up_Arrow,
+             Down_Arrow,
+             Left_Arrow,
+             Right_Arrow,
+             ' ']);
          SpotX:=Spot.X;  SpotY:=Spot.Y;
          Case Answer of
             Left_Arrow:  Move_Left (SpotX,SpotY);
@@ -411,9 +416,9 @@ Begin { Edit Picture }
              +String(Picture_Number,2));
          SMG$Put_Line (ScreenDisplay,
              '------------ ---');
-         SNG$Put_Line (ScreenDisplay,
+         SMG$Put_Line (ScreenDisplay,
              ' Edit 1=Image   2=Bug-eyes   <SPACE>=exit');
-         Display_Image (Pics[Picture_Number],4,1);
+         Display_Image (Pics[Picture_Number].Image,4,1);
          Display_Image_With_Eyes (Pics[Picture_Number],4,40);
          SMG$End_Display_Update (ScreenDisplay);
          Answer:=Make_Choice (['1','2',' ']);
@@ -443,8 +448,10 @@ Begin { Pic Edit }
             Begin
                SMG$Begin_Display_Update (ScreenDisplay);
                SMG$Erase_Display (ScreenDisplay);
-               SMG$Put_Line (ScreenDisplay,'Monster image editor');
-               SMG$Put_Chars (ScreenDisplay,'Edit which image? (0-150, -1 exits) --->');
+               SMG$Put_Line (ScreenDisplay,
+                   'Monster image editor');
+               SMG$Put_Chars (ScreenDisplay,
+                  'Edit which image? (0-150, -1 exits) --->');
                SMG$End_Display_Update (ScreenDisplay);
                Get_Num (Response,ScreenDisplay);
             End;
