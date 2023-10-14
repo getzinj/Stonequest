@@ -71,6 +71,45 @@ Value
     Time_Out_Char: Char:=' '): [Volatile]Char;External;
 (******************************************************************************)
 
+Procedure Select_Item_Spell (Var SpellChosen: Spell_Name);
+
+Var
+   SpellName: Line;
+   Location,Loop: Spell_Name;
+
+Begin
+   SpellName:='';
+   Location:=NoSp;
+   Cursor;
+   SMG$Read_String (Keyboard,Spellname,Display_ID:=ScreenDisplay);
+   No_Cursor;
+   For Loop:=Crlt to DetS do
+      If (STR$Case_Blind_Compare(Spell[Loop]+'',SpellName)=0) then
+         Location:=Loop;
+   SpellChosen:=Location;
+End;
+
+(******************************************************************************)
+
+Procedure SpellCast (Var Curr_Spell: Spell_Name);
+
+Begin
+   SMG$Begin_Display_Update (ScreenDisplay);
+   SMG$Erase_Display (ScreenDisplay,15);
+   SMG$Put_Line (ScreenDisplay,
+       'Item currently casts spell '
+       +Spell[Curr_Spell]);
+   SMG$Put_Line (ScreenDisplay,'Cast which spell now?');
+   SMG$End_Display_Update (ScreenDisplay);
+   Select_Item_Spell (Curr_Spell);
+   SMG$Erase_Display (ScreenDisplay,15);
+   SMG$End_Display_Update (ScreenDisplay);
+End;
+
+(******************************************************************************)
+
+
+
 { TODO: Enter this code }
 
 [Global]Procedure Edit_Item;
