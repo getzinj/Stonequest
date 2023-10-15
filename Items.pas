@@ -410,6 +410,52 @@ End;
 
 (******************************************************************************)
 
+[Global]Procedure Item_Change_Screen (Var Item: Item_Record;  Number: Integer;
+                                      Var Items: List_of_Items;  Allow_Number_Change: Boolean:=True);
+
+Var
+   Loop: Integer;
+   Answer: Char;
+
+Begin
+  Open(AmountFile,
+     file_name:='store.dat;1',History:=Unknown,Access_Method:=DIRECT,
+     Sharing:=READWRITE);
+
+  Loop:=0;
+  Repeat
+     Begin
+        Find(AmountFile,Number+1);
+
+        SMG$Begin_Display_Update (ScreenDisplay);
+        SMG$Erase_Display (ScreenDisplay);
+        SMG$Home_Cursor (ScreenDisplay);
+        SMG$Put_Line (ScreenDisplay,'Item #'+String(Number,3));
+        SMG$Put_Line (ScreenDisplay,'---- ----');
+        For Loop:=1 to 22 do
+           Print_Characteristic (Item,Loop,Items,Allow_Number_Changes);
+        SMG$End_Display_Update (ScreenDisplay);
+        Answer:=Make_Choice (['A'..'V',' ']);
+        If Answer<>' ' then
+           Handle_Choice (Item,Ord(Answer)-64,Number,Allow_Number_Change);
+        Unlock (AmountFile);
+     End;
+  Until Answer=' ';
+  Close (AmountFile);
+End;
+
+(******************************************************************************)
+
+Procedure Change_Item (Number: Integer; Var Item_List: List_of_Items);
+
+Begin
+   SMG$Erase_Display (ScreenDisplay);
+   SMG$Home_Cursor (ScreenDisplay);
+   Item_Change_Screen (Item_List[Number],Number,Item_list,True);
+End;
+
+(******************************************************************************)
+
 { TODO: Enter this code }
 
 [Global]Procedure Edit_Item;
