@@ -331,6 +331,84 @@ End;
 
 (******************************************************************************)
 
+Procedure Handle_Choice (Var Item: Item_Record; Choice_Num: Integer; Item_Number: Integer;  Allow_Number_Change: Boolean);
+
+Var
+   Num: Integer;
+   Strng: Line;
+
+Begin
+   Case Choice_Num of
+      2,3:  Begin
+                SMG$Set_Cursor_ABS (ScreenDisplay,1,40);
+                SMG$Put_Line (ScreenDisplay,
+                    'Enter a string of up to 20 characters');
+                Cursor; SMG$Read_String(Keyboard,Strng,Display_ID:=ScreenDisplay); No_Cursor;
+                If Strng.Length>20 then Strng:=Substr(Strng,1,20);
+                If Choice_Num= 2 then
+                   Item.Name:=Strng
+                Else
+                   Item.True_Name:=Strng;
+       4: If Item.Alignment=Evil then
+             Item.Alignment:=NoAlign
+          Else
+             Item.Alignment:=Succ(Item.Alignment);
+       5: If Item.Kind=Cloak then
+             Item.Kind:=Weapon
+          Else
+             Item.Kind:=Succ(Item.Kind);
+       6: Item.Cursed:=Not (Item.Cursed);
+       1,7,8,9,10,11,14,19,20,22:
+          Begin
+             SMG$Set_Cursor_ABS (ScreenDisplay,1,40);
+             SMG$Put_Line (ScreenDisplay,
+                 'Enter an integer.');
+             SMG$Set_Cursor_ABS (ScreenDisplay,2,40);
+             Get_Num (Num,ScreenDisplay);
+             Case Choice_Num of
+                1: If Num<251 then Item.Item_Number:=Num;
+                7: Item.Special_Occurance_No:=Num;
+                8: If (Num>-1) and (Num<101) then
+                   Item.Percentage_Breaks:=Num;
+                9: If (Num>-1) and (Num<451) then
+                   Item.Turns_Into:=Num;
+               10: Item.GP_Value:=Num;
+               11: If Allow_Number_Change then
+                    Begin
+                       Repeat
+                          Find (AmountFile,Item_Number+1, Error:=Continue)
+                       Until Status(AmountFile)=0;
+                       AmountFile^:=Num;
+                       Update (AmountFile);
+                    End;
+               14:  Item.Regenerates:=Num;
+               19: If (Num>-128) and (Num<128) then
+                      Item.Plus_to_hit:=Num;
+               20: If (Num>-21) and (Num<21) then
+                      Item.AC_Plus:=Num;
+               22: Item.Additional_Attacks:=Num;
+             End;
+          End;
+       18: Begin
+             SMG$Put_Chars (ScreenDisplay,'Enter X: ',1,40);
+             Get_Num (Item.Damage.X, ScreenDisplay);
+             SMG$Put_Chars (ScreenDisplay,'Enter Y: ',2,40);
+             Get_Num (Item.Damage.Y, ScreenDisplay);
+             SMG$Put_Chars (ScreenDisplay,'Enter Z: ',3,40);
+             Get_Num (Item.Damage.Z, ScreenDisplay);
+           End;
+       12: SpellCast (Item.Spell_Cast);
+       13: Change_Class_Set (Item.Usable_By,
+              'The item can be used by these classes');
+       15: Protectsagainst (Item.Protects_Against);
+       16: Change_Attack_Set (Item.Resists,
+               'The item is resistant to these attack forms');
+       17: HatesP (Item.Versus);
+       21: Item.Auto_Kill:=Not (Item.Auto_Kill);
+   End;
+End;
+
+(******************************************************************************)
 
 { TODO: Enter this code }
 
