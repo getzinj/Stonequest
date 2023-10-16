@@ -76,6 +76,82 @@ Value
 [External]Procedure Dead_Character (Position: Integer; Var Member: Party_Type; Party_Size: Integer);External;
 (******************************************************************************)
 
+Function Insane_Leader (Party: Party_Type; Var Name: Line): Boolean;
+
+Begin { Insane Leader }
+   If Party[1].Status=Insane then
+      Begin
+         Name:=Party[1].Name;
+         Insane_Leader:=True;
+      End
+   Else
+      Insane_Leader:=False;
+End;  { Insane Leader }
+
+(******************************************************************************)
+
+Function Party_Dead (Party: Party_type; Size: Integer): Boolean;
+
+{ This function will return TRUE if every member in the party is dead, and FALSE otherwise }
+
+Var
+   Temp: Boolean;
+   Index: Integer;
+
+Begin { Party Dead }
+   Temp:=False;
+   Index:=0;
+
+   { Repeat until all members checked or one living found }
+
+   Repeat
+      Begin
+         Index:=Index+1;
+         Temp:=Temp or Alive (Party[Index]);
+      End;
+   Until Temp or (Index=6);
+   Party_Dead:=Not Temp;
+End;  { Party Dead }
+
+(******************************************************************************)
+
+[Global]Function Monster_Name (Monster: Monster_Record; Number: Integer; Identified): Monster_Name_Type;
+
+{ This function returns the name of the monster as influenced by whether or not the monsters have been identified, and whether there
+  is just one, or many. }
+
+Begin { Monster Name }
+   If Identified then  { If the monster is known... }
+      If Number>1 then { and there's more than one.... }
+         Monster_Name:=Monster.Real_Plural  { Use the correct plural name }
+      Else
+         Monster_Name:=Monster.Real_Name    { Otherwise use the correct singular name }
+   Else                 { Otherwise, if it isn't known... }
+      If Number>1 then { and there's more than one.... }
+         Monster_Name:=Monster.Plural  { Use the unidentified plural name }
+      Else
+         Monster_Name:=Monster.Name;    { Otherwise use the unidentified singular name }
+End;  { Monster Name }
+
+(******************************************************************************)
+
+[Global]Procedure Slay_Character (Var Character: Character_Type; Var Can_Attack: Flag);
+
+{ This procedure kills CHARACTER, if he or she is not already dead }
+
+Begin { Slay Character }
+   If Not (Character.Status in [Dead,Ashes,Deleted]) then
+       Begin
+          Character.Regenerates:=0;  Character.Armor_Class:=12;  Character.Status:=Dead;  Character.Curr_HP:=0;
+          Can_Attack:=False;
+          SMG$Put_Line (MessageDisplay,
+              Character.Name
+              +' is slain!',0,1);
+          Ring_Bell (MessageDisplay,3);
+       End;
+End;  { Slay Character }
+
+(******************************************************************************)
 
 { TODO: Enter this code }
 
