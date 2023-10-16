@@ -134,7 +134,7 @@ Begin { HatesP }
          Begin { For loop 1 }
             If Loop in CantStand then
             Begin
-                T:=T+{ad(Monster_T[Loop],' ',20);
+                T:=T+Pad(Monster_T[Loop],' ',20);
                 If Pos/3<>Pos div 3 then
                    T:=T+'    '
                 Else
@@ -309,7 +309,7 @@ Begin
          Else
              SMG$Put_Chars (ScreenDisplay,
                  'Press "'+CHR(13+64)+'" to edit list');
-      14: SMG$Put_Chars (ScreenDisplay,Item, String(Item.Regenerates));
+      14: SMG$Put_Chars (ScreenDisplay,String(Item.Regenerates));
       15: If Item.Protects_Against=[] then
              SMG$Put_Chars (ScreenDisplay,
                  'Nothing')
@@ -339,15 +339,15 @@ Begin
                     '+');
              SMG$Put_Chars (ScreenDisplay,String(Item.Damage.Z));
           End;
-      19: SMG$Put_Chars (ScreenDisplay,Item, String(Item.Plus_to_hit));
-      20: SMG$Put_Chars (ScreenDisplay,Item, String(Item.AC_Plus));
+      19: SMG$Put_Chars (ScreenDisplay,String(Item.Plus_to_hit));
+      20: SMG$Put_Chars (ScreenDisplay,String(Item.AC_Plus));
       21: If Item.Auto_Kill then
              SMG$Put_Chars (ScreenDisplay,
                  'Yes')
          Else
              SMG$Put_Chars (ScreenDisplay,
                  'No');
-      22: SMG$Put_Chars (ScreenDisplay,Item, String(Item.Additional_Attacks));
+      22: SMG$Put_Chars (ScreenDisplay,String(Item.Additional_Attacks));
    End;
    SMG$Put_Line (ScreenDisplay,'');
 End;
@@ -373,6 +373,7 @@ Begin
                    Item.Name:=Strng
                 Else
                    Item.True_Name:=Strng;
+           End;
        4: If Item.Alignment=Evil then
              Item.Alignment:=NoAlign
           Else
@@ -462,7 +463,7 @@ Begin
         SMG$Put_Line (ScreenDisplay,
             '---- ----');
         For Loop:=1 to 22 do
-           Print_Characteristic (Item,Loop,Items,Allow_Number_Changes);
+           Print_Characteristic (Item,Loop,Items,Allow_Number_Change);
         SMG$End_Display_Update (ScreenDisplay);
         Answer:=Make_Choice (
             ['A'..'V',' ']);
@@ -492,7 +493,7 @@ Const
    Page_Size = 22;
 
 Var
-   Loop,First,Last: Integer
+   Loop,First,Last: Integer;
    T,Temp: Line;
    Answer: Char;
 
@@ -589,7 +590,7 @@ Begin
 
          Temp_Record:=Item_List[Old_Slot];
          Item_List[Old_Slot]:=Item_List[New_Slot];
-         ItemList[New_Slot]:=Temp_Record;
+         Item_List[New_Slot]:=Temp_Record;
 
          Item_List[New_Slot].Item_Number:=New_Slot;
          Item_List[Old_Slot].Item_Number:=Old_Slot;
@@ -640,7 +641,7 @@ Begin { Edit Item }
              +' -3 swaps, -2 lists,'
              +' -1 exits)',3,1);
          Get_Num (Number,ScreenDisplay);
-         SMG$Set_CursorABS (ScreenDisplay,4,1);
+         SMG$Set_Cursor_ABS (ScreenDisplay,4,1);
          If (Number > -1) and (Number < 251) then
             Change_Item (Number,Item_List);
 {        If Number=-4 then Insert_Item; }
