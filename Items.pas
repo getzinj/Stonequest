@@ -15,7 +15,6 @@ Var
    Spell: [External]Array [Spell_Name] of Varying [4] of Char;
    Item_Name: [External]Array [Item_Type] of Varying [7] of Char;
    AlignName: [External]Array [Align_Type] of Packed Array [1..7] of char;
-   AmountFile: [External]Number_File;
    Item_List: [External]List_of_Items;
 
 Value
@@ -70,6 +69,8 @@ Value
 [External]Function String (Num: Integer; Len: Integer:=0):Line;external;
 [External]Function Yes_or_No (Time_Out: Integer:=-1;
     Time_Out_Char: Char:=' '): [Volatile]Char;External;
+[External]Function Get_Store_Quantity(slot: Integer): Integer;External;
+[External]Procedure Write_Store_Quantity(slot: Integer; amount: Integer);External;
 (******************************************************************************)
 
 Procedure Select_Item_Spell (Var SpellChosen: Spell_Name);
@@ -265,7 +266,10 @@ End;
 
 (******************************************************************************)
 
-Procedure Print_Characteristic (Item: Item_Record; Position: Integer; Items: List_of_items;  Allow_Number_Change: Boolean);
+Procedure Print_Characteristic (Item: Item_Record; Number: Integer; Position: Integer; Items: List_of_items;  Allow_Number_Change: Boolean);
+
+Var
+   Amount: Integer;
 
 Begin
    SMG$Put_Chars (ScreenDisplay,
@@ -289,15 +293,18 @@ Begin
       8: SMG$Put_Chars (ScreenDisplay,String(Item.Percentage_Breaks));
       9: SMG$Put_Chars (ScreenDisplay,Items[Item.Turns_Into].True_Name);
       10: SMG$Put_Chars (ScreenDisplay,String(Item.GP_Value));
-      11: If AmountFile^=0 then
-             SMG$Put_Chars (ScreenDisplay,
-                 'None')
-         Else
-             If AmountFile^=-1 then
-                SMG$Put_Chars (ScreenDisplay,
-                    'Unlimited')
-             Else
-                SMG$Put_Chars (ScreenDisplay,String(AmountFile^));
+      11: Begin
+            amount:=Get_Store_Quantity(Number);
+            If amount=0 then
+               SMG$Put_Chars (ScreenDisplay,
+                   'None')
+            Else
+               If amount=-1 then
+                  SMG$Put_Chars (ScreenDisplay,
+                      'Unlimited')
+               Else
+                  SMG$Put_Chars (ScreenDisplay,String(amount));
+         End;
       12: If Ord(Item.Spell_Cast)=0 then
              SMG$Put_Chars (ScreenDisplay,
                  'None')
@@ -399,13 +406,7 @@ Begin
                    Item.Turns_Into:=Num;
                10: Item.GP_Value:=Num;
                11: If Allow_Number_Change then
-                    Begin
-                       Repeat
-                          Find (AmountFile,Item_Number+1, Error:=Continue)
-                       Until Status(AmountFile)=0;
-                       AmountFile^:=Num;
-                       Update (AmountFile);
-                    End;
+                      Write_Store_Quantity(Item_Number, Num);
                14:  Item.Regenerates:=Num;
                19: If (Num>-128) and (Num<128) then
                       Item.Plus_to_hit:=Num;
@@ -446,15 +447,9 @@ Var
    Answer: Char;
 
 Begin
-  Open(AmountFile,
-     file_name:='store.dat;1',History:=Unknown,Access_Method:=DIRECT,
-     Sharing:=READWRITE);
-
   Loop:=0;
   Repeat
      Begin
-        Find(AmountFile,Number+1);
-
         SMG$Begin_Display_Update (ScreenDisplay);
         SMG$Erase_Display (ScreenDisplay);
         SMG$Home_Cursor (ScreenDisplay);
@@ -463,16 +458,14 @@ Begin
         SMG$Put_Line (ScreenDisplay,
             '---- ----');
         For Loop:=1 to 22 do
-           Print_Characteristic (Item,Loop,Items,Allow_Number_Change);
+           Print_Characteristic (Item,Number,Loop,Items,Allow_Number_Change);
         SMG$End_Display_Update (ScreenDisplay);
         Answer:=Make_Choice (
             ['A'..'V',' ']);
         If Answer<>' ' then
            Handle_Choice (Item,Ord(Answer)-64,Number,Allow_Number_Change);
-        Unlock (AmountFile);
      End;
   Until Answer=' ';
-  Close (AmountFile);
 End;
 
 (******************************************************************************)
@@ -569,24 +562,11 @@ Begin
    Answer:=Yes_or_No;
    If Answer='Y' then
       Begin
-         Open(AmountFile,
-             file_name:='STORE.DAT;1',History:=Unknown,
-             Access_Method:=DIRECT,Sharing:=READWRITE);
+         Old_num:=Get_Store_Quantity(Old_Slot);
+         New_num:=Get_Store_Quantity(New_Slot);
 
-         Find(AmountFile,Old_Slot+1);
-         Old_Num:=AmountFile^;
-
-         Find(AmountFile,New_Slot+1);
-         New_Num:=AmountFile^;
-
-         AmountFile^:=Old_Num;
-         Update(AmountFile);
-
-         Find(AmountFile,Old_Slot+1);
-         AmountFile^:=New_Num;
-         Update(AmountFile);
-
-         Close(AmountFile);
+         Write_Store_Quantity(New_Slot,Old_Num);
+         Write_Store_Quantity(Old_Slot,New_Num);
 
          Temp_Record:=Item_List[Old_Slot];
          Item_List[Old_Slot]:=Item_List[New_Slot];

@@ -9,6 +9,7 @@ Var
    PicFile:                    [External]Picture_File_Type;           { Pictures }
    Message_File:               [External]Text;                        { Game text }
    SaveFile:                   [External]Save_File_Type;
+   AmountFile:                 [External]Number_File;
 
 [External]Function Roll_Die (Die_Type: Integer): [Volatile]Integer;External;
 
@@ -319,6 +320,39 @@ Begin { Read Items }
            End;
      End;
 End;  { Read Items }
+
+
+(******************************************************************************)
+
+[Global]Function Get_Store_Quantity(slot: Integer): Integer;
+
+Begin
+    Open(AmountFile,
+       file_name:='STORE.DAT;1',History:=Unknown,
+       Access_Method:=DIRECT,Sharing:=READWRITE);
+
+    Find(AmountFile,slot+1);
+    Get_Store_Quantity:=AmountFile^;
+
+    Close(AmountFile);
+End;
+
+(******************************************************************************)
+
+[Global]Procedure Write_Store_Quantity(slot: Integer; amount: Integer);
+
+Begin
+    Open(AmountFile,
+        file_name:='STORE.DAT;1',History:=Unknown,
+        Access_Method:=DIRECT,Sharing:=READWRITE);
+
+    Find(AmountFile,slot+1);
+
+    AmountFile^:=amount;
+    Update(AmountFile);
+
+    Close(AmountFile);
+End;
 
 (******************************************************************************)
 
