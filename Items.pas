@@ -99,7 +99,8 @@ Begin
    SMG$Put_Line (ScreenDisplay,
        'Item currently casts spell '
        +Spell[Curr_Spell]);
-   SMG$Put_Line (ScreenDisplay,'Cast which spell now?');
+   SMG$Put_Line (ScreenDisplay,
+       'Cast which spell now?');
    SMG$End_Display_Update (ScreenDisplay);
    Select_Item_Spell (Curr_Spell);
    SMG$Erase_Display (ScreenDisplay,15);
@@ -143,7 +144,8 @@ Begin
                     End;
          SMG$Put_Line (ScreenDisplay,T,0);
          SMG$Set_Cursor_ABS (ScreenDisplay,15,1);
-         SMG$Put_Line (ScreenDisplay,'Change which monster?');
+         SMG$Put_Line (ScreenDisplay,
+             'Change which monster?');
          Pos:=1;
          T:='';
          For Loop:=Warrior to Enchanted do
@@ -274,56 +276,73 @@ Begin
       4: SMG$Put_Chars (ScreenDisplay,Item, AlignName[Item.Alignment]);
       5: SMG$Put_Chars (ScreenDisplay,Item, Item_Name[Item.Kind]);
       6: If Item.Cursed=True then
-             SMG$Put_Chars (ScreenDisplay,'Yes')
+             SMG$Put_Chars (ScreenDisplay,
+                 'Yes')
          Else
-             SMG$Put_Chars (ScreenDisplay,'No');
+             SMG$Put_Chars (ScreenDisplay,
+                 'No');
       7: SMG$Put_Chars (ScreenDisplay,Item, String(Item.Special_Occurance_No));
       8: SMG$Put_Chars (ScreenDisplay,Item, String(Item.Percentage_Breaks));
       9: SMG$Put_Chars (ScreenDisplay,Item, Items[Item.Turns_Into].True_Name);
       10: SMG$Put_Chars (ScreenDisplay,Item, String(Item.GP_Value));
       11: If AmountFile^=0 then
-             SMG$Put_Chars (ScreenDisplay,'None')
+             SMG$Put_Chars (ScreenDisplay,
+                 'None')
          Else
              If AmountFile^=-1 then
-                     SMG$Put_Chars (ScreenDisplay,'Unlimited')
+                SMG$Put_Chars (ScreenDisplay,
+                    'Unlimited')
              Else
-                     SMG$Put_Chars (ScreenDisplay,String(AmountFile^));
+                SMG$Put_Chars (ScreenDisplay,String(AmountFile^));
       12: If Ord(Item.Spell_Cast)=0 then
-             SMG$Put_Chars (ScreenDisplay,'None')
+             SMG$Put_Chars (ScreenDisplay,
+                 'None')
          Else
              SMG$Put_Chars (ScreenDisplay,Spell[Item.Spell_Cast]);
       13: If Item.Usable_By=[] then
-             SMG$Put_Chars (ScreenDisplay,'No one')
+             SMG$Put_Chars (ScreenDisplay,
+                 'No one')
          Else
-             SMG$Put_Chars (ScreenDisplay,'Press "'+CHR(13+64)+'" to edit list');
+             SMG$Put_Chars (ScreenDisplay,
+                 'Press "'+CHR(13+64)+'" to edit list');
       14: SMG$Put_Chars (ScreenDisplay,Item, String(Item.Regenerates));
       15: If Item.Protects_Against=[] then
-             SMG$Put_Chars (ScreenDisplay,'Nothing')
+             SMG$Put_Chars (ScreenDisplay,
+                 'Nothing')
          Else
-             SMG$Put_Chars (ScreenDisplay,'Press "'+CHR(15+64)+'" to edit list');
+             SMG$Put_Chars (ScreenDisplay,
+                 'Press "'+CHR(15+64)+'" to edit list');
       16: If Item.Resists=[] then
-             SMG$Put_Chars (ScreenDisplay,'Nothing')
+             SMG$Put_Chars (ScreenDisplay,
+                 'Nothing')
          Else
-             SMG$Put_Chars (ScreenDisplay,'Press "'+CHR(16+64)+'" to edit list');
+             SMG$Put_Chars (ScreenDisplay,
+                 'Press "'+CHR(16+64)+'" to edit list');
       17: If Item.Versus=[] then
              SMG$Put_Chars (ScreenDisplay,'Nothing')
          Else
-             SMG$Put_Chars (ScreenDisplay,'Press "'+CHR(17+64)+'" to edit list');
+             SMG$Put_Chars (ScreenDisplay,
+                 'Press "'+CHR(17+64)+'" to edit list');
       18: Begin
-             SMG$Put_Chars (ScreenDisplay,String(Item.Damage.X)+'D');
+             SMG$Put_Chars (ScreenDisplay,String(Item.Damage.X)
+                 +'D');
              SMG$Put_Chars (ScreenDisplay,String(Item.Damage.Y));
              if Item.Damage.Z<0 then
-                SMG$Put_Chars (ScreenDisplay,'-')
+                SMG$Put_Chars (ScreenDisplay,
+                    '-')
              Else
-                SMG$Put_Chars (ScreenDisplay,'+');
+                SMG$Put_Chars (ScreenDisplay,
+                    '+');
              SMG$Put_Chars (ScreenDisplay,String(Item.Damage.Z));
           End;
       19: SMG$Put_Chars (ScreenDisplay,Item, String(Item.Plus_to_hit));
       20: SMG$Put_Chars (ScreenDisplay,Item, String(Item.AC_Plus));
       21: If Item.Auto_Kill then
-             SMG$Put_Chars (ScreenDisplay,'Yes')
+             SMG$Put_Chars (ScreenDisplay,
+                 'Yes')
          Else
-             SMG$Put_Chars (ScreenDisplay,'No');
+             SMG$Put_Chars (ScreenDisplay,
+                 'No');
       22: SMG$Put_Chars (ScreenDisplay,Item, String(Item.Additional_Attacks));
    End;
    SMG$Put_Line (ScreenDisplay,'');
@@ -342,7 +361,8 @@ Begin
       2,3:  Begin
                 SMG$Set_Cursor_ABS (ScreenDisplay,1,40);
                 SMG$Put_Line (ScreenDisplay,
-                    'Enter a string of up to 20 characters');
+                    'Enter a string of up'
+                    +' to 20 characters');
                 Cursor; SMG$Read_String(Keyboard,Strng,Display_ID:=ScreenDisplay); No_Cursor;
                 If Strng.Length>20 then Strng:=Substr(Strng,1,20);
                 If Choice_Num= 2 then
@@ -390,11 +410,14 @@ Begin
              End;
           End;
        18: Begin
-             SMG$Put_Chars (ScreenDisplay,'Enter X: ',1,40);
+             SMG$Put_Chars (ScreenDisplay,
+                 'Enter X: ',1,40);
              Get_Num (Item.Damage.X, ScreenDisplay);
-             SMG$Put_Chars (ScreenDisplay,'Enter Y: ',2,40);
+             SMG$Put_Chars (ScreenDisplay,
+                 'Enter Y: ',2,40);
              Get_Num (Item.Damage.Y, ScreenDisplay);
-             SMG$Put_Chars (ScreenDisplay,'Enter Z: ',3,40);
+             SMG$Put_Chars (ScreenDisplay,
+                 'Enter Z: ',3,40);
              Get_Num (Item.Damage.Z, ScreenDisplay);
            End;
        12: SpellCast (Item.Spell_Cast);
@@ -430,12 +453,15 @@ Begin
         SMG$Begin_Display_Update (ScreenDisplay);
         SMG$Erase_Display (ScreenDisplay);
         SMG$Home_Cursor (ScreenDisplay);
-        SMG$Put_Line (ScreenDisplay,'Item #'+String(Number,3));
-        SMG$Put_Line (ScreenDisplay,'---- ----');
+        SMG$Put_Line (ScreenDisplay,
+            'Item #'+String(Number,3));
+        SMG$Put_Line (ScreenDisplay,
+            '---- ----');
         For Loop:=1 to 22 do
            Print_Characteristic (Item,Loop,Items,Allow_Number_Changes);
         SMG$End_Display_Update (ScreenDisplay);
-        Answer:=Make_Choice (['A'..'V',' ']);
+        Answer:=Make_Choice (
+            ['A'..'V',' ']);
         If Answer<>' ' then
            Handle_Choice (Item,Ord(Answer)-64,Number,Allow_Number_Change);
         Unlock (AmountFile);
@@ -456,13 +482,166 @@ End;
 
 (******************************************************************************)
 
-{ TODO: Enter this code }
+Procedure Print_Table (Item: List_of_Items);
+
+Const
+   Page_Size = 22;
+
+Var
+   Loop,First,Last: Integer
+   T,Temp: Line;
+   Answer: Char;
+
+Begin
+   Answer:=' ';
+   First:=1;   Last:=First+Page_Size;
+   Repeat
+      Begin
+         SMG$Begin_Display_Update (ScreenDisplay);
+         SMG$Erase_Display (ScreenDisplay);
+         SMG$Home_Cursor (ScreenDisplay);
+         For Loop:=First to Last do
+             Begin
+                T:=String(Loop,3)
+                    +'    '
+                    +Pad(Item[Loop].True_Name,' ',22);
+                Writev (Temp,Item[Loop].Kind);
+                T:=T+Temp;
+                SMG$Put_Line (ScreenDisplay,T);
+             End;
+         SMG$Put_Line (ScreenDisplay,
+             'F)orward, B)ack, E)xit',0);
+         SMG$End_Display_Update (ScreenDisplay);
+         Answer:=Make_Choice (['F','B','E']);
+         If (Answer='F') and (First+Page+size<=Table_Size) then
+            Begin
+               First:=First+Page_Size;
+               Last:=First+Page_Size;
+               If Last>Table_Size then
+                   Last:=Table_Size;
+               End
+            Else
+               If (Answer='B') and (First>=10) then
+                  Begin
+                     First:=First-Page_Size;
+                     If First<1 then
+                        First:=1;
+                     Last:=First+Page_Size;
+                  End;
+      End;
+   Until Answer='E';
+End;
+
+(******************************************************************************)
+
+Procedure Swap_Record;
+
+Var
+  T: Line;
+  Answer: Char;
+  Old_Slot,New_Slot: Integer;
+  Temp_Record: Item_Record;
+
+Begin
+   SMG$Put_Chars (ScreenDisplay,
+       'Record A -->');
+   Get_Num (Old_Slot,ScreenDisplay);
+
+   SMG$Put_Chars (ScreenDisplay,
+       'Record B -->');
+   Get_Num (New_Slot,ScreenDisplay);
+
+   T:='Swap: ';
+   T:=T
+      +Item_List[New_Slot].True_Name
+      +' with '
+      +Item_List[Old_Slot].True_Name;
+   SMG$Put_Line (ScreenDisplay, T);
+   SMG$Put_Line (ScreenDisplay,
+       'Confirm? (Y/N)');
+
+   Answer:=Yes_or_No;
+   If Answer='Y' then
+      Begin
+         Open(AmountFile,
+             file_name:='STORE.DAT;1',History:=Unknown,
+             Access_Method:=DIRECT,Sharing:=READWRITE);
+
+         Find(AmountFile,Old_Slot+1);
+         Old_Num:=AmountFile^;
+
+         Find(AmountFile,New_Slot+1);
+         New_Num:=AmountFile^;
+
+         AmountFile^:=Old_Num;
+         Update(AmountFile);
+
+         Find(AmountFile,Old_Slot+1);
+         AmountFile^:=New_Num;
+         Update(AmountFile);
+
+         Close(AmountFile);
+
+         Temp_Record:=Item_List[Old_Slot];
+         Item_List[Old_Slot]:=Item_Lit[New_Slot];
+         ItemList[New_Slot]:=Temp_Record;
+
+         Item_List[New_Slot].Item_Number:=New_Slot;
+         Item_List[Old_Slot].Item_Number:=Old_Slot;
+      End;
+End;
+
+(******************************************************************************)
+
+{ Function Find_Last (Curr: Integer): Integer;
+
+Var
+   X: Integer;
+   Done: Boolean;
+
+Begin
+   X:=Curr;
+   Done:=(X>448);
+   While Not Done do
+      Begin
+         X:=X+1;
+         Done:=(Item_List[X]=Null_Item);
+         Done:=Done or (X>440);
+      End;
+   Find_Last:=X;
+End; }
+
+(******************************************************************************)
 
 [Global]Procedure Edit_Item;
 
 Begin { Edit Item }
-
-{ TODO: Enter this code }
-
+   Number:=0;
+   Repeat
+      Begin
+         SMG$Begin_Display_Update (ScreenDisplay);
+         SMG$Erase_Display (ScreenDisplay);
+         SMG$Home_Cursor (ScreenDisplay);
+         SMG$Put_Line (ScreenDisplay,
+             '           '
+             +'       Edit Item',1,1);
+         SMG$Put_Line (ScreenDisplay,String(Table_Size)
+             +' is the cu'
+             +'rrent table size.  '
+             +'Edit which item?');
+         SMG$End_Display_Update (ScreenDisplay);
+         SMG$Put_Chars (ScreenDisplay,
+             '(0-250, -4 to insert,'
+             +' -3 swaps, -2 lists,'
+             +' -1 exits)',3,1);
+         Get_Num (Number,ScreenDisplay);
+         SMG$Set_CursorABS (ScreenDisplay,4,1);
+         If (Number > -1) and (Number < 251) then
+            Change_Item (Number,Item_List);
+{        If Number=-4 then Insert_Item; }
+         If Number=-3 then Swap_Record;
+         If Number=-2 then Print_Table (Item_List);
+      End;
+   Until Number=-1;
 End;  { Edit Item }
 End.  { Edit Items }
