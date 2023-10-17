@@ -71,7 +71,7 @@ Value
 [External]Procedure Delay (Seconds: Real);External;
 [External]Function  String(Num: Integer;  Len: Integer:=0):Line;External;
 [External]Function Compute_Party_Size (Member: Party_Type;  Party_Size: Integer): Integer;External;
-[External]Procedure Print_Party_Line (Member: Party_Type;  Party_Size,Position: Integer);External
+[External]Procedure Print_Party_Line (Member: Party_Type;  Party_Size,Position: Integer);External;
 [External]Procedure Time_Effects (Position: Integer; Var Member: Party_Type; Party_Size: Integer);External;
 [External]Procedure Dead_Character (Position: Integer; Var Member: Party_Type; Party_Size: Integer);External;
 (******************************************************************************)
@@ -115,7 +115,7 @@ End;  { Party Dead }
 
 (******************************************************************************)
 
-[Global]Function Monster_Name (Monster: Monster_Record; Number: Integer; Identified): Monster_Name_Type;
+[Global]Function Monster_Name (Monster: Monster_Record; Number: Integer; Identified: Boolean): Monster_Name_Type;
 
 { This function returns the name of the monster as influenced by whether or not the monsters have been identified, and whether there
   is just one, or many. }
@@ -226,7 +226,7 @@ Begin { Initialize }
    SMG$Create_Virtual_Display (22,78,SpellListDisplay,1);
    SMG$Erase_Display (SpellListDisplay);
 
-   Encounter_Spells := Party_Spell + Person_Spell + Caster_Spell + All_Monster_Spell + Group_Spell + Area_Spell;
+   Encounter_Spells := Party_Spell + Person_Spell + Caster_Spell + All_Monsters_Spell + Group_Spell + Area_Spell;
 
    Can_Attack:=Update_Can_Attacks (Member,Party_Size);
    Time_Stop_Monsters:=False;  Time_Stop_Players:=False;
@@ -237,6 +237,64 @@ Begin { Initialize }
    Alarm_Off:=False;   NotSurprised:=False;
    Yikes:=False;
 End;  { Initialize }
+
+(******************************************************************************)
+
+Procedure Switch_Characters (Character1,Character2: Integer; Var Member: Party_Type;  Var Can_Attack: Party_Flag);
+
+{ This function switches the positions of two characters in the party.  Notice that, in case of a silenced person, it is
+  not the person that is silenced, but the area occupied by the person. Therefore, if a non-silenced person person switches with
+  a silenced person, the non-silenced person becomes silenced and visa versa. }
+
+Var
+   Temp: Character_Type;
+   Temp1: Boolean;
+
+Begin { Switch Characters }
+   Temp:=Member[Character1];
+   Member[Character1]:=Member[Character2];
+   Member[Character2]:=Temp;
+
+   Temp1:=Can_Attack[Character1];
+   Can_Attack[Character1]:=Can_Attack[Character2];
+   Can_Attack[Character2]:=Temp1;
+End;  { Switch Character }
+
+(******************************************************************************)
+
+Procedure Berserk_Characters (Var Member: Party_Type; Current_Party_Size: Party_Size_Type;  Var Can_Attack: Party_Flag);
+
+{ This procedure will advance a berserk character in the ranks }
+
+Var
+   Loop: Integer;
+
+Begin { Berserk Characters }
+  For Loop:=2 to Current_Party_Size do
+     If (Member[Loop].Status in [Healthy,Poisoned]) and Member[Loop].Attack.Berserk then
+        Switch_Characters (Loop,Loop-1,Member,Can_Attack);
+End;  { Berserk Characters }
+
+(******************************************************************************)
+
+Function Need_to_Switch_Characters (Character2,Character1: Status_Type):Boolean;
+
+Var
+   Temp: Boolean;
+
+Begin { Need to Switch Characters }
+   Temp:=False;
+   Case Character2 of
+        Healthy,Poisoned,Zombie:  Temp:=Not (Character1 in [Insane,Healthy,Poisoned,Zombie]);
+        Asleep:                   Temp:=Not(Character1 in [Zombie,Insane,Healthy,Poisoned,Asleep]);
+        Petrified,Paralyzed:      Temp:=Character1 in [Dead,Ashes,Deleted];
+        Dead,Ashes,Deleted:       Temp:=False;
+        Insane:                   Temp:=True;
+        Afraid:                   Temp:=Not (Character1 in [Zombie,Insane,Healthy,Poisoned,Afraid,Paralyzed,Petrified]);
+        Otherwise                 Temp:=False;
+   End;
+   Need_To_Switch_Characters:=Temp;
+End;  { Need to Switch Characters }
 
 (******************************************************************************)
 
