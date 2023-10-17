@@ -438,13 +438,257 @@ End;
 
 { TODO: Enter this code }
 
+(******************************************************************************)
+
+Function Empty (A: PriorityQueue): Boolean;
+
+Begin
+   Empty:=(A.Last=0)
+End;
+
+(******************************************************************************)
+
+Procedure MakeNull (Var A: PriorityQueue);
+
+Begin
+   A:=Zero;
+End;
+
+(******************************************************************************)
+
+Function P (A: Attacker_Type): Integer;
+
+Begin
+   P:=A.Priority;
+End;
+
+(******************************************************************************)
+
+Procedure Insert (X: Attacker_Type; Var A: PriorityQueue);
+
+Var
+   NotDone: Boolean;
+   i: Integer;
+   Temp: Attacker_Type;
+
+Begin
+   If A.Last>4007 then
+      Begin
+        SMG$Erase_Display (CharacterDisplay);
+        SMG$Put_Line (CharacterDisplay,
+            'Error: heap insert overflow.');
+        Delay(13);
+      End
+   Else
+      Begin
+         A.Last:=A.Last + 1;
+         A.Contents[A.Last] := x;
+         i := A.Last; { i is index of current position of x }
+         If I>1 then NotDone:=(P(A.Contents[i])<P(A.Contents[i div 2]))
+         Else        NotDone:=False;
+         While NotDone do
+            Begin { Push x up the tree by exchanging it with its parent of larger priority. Recall p computes the priority of a
+                    Attacker_Type element }
+               Temp:=Contents[i];
+               A.Contents[i]:=A.Contents[i div 2];
+               A.Contents[i div 2]:=Temp;
+
+               i:=i div 2;
+
+               If I>1 then
+                   NotDone:=(P(A.Contents[i])<P(A.Contents[i div 2]))
+               Else
+                   NotDone:=False
+            End
+      End
+End;
+
+(******************************************************************************)
+
+Function DeleteMin (Var A: PriorityQueue): Attacker_Type;
+
+Var
+   i,j: Integer;
+   Temp,minimum: Attacker_Type;
+
+Begin
+  If A.last>0 then
+     Begin
+        Minimum:=A.Contents[1];
+        A.Contents[1]:=A.Contents[A.Last];
+        A.Last:=A.Last-1;
+
+        i:=1;
+        While (i <= (A.Last div 2)) do
+           Begin
+              If 2*i=A.last then J:=2*i
+              Else If P(A.Contents[2*i])<P(A.Contents[2*i+1]) then
+                      j:=2*i
+                   Else
+                      j:=2*i+1;
+
+              If (P(A.Contents[i]) > P(A.Contents[j]) then
+                 Begin
+                    Temp:=A.Contents[i];
+                    A.Contents[i]:=A.Contents[j];
+                    A.Contents[j]:=Temp;
+                    i:=j;
+                 End
+              Else
+                 Begin
+                    DeleteMin:=Minimum;
+                    i:=(A.Last div 2)+1;
+                 End
+           End;
+        DeleteMin:=Minimum;
+     End
+  Else
+     Begin
+        Temp.Group:=0;
+        DeleteMin:=Temp;
+     End;
+End;
+
+{ TODO: Enter this code }
+
+(******************************************************************************)
+
+Procedure Friendly_Monsters (Lead_Monster: Monster_Group;  Var Killer_Party: Boolean; Var NotSurprised: Boolean;
+                             Var Member: Party_Type;  Current_Party_Size: Integer);
+
+{ This procedure handles friendly monsters. It gives a party a chance to attack the monsters anyway, and if this is the case,
+  KILLER_PARTY is set to be true. }
+
+Var
+   Peace: Char;
+   DummyName: Line;
+
+Begin
+   NotSurprised:=True;  { By being friendly, they blew their chance of surprise }
+   Print_Hailing (Lead_Monster);
+   Peace:=Make_Choice (['F','L']); { F)ight or L)eave in peace }
+   If Insane_Leader (Member,DummyName) then
+      Begin
+         If Peace='F' then
+            SMG$Put_Line (MessageDisplay,
+                DummyName
+                +' charges ahead of thee into battle!')
+         Else
+            SMG$Put_Line (MessageDisplay,
+                DummyName
+                +' charges insanely into battle!');
+         Peace:='F';
+         Delay(1);
+      End;
+   Killer_Party:=(Peace='F');
+   If Killer_Party then Alignment_Drift (Evil,Member,Current_Party_Size)
+   Else                 Alignment_Drift (Good,Member,Current_Party_Size);
+End;
+
+
+
+(******************************************************************************)
+
+Procedure Init_Combat_Display (Var Encounter: Encounter_Group);
+
+Var
+   Pic_Number: Pic_Type;
+
+{ This procedure initializes the screen for combat-mode }
+
+Begin { Init Combat Display }
+   Pic_Number:=Encounter[1].Monster.Picture_Number;
+   Show_Monster_Image (Pic_Number,FightDisplay);
+   SMG$Erase_Display (MonsterDisplay);
+   SMG$Erase_Display (MessageDisplay);
+
+   SMG$Paste_Virtual_Display (FightDisplay,Pasteboard,ViewY,ViewX);
+   SMG$Paste_Virtual_Display (MonsterDisplay,Pasteboard,MonY,MonX);
+End;  { Init Combat Display }
+
+(******************************************************************************)
+
+Procedure Restore_Screen;
+
+{ This procedure restores the non-combat mode to the pasteboard, by removing combat-oriented displays.  If LEAVE_MAZE is true
+  (because of death, WOrd of REcall, or other reason), all of the maze displays are removed. }
+
+Begin
+   SMG$Erase_Display (MessageDisplay);
+   SMG$Begin_Pasteboard_Update (Pasteboard);
+   SMG$Unpaste_Virtual_Display (MonsterDisplay,Pasteboard);
+   SMG$Unpaste_Virtual_Display (FightDisplay,Pasteboard);
+   If Leave_Maze then
+      Begin
+        SMG$Unpaste_Virtual_Display (OptionsDisplay,Pasteboard);
+        SMG$Unpaste_Virtual_Display (CharacterDisplay,Pasteboard);
+        SMG$Unpaste_Virtual_Display (CommandsDisplay,Pasteboard);
+        SMG$Unpaste_Virtual_Display (SpellsDisplay,Pasteboard);
+        SMG$Unpaste_Virtual_Display (MessageDisplay,Pasteboard);
+        SMG$Unpaste_Virtual_Display (MonsterDisplay,Pasteboard);
+        SMG$Unpaste_Virtual_Display (ViewDisplay,Pasteboard);
+      End;
+   SMG$End_Pasteboard_Update (Pasteboard);
+End;
+
+(******************************************************************************)
+
+Procedure Combat_Over (Var Member: Party_Type;  Current_Party_Size: Party_Size_Type);
+
+{ This procedure ties up loose ends in the combat module, such as deleting the created display, and returning characters to their
+  non-combat state (e.g. no longer berserking) }
+
+Var
+   Character: Integer;
+
+Begin { Combat Over }
+   Restore_Screen;                                  { Remove all the combat-oriented displays }
+   SMG$Delete_Virtual_Display (SpellListDisplay);   { Get rid of the temp }
+
+   { Turn characters back to their non-combat state }
+
+   If Current_Party_Size>0 then
+      For Character:=1 to Current_Party_Size do
+         Begin
+            Compute_AC_and_Regenerates (Member[Character]);
+            Member[Character].Attack.Berserk:=False;
+            If Member[Character].Status=Afraid then
+               Member[Character].Status:=Healthy;
+         End;
+End;  { Combat Over }
+
+(******************************************************************************)
+
 [Global]Procedure Run_Encounter (Monster_Number:Integer;  Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type;
                                  Party_Size: Integer;  Var Alarm_Off: Boolean;  Location: Area_Type:=Corridor;
                                  NoMagic: Boolean:=False;  Var Time_Delay: Integer);
 
+{ This procedure will run  the combat simulation. }
+
+Var
+   Homicidal_Party: Boolean;
+   Encounter: Encounter_Group;
+   Monster_Reaction: Reaction_Type;
+   Can_Attack: Party_Flag;
+
 Begin { Run Encounter }
+   Homicidal_Party:=False;
+   Initialize (Member,Current_Party_Size,Party_Size,Can_Attack,Alarm_Off,Time_Delay);
+   Init_Encounter (Monster_Number,Encounter,Member,Current_Party_Size);
+   Init_Combat_Display (Encounter);
+   Monster_Reaction:=Reation (Encounter[1].Monster,Member,Party_Size);  { How do the monsters react? }
 
-{ TODO: Enter this code }
+   { Handle friendly monsters }
 
+   If Monster_Reaction=Friendly then
+      Friendly_Monsters (Encounter[1],Homicidal_Party,NotSurprised,Member,Current_Party_Size);
+
+   { Handle combat if necessary }
+
+   If (Monster_Reaction=Hostile) or Homicidal_Party then
+       Fight (Encounter,Member,Current_Party_Size, Party_Size,
+           NotSurprised,Location,Time_Delay,Alarm_Off,Can_Attack);
+
+   Combat_Over (Member,Current_Party_Size);  { Restore things to non-combat }
 End;  { Run Encounter }
 End.  { Encounter }
