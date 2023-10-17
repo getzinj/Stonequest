@@ -549,6 +549,33 @@ Begin
      End;
 End;
 
+(******************************************************************************)
+
+Procedure Insert_Monster_Attacks (Var Group: Encounter_Group; Var Attacks: PriorityQueue);
+
+Var
+  Mon_Group,Monster,Dex_Adj: Integer;
+  Individual: Attacker_Type;
+  Monster_Rec: Monster_Record;
+
+Begin
+   For Mon_Group:=1 to 4 do
+      If Group[Mon_Group].Curr_Group_Size>0 then
+         Begin
+            Monster_Rec:=Group[Mon_Group].Monster;
+            For Monster:=1 to Group[Mon_Group].Curr_Group_Size do
+               Begin
+                  Dex_Adj:=Monster_Rec.No_of_attacks*(-1 * (10-Monster.Rec.Armor_Class)); { TODO: Make a function }
+                  Individual.Priority:=Roll_Die (6000)-(Dex_Adj*400)-(Monster_Rec.Hit_Points.X*200); { TODO: Make a function }
+
+                  Individual.Caster_Level:=Monster_Rec.Hit_Points.X;
+                  Individual.Group:=Mon_Group;
+                  Individual.Attacker_Position:=Monster;
+                  Insert (Individual,Attacks);
+               End;
+         End;
+End;
+
 { TODO: Enter this code }
 
 (******************************************************************************)
