@@ -153,6 +153,93 @@ End;  { Slay Character }
 
 (******************************************************************************)
 
+Function Update_Can_Attacks (Member: Party_Type; Party_Size: Integer): Party_Flag;
+
+{ This procedure will determine who in the party can still attack }
+
+Var
+   Individual: Integer;
+   Can_Attack: Party_Flag;
+
+Begin { Update Can Attacks }
+   For Individual:=1 to Party_Size do
+      Can_Attack[Individual]:=(Member[Individual].Status in [Healthy,Poisoned,Zombie]);
+   Update_Can_Attacks:=Can_Attack;
+End;  { Update Can Attacks }
+
+(******************************************************************************)
+
+Procedure Combat_Message;
+
+{ Print "An encounter..." on the screen }
+
+Begin { Combat Message }
+   SMG$Begin_Display_Update (MessageDisplay);
+   SMG$Erase_Display (MessageDisplay);
+   SMG$Put_Chars (MessageDisplay,
+       'An encounter...',2,1,,1);
+   SMG$End_Display_Update (MessageDisplay);
+   Delay (2);
+End;  { Combat Message }
+
+(******************************************************************************)
+
+Procedure Compute_AC_And_Regenerates (Var Character: Character_Type);
+
+[External]Function Compute_AC (Character: Character_Type; PosZ: Integer:=0): Integer;external;
+
+Begin { Compute AC and Regenerates }
+   Character.Armor_Class:=Compute_AC(Character,PosZ);
+   Character.Regenerates:=Regenerates(Character,PosZ);
+End;  { Compute AC and Regenerates }
+
+(******************************************************************************)
+
+Procedure Initialize_Character (Var Character: Character_Type; Position: Integer);
+
+Begin { Initialize Character }
+  Compute_AC_And_Regenerates (Character);
+  Character.Attack.Berserk:=False;
+  Silenced[Position]:=False
+End;  { Initialize Character }
+
+(******************************************************************************)
+
+Procedure Initialize (Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type; Party_Size: Integer;
+                      Var Can_Attack: Party_Flag;  Var Alarm_Off: Boolean;  Time_Delay: Integer);
+
+{ This procedure initializes the encounter module. }
+
+Var
+   Character: Integer;
+
+Begin { Initialize }
+   Combat_Message;
+   Show_Messages:=True;
+
+   { Establish the delay constant for pacing messages }
+
+   Delay_Constant:=Time_Delay/500;
+
+   { Initialize some displays }
+
+   SMG$Create_Virtual_Display (22,78,SpellListDisplay,1);
+   SMG$Erase_Display (SpellListDisplay);
+
+   Encounter_Spells := Party_Spell + Person_Spell + Caster_Spell + All_Monster_Spell + Group_Spell + Area_Spell;
+
+   Can_Attack:=Update_Can_Attacks (Member,Party_Size);
+   Time_Stop_Monsters:=False;  Time_Stop_Players:=False;
+
+   For Character:=1 to Current_Party_Size do
+      Initialize_Character(Member[Character],Character);
+
+   Alarm_Off:=False;   NotSurprised:=False;
+   Yikes:=False;
+End;  { Initialize }
+
+(******************************************************************************)
+
 { TODO: Enter this code }
 
 [Global]Procedure Run_Encounter (Monster_Number:Integer;  Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type;
