@@ -366,6 +366,76 @@ End;  { Index of Living }
 
 (******************************************************************************)
 
+Procedure Number_Active (Group: Monster_Group): Integer;
+
+{ This function determines how many monsters can attack in GROUP }
+
+Var
+   Temp,Loop: Integer;
+
+Begin { Number Active }
+   Temp:=0;
+   For Loop:=1 to Group.Curr_Group_Size do
+      If Group.Status[Loop] in [Healthy,Poisoned,Afraid,Zombie] then
+         Temp:=Temp+1;
+   Number_Active:=Temp;
+End;  { Number Active }
+
+(******************************************************************************)
+
+Procedure Print_Monster_Line (Group_Number: Integer; Group: Monster_Group);
+
+{ This procedure will print out the GROUP_NUMBERth group's status line }
+
+Var
+   Name: Line;
+
+Begin
+   Name:='';
+   If Group.Curr_Group_Size>0 then
+      Begin
+         Name:=Monster_Name (Group.Monster,Group.Curr_Group_Size,Group.Identified);
+         SMG$Put_Chars (MonsterDisplay,
+             CHR(Group_Number+ZeroOrder)
+             +'  '
+             +String(Group.Curr_Group_Size),Group_Number,1,1);
+         SMG$Put_Chars (MonsterDisplay,' '
+             +Name
+             +' ('
+             +String(Number_Active (Group))
+             +')');
+      End
+   Else
+      SMG$Put_Chars (MonsterDisplay,
+          '',Group_Number,1,1);
+End;
+
+(******************************************************************************)
+
+Procedure Switch_Monsters (Var Group: Monster_Group; One,Two: Integer);
+
+{ This procedure switches the position of two monsters in GROUP }
+
+Var
+   TempStat: Status_Type;
+   TempMax,TempCurr: Integer;
+
+Begin
+   TempStat:=Group.Status[One];
+   TempMax:=Group.Max_HP[One];
+   TempCurr:=Group.Curr_HP[One];
+
+   Group.Status[One]:=Group.Status[Two];
+   Group.Max_HP[One]:=Group.Max_HP[Two];
+   Group.Curr_HP[One]:=Group.Curr_HP[Two];
+
+   Group.Status[Two]:=TempStat;
+   Group.Max_HP[Two]:=TempMax;
+   Group.Curr_HP[Two]:=TempCurr;
+End;
+
+(******************************************************************************)
+
 { TODO: Enter this code }
 
 [Global]Procedure Run_Encounter (Monster_Number:Integer;  Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type;
