@@ -64,6 +64,7 @@ Value
 [External]Function Pick_Character_Number (Party_Size: Integer; Current_Party_Size: Integer:=0;
                                           Time_Out: Integer:=-1; Time_Out_Char: Char:='0'): [Volatile]Integer;External;
 [External]Procedure Ring_Bell (Display_Id: Unsigned; Number_of_Times: Integer:=1);External;
+[External]Function  Roll_Die (Die_Type: Integer): [Volatile]Integer;External;
 [External]Function Random_Number (Die: Die_Type): [Volatile]Integer;External;
 [External]Function Regenerates (Character: Character_Type; PosZ: Integer:=0): Integer;external;
 [External]Function Alive (Character: Character_Type): Boolean;external;
@@ -295,6 +296,73 @@ Begin { Need to Switch Characters }
    End;
    Need_To_Switch_Characters:=Temp;
 End;  { Need to Switch Characters }
+
+(******************************************************************************)
+
+[Global]Procedure Dead_Characters (Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type;  Party_Size: Integer;
+                                   Var Can_Attack: Party_Flag);
+
+{ This procedure will move dead characters and/or inactive characters to the back of the party.  The algorithm is basically a
+  bubblesort, which is O(n^2), but since there are most six slots, the time is negligable. }
+
+Var
+  Done: Boolean;
+  Loop: Integer;
+
+Begin { Dead Characters }
+   Can_Attack:=Update_Can_Attacks (Member,Party_Size);
+   Repeat
+     Begin
+        Done:=True;
+        For Loop:=Party_Size downto 2 do
+           If Need_to_Switch_Characters (Member[Loop].Status,Member[Loop-1].Status) then
+              Begin
+                 Switch_Characters (Loop,Loop-1,Member,Can_Attack);
+                 Done:=False;
+              End;
+     End;
+   Until Done;
+
+   Current_Party_Size:=Compute_Party_Size (Member,Party_Size);
+End; { Dead Characters }
+
+(******************************************************************************)
+
+Function Index_of_Living_Aux (Group: Monster_Group): Integer;
+
+{ This function returns the slot of the first living monster in GROUP }
+
+Var
+   Index: Integer;
+
+Begin { Index of Living Aux }
+   Index:=1;
+   While (Index<=Group.Curr_Group_Size) and (Group.Status[Index]=Dead) do
+      Index:=Index+1;
+   If Index>Group.Curr_Group_Size then
+      Index_of_Living_Aux:=0
+   Else
+      Index_of_Living_Aux:=Index;
+End;  { Index of Living Aux }
+
+(******************************************************************************)
+
+[Global]Function Index_of_Living (Group: Monster_Group): [Volatile]Integer;
+
+Var
+   Person: Integer;
+
+Begin { Index of Living }
+   If Index_of_Living_Aux (Group)=0 then
+      Index_of_Living:=0
+   Else
+      Begin
+         Repeat
+            Person:=Roll_Die(Group.Curr_Group_Size)
+         Until Group.Status[Person]<>Dead;
+         Index_of_Living:=Person;
+      End;
+End;  { Index of Living }
 
 (******************************************************************************)
 
