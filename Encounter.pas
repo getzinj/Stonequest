@@ -366,7 +366,7 @@ End;  { Index of Living }
 
 (******************************************************************************)
 
-Procedure Number_Active (Group: Monster_Group): Integer;
+Function Number_Active (Group: Monster_Group): Integer;
 
 { This function determines how many monsters can attack in GROUP }
 
@@ -396,7 +396,7 @@ Begin
       Begin
          Name:=Monster_Name (Group.Monster,Group.Curr_Group_Size,Group.Identified);
          SMG$Put_Chars (MonsterDisplay,
-             CHR(Group_Number+ZeroOrder)
+             CHR(Group_Number+ZeroOrd)
              +'  '
              +String(Group.Curr_Group_Size),Group_Number,1,1);
          SMG$Put_Chars (MonsterDisplay,' '
@@ -474,7 +474,7 @@ Begin
     Until Done;
 
     Group.Curr_Group_Size:=0;  Slot:=1;
-    While (Group.Status[Slot]<>Dead) and (Slot<=Group.Orig_Group_Size) do
+    While (Group.Status[Slot]<>Dead) and (Slot<=Group.Origin_Group_Size) do
        Begin
           Group.Curr_Group_Size:=Group.Curr_Group_Size+1;
           Slot:=Slot+1;
@@ -523,6 +523,74 @@ Begin
             SMG$Put_Chars (Display,Pic.Eye_Type+'',Pic.Left_Eye.Y+0,Pic.Left_Eye.X+0);
       End;
    SMG$End_Display_Update (Display);
+End;
+
+(******************************************************************************)
+
+Procedure They_Advance (Name: Monster_Name_Type);
+
+Begin
+   SMG$Begin_Display_Update (MessageDisplay);
+   SMG$Erase_Display (MessageDisplay);
+   SMG$Put_Line (MessageDisplay,
+       'The '
+       +Name
+       +' advance!');
+   Ring_Bell (MessageDisplay, 2);
+   SMG$End_Display_Update (MessageDisplay);
+   Delay (2*Delay_Constant);
+End;
+
+(******************************************************************************)
+
+Procedure Swap_Groups (Var Group: Encounter_Group; Group1, Group2: Integer; Var Advance: Boolean;
+                       Var Name: Monster_Name_Type);
+
+Var
+   Temp: Monster_Group;
+
+Begin
+   Advance:=False;
+   If Group[Group1].Curr_Group_Size>0 then
+      Begin
+         Name:=Monster_Name(Group[Group2].Monster,2,Group[Group2].Identified);
+         Advance:=True;
+      End;
+   Temp:=Group[Group1];
+   Group[Group1]:=Group[Group2];
+   Group[Group2]:=Temp;
+End;
+
+(******************************************************************************)
+
+Procedure Update_Monster_Box (Var Group: Encounter_Group);
+
+{ This procedure will allow monsters groups to switch positions for more favorable attack advantages }
+
+Var
+   i,j: Integer;
+   Name: Monster_Name_Type;
+   Advance: Boolean;
+
+Begin
+   Print_Monsters (Group);
+   For i:=1 to 3 do
+      For j:=4 downto i+1 do
+         If (Group[j-1].Curr_Group_Size<Group[j].Curr_Group_Size) or Want_to_Pass (Group,j-1,j) then
+            Begin
+               Swap_Groups (Group,j-1,j,Advance,Name);
+
+               SMG$Begin_Display_Update (MonsterDisplay);
+               Print_Monster_Line (j-1,Group[j-1]);
+               Print_Monster_Line (j,Group[j]);
+               SMG$End_Display_Update (MonsterDisplay);
+
+               If Advance then
+                  They_Advance (Name);
+
+               If Group[1].Curr_Group_Size>0 then
+                  Show_Monster_Image (Group[1].Monster.Picture_Number,FightDisplay);
+            End;
 End;
 
 (******************************************************************************)
@@ -580,7 +648,7 @@ Begin
          While NotDone do
             Begin { Push x up the tree by exchanging it with its parent of larger priority. Recall p computes the priority of a
                     Attacker_Type element }
-               Temp:=Contents[i];
+               Temp:=A.Contents[i];
                A.Contents[i]:=A.Contents[i div 2];
                A.Contents[i div 2]:=Temp;
 
@@ -618,7 +686,7 @@ Begin
                    Else
                       j:=2*i+1;
 
-              If (P(A.Contents[i]) > P(A.Contents[j]) then
+              If P(A.Contents[i]) > P(A.Contents[j]) then
                  Begin
                     Temp:=A.Contents[i];
                     A.Contents[i]:=A.Contents[j];
@@ -656,7 +724,7 @@ Begin
             Monster_Rec:=Group[Mon_Group].Monster;
             For Monster:=1 to Group[Mon_Group].Curr_Group_Size do
                Begin
-                  Dex_Adj:=Monster_Rec.No_of_attacks*(-1 * (10-Monster.Rec.Armor_Class)); { TODO: Make a function }
+                  Dex_Adj:=Monster_Rec.No_of_attacks+(-1 * (10-Monster_Rec.Armor_Class)); { TODO: Make a function }
                   Individual.Priority:=Roll_Die (6000)-(Dex_Adj*400)-(Monster_Rec.Hit_Points.X*200); { TODO: Make a function }
 
                   Individual.Caster_Level:=Monster_Rec.Hit_Points.X;
@@ -794,7 +862,7 @@ Begin { Run Encounter }
    Initialize (Member,Current_Party_Size,Party_Size,Can_Attack,Alarm_Off,Time_Delay);
    Init_Encounter (Monster_Number,Encounter,Member,Current_Party_Size);
    Init_Combat_Display (Encounter);
-   Monster_Reaction:=Reation (Encounter[1].Monster,Member,Party_Size);  { How do the monsters react? }
+   Monster_Reaction:=Reaction (Encounter[1].Monster,Member,Party_Size);  { How do the monsters react? }
 
    { Handle friendly monsters }
 
