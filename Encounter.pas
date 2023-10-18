@@ -436,6 +436,97 @@ End;
 
 (******************************************************************************)
 
+Function Need_to_Swap (Group: Monster_Group; Pos1,Pos2: Integer): Boolean;
+
+{ This function determines whether or not two monsters need to be switched in the marching order }
+
+Var
+   Temp: Boolean;
+
+Begin
+   Temp:=(Group.Status[Pos1]=Dead);
+   Temp:=Temp and (Group.Status[Pos2]<>Dead);
+   Need_to_Swap:=Temp;
+End;
+
+(******************************************************************************)
+
+Procedure Update_Monster_Group (Var Group: Monster_Group);
+
+{ This procedure will update the current monster group.  Updated are the positions of the monsters, and the current group size }
+
+Var
+   Slot: Integer;
+   Done: Boolean;
+
+Begin
+  If Group.Origin_Group_Size>1 then
+     Repeat
+        Begin
+           Done:=True;
+           For Slot:=Group.Origin_Group_Size downto 2 do
+              If Need_to_Swap (Group,Slot-1,Slot) then
+                 Begin
+                    Switch_Monsters (Group,Slot-1,Slot);
+                    Done:=False;
+                 End;
+        End;
+    Until Done;
+
+    Group.Curr_Group_Size:=0;  Slot:=1;
+    While (Group.Status[Slot]<>Dead) and (Slot<=Group.Orig_Group_Size) do
+       Begin
+          Group.Curr_Group_Size:=Group.Curr_Group_Size+1;
+          Slot:=Slot+1;
+       End
+End;
+
+(******************************************************************************)
+
+Procedure Print_Monsters (Var Group: Encounter_Group);
+
+{ This procedure will print the monster status lines to the monster display }
+
+Var
+   Num: Integer;
+
+Begin
+  SMG$Begin_Display_Update (MonsterDisplay);
+  SMG$Erase_Display (MonsterDisplay);
+  For Num:=4 downto 1 do
+     Begin
+        Group[Num].Identified:=Group[Num].Identified or Made_Roll (15); { TODO: Make method taking past encounters into consideration }
+        Update_Monster_Group (Group[Num]);
+        Print_Monster_Line (Num,Group[Num]);
+     End;
+  SMG$End_Display_Update (MonsterDisplay);
+End;
+
+(******************************************************************************)
+
+[Global]Procedure Show_Monster_Image (Number: Pic_Type; Var Display: Unsigned);
+
+Var
+   Pic: Picture;
+
+[External]Procedure Show_Image (Number: Pic_Type; Var Display: Unsigned);External;
+
+Begin
+   SMG$Begin_Display_Update (Display);
+   Show_Image (Number, Display);
+   Pic:=Pics[Number];
+   If Yikes then
+      Begin
+         If (Pic.Right_Eye.X>0) and (Pic.Right_Eye.Y>0) then
+            SMG$Put_Chars (Display,Pic.Eye_Type+'',Pic.Right_Eye.Y+0,Pic.Right_Eye.X+0);
+         If (Pic.Left_Eye.X>0) and (Pic.Left_Eye.Y>0) then
+            SMG$Put_Chars (Display,Pic.Eye_Type+'',Pic.Left_Eye.Y+0,Pic.Left_Eye.X+0);
+      End;
+   SMG$End_Display_Update (Display);
+End;
+
+(******************************************************************************)
+
 { TODO: Enter this code }
 
 (******************************************************************************)
