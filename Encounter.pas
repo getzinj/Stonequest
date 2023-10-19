@@ -595,6 +595,203 @@ End;
 
 (******************************************************************************)
 
+[Global]Procedure Update_Character_Box (Member: Party_Type; Party_Size: Integer; Var Can_Attack: Party_Flag);
+
+Var
+   Num: Integer;
+
+Begin
+   Can_Attack:=Update_Can_Attack (Member,Party_Size);
+   SMG$Begin_Display_Update (CharacterDisplay);
+   For Num:=1 to Party_size do
+      Print_Party_Line (Member,Party_Size,Num);
+   SMG$End_Display_Update (CharacterDisplay);
+End;
+
+(******************************************************************************)
+
+Function Item_Attacker_Level (Attacker: Character_Type; Defender_Level): [Volatile]Boolean;
+
+Var
+   Critical_Flag: Boolean;
+   Item_Num: Integer;
+
+Begin
+  Critical_Flag:=False;
+  For Item_Num:=1 to Attacker.No_of_Items do
+     If Attacker.Item[Item_num].Equipted then
+        If Item_List[Attacker.Item[Item_Num].Item_Num].Auto_Kill then { TODO: Make the items stack so multiple items equals better chance of critical }
+           Critical_Flag:=True;
+
+  If Critical_Flag then Item_Attacker_Level:=Max(Attacker.Level,Attacker.Previous_Lvl)
+  Else                  Item_Attacker_Level:=0;
+End;
+
+(******************************************************************************)
+
+Function Class_Attacker_Level (Attacker: Character_Type): Integer;
+
+Begin
+   Attacker_Level:=0;
+   If Attacker.Class in [Monk, Ninja, Assassin] then
+      If Attacker.PreviousClass in [Monk, Ninja, Assassin] then
+         Class_Attacker_Level:=Max(Attacker.Level,Attacker.Previous_Lvl)
+      Else
+         Class_Attacker_Level:=Attacker.Level
+   Else if Attacker.PreviousClass in [Monk, Ninja, Assassin] then
+           Class_Attacker_Level:=Attacker.Previous_Lvl
+        Else
+           Class_Attacker_Level:=0;
+End;
+
+(******************************************************************************)
+
+[Global]Function Critical_hit (Attacker: Character_Type; Defender_Level: Integer): [Volatile]Boolean;
+
+Var
+   Base,Attacker_Level: Integer;
+
+Begin
+   Attacker_Level:=Max(Class_Attacker_Level(Attacker),Item_Attacker_Level(Attacker));
+   If Attacker_Level>0 then
+      Begin
+         Base:=10+ (5* ((Attacker_Level-Defender_Level) div 2));
+         Critical_Hit:=Made_Roll(Base);
+      End
+   Else
+      Critical_Hit:=False;
+End;
+
+(******************************************************************************)
+
+Function Luck_Adjustment (Luck: Integer): Integer;
+
+Begin
+   Case Luck of
+                  3: Luck_Adjustment:=-3;
+                  4: Luck_Adjustment:=-2;
+                  5: Luck_Adjustment:=-1;
+              6..15: Luck_Adjustment:=0;
+                 16: Luck_Adjustment:=1;
+                 17: Luck_Adjustment:=2;
+           18,19,20: Luck_Adjustment:=3;
+           21,22,23: Luck_Adjustment:=4;
+              24,25: Luck_Adjustment:=5;
+           Otherwise Luck_Adjustment:=0;
+   End;
+End;
+
+(******************************************************************************)
+
+Function Natural_Adjustment (Character: Character_Type; Attack: Attack_Type): Integer;
+
+Var
+   Constitution,Luck: Integer;
+   Race: Race_Type;
+   Temp: Integer;
+
+Begin
+   Temp:=0;  Race:=Character.Race;  Constitution:=Character.Abilities[5];  Luck:=Character.Abilities[7];
+
+   If Attack=Poison then
+      If Race in [LizardMan,HfOgre,Dwarven,Hobbit] then
+         Temp:=Temp+Trunc (Constitution / 3.5)
+      Else
+         If (Constitution>18) then
+            Temp:=Temp+(Constitution-18);
+
+   If (Race in [Dwarven,Hobbit]) and (Attack in [Magic,Death,CauseFear]) then
+      Temp:=Temp+Trunc (Constitution / 3.5);
+
+   Temp:=Temp+Luck_Adjustment (Luck);
+
+   Natural_Adjustment:=Temp;
+End;
+
+(******************************************************************************)
+
+Function Magical_Adjustment (Character: Character_Type; Attack: Attack_Type): Integer;
+
+Var
+   Temp,Item_No: Integer;
+
+Begin
+   Temp:=0;
+   If Character.No_of_Items>0 then
+      For Item_No:=1 to Character.No_of_Items do
+          If Character.Item[Item_No].Equipted then
+             If (Attack in Item_List[Character.Item[Item_No].Item_Num].Resists) or
+                ((Attack in [Stoning,LvlDrain) and (Magic in Item_List[Character.Item[Item_No].Item_Num].Resists)) then
+                   Temp:=Temp+1;
+   Magical_Adjustment:=Temp;
+End;
+
+(******************************************************************************)
+
+Function Class_Save (Class: Class_Type; Level: Integer): Integer;
+
+Var
+   Temp: Integer;
+
+Begin
+   Case Class of
+       Cleric,Monk:                                Temp:=10- (((Level-1) div 3));
+       Fighter,Ranger,Samurai,Paladin,AntiPaladin: Temp:=10- (((Level-1) div 2));
+       Wizard:                                     Temp:=11- (((Level-1) div 5));
+       Thief,Ninja,Assassin,Bard:                  Temp:=11- (((Level-1) div 4));
+       Otherwise                                   Temp:=12- (((Level-1) div 5));
+   End;
+   Class_Save:=Temp;
+End;
+
+(******************************************************************************)
+
+Function Base_Save (Character: Character_Type): Integer;
+
+Var
+   Temp1,Temp2: Integer;
+
+Begin
+   Temp1:=Class_Save (Character.Class,Character.Level);
+   Temp2:=Class_Save (Character.PreviousClass,Character.Previous_Lvl);
+   Base_Save:=Min (Temp1,Temp2);
+End;
+
+(******************************************************************************)
+
+Function Class_Adjustment (Class: Class_Type;  Attack: Attack_Type): Integer;
+
+Begin
+  Class_Adjustment:=0;
+  Case Attack of
+       Poison: If Class=Assassin then Class_Adjustment:=1;
+       Magic:  If Class=Wizard   then Class_Adjustment:=1;
+       Death:  If Class=AntiPaladin then Class_Adjustment:=1;
+       CauseFear: If Class=AntiPaladin then Class_Adjustment:=-3
+                  Else If Class=Barbarian then Class_Adjustment:=5;
+       Aging,Sleep: If Class=Monk then Class_Adjustment:=1;
+  End;
+End;
+
+(******************************************************************************)
+
+Function Saving_Throw (Character: Character_Type; Attack: Attack_Type): Integer;
+
+Var
+   Roll_Needed: Integer;
+
+Begin
+   Roll_Needed:=Base_Save (Character);
+   Roll_Needed:=Roll_Needed
+       -Natural_Adjustment (Character,Attack)
+       -Magical_Adjustment (Character,Attack)
+       -Class_Adjustment (Character.Class,Attack)
+       -Class_Adjustment (Character.PreviousClass,Attack);
+  Saving_Throw:=Max(Roll_Needed,2);
+End;
+
+(******************************************************************************)
+
 { TODO: Enter this code }
 
 (******************************************************************************)
