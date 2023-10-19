@@ -1338,6 +1338,188 @@ Begin
 End;
 
 (******************************************************************************)
+[External]Procedure Drain_Levels_from_Character (Var Character: Character_Type; Levels: Integer:=1);External;
+[External]Procedure Handle_Monster_Attack (Attacker: Attacker_Type;  Var Monster_Group1: Encounter_Group;
+                                                 Var Member: Party_Type; Var Current_Party_Size: Party_Size_Type;
+                                                 Party_Size: Integer; Var Can_Attack: Party_Flag);external;
+[External]Procedure Handle_Character_Attack (Attacker_Record: Attacker_Type; Var MonsterGroup: EncounterGroup;
+                                             Var Member: Party_Type; Var Current_Party_Size: Party_Size_Type);External;
+(******************************************************************************)
+
+Procedure Character_Attack (Attacker: Attacker_Type; Var Monster_Group: Encounter_Group; Var Member: Party_Type;
+                       Var Current_Party_Size: Party_Size_Type; Party_Size: Integer; Var Can_Attack: Party_Flag);
+
+Var
+   Character: Character_Type;
+   Position: Integer;
+
+Begin
+   Position:=Attacker.Attacker_Position;  Character:=Member[Position];
+
+   If (Can_Attack[Position]) and (Attacker.Action<>Parry) and (Character.Status in [Healthy,Poisoned,Zombie]) then
+      Begin
+         Handle_Character_Attack (Attacker,Monster_Group,Member,Current_Party_Size);
+         Delay ((3/2) * Delay_Constant)
+      End
+End;
+
+(******************************************************************************)
+
+Procedure Monster_Attack (Attacker: Attacker_Type; Var Monster_Group: Encounter_Group; Var Member: Party_Type;
+                                                Var Current_Party_Size: Party_Size_Type; Var Can_Attack: Party_Flag);
+
+Begin
+   If (Monster_Group[Attacker.Group].Status[Attacker.Attacker_Position]=Healthy) then
+      Begin
+         Handle_Monster_Attack (Attacker,Monster_Group,Member,Current_Party_Size,Party_Size,Can_Attack);
+         Delay ((3/2)*Delay_Constant)
+      End
+End;
+
+(******************************************************************************)
+
+Procedure Handle_Attack (    Attacker: Attacker_Type;
+                                 Var Monster_Group: Encounter_Group;
+                                 Var Member: Party_Type;
+                                 Var Current_Party_Size: Party_Size_Type;
+                                     Party_Size: Integer;
+                                 Var Can_Attack: Party_Flag);
+
+Begin
+   SMG$Erase_Display (MessageDisplay);
+   If (attacker.Group=5) and (Not Time_Stop_Players) then
+      Character_Attack (Attacker,Monster_Group,Member,Current_Party_Size,Can_Attack)
+   Else
+      If Not Time_Stop_Monsters then
+         Monster_Attack (Attacker,Monster_Group,Member,Current_Party_size,Party_Size,Can_Attack);
+End;
+
+(******************************************************************************)
+
+Procedure End_of_Round_Update (Var Monster_Group: Encounter_Group;
+                                       Var Member: Party_Type;
+                                       Var Current_Party_Size: Party_Size_Type;
+                                           Party_Size: Integer;
+                                       Var Can_Attack: Party_Flag);
+
+Begin
+   If Not Leave_Maze then
+      Begin
+         Update_Monster_Box (Monster_Group);
+
+         SMG$Begin_Display_Update (CharacterDisplay);
+         Berserk_Characters (Member,Current_Party_Size,Can_Attack);
+         Dead_Characters (Member,Current_Party_Size,Party_Size,Can_Attack);
+         Update_Character_Box (Member, Party_Size, Can_Attack);
+         SMG$End_Display_Update (CharacterDisplay);
+
+         Time_Stop_Players:=False;  Time_Stop_Monsters:=False;
+      End;
+End;
+
+(******************************************************************************)
+
+Procedure One_Round (Var Attacks: PriorityQueue;  Var Monster_Group: Encounter_Group;  Var Member: Party_Type;
+                             Var Current_Party_Size: Party_Size_Type;  Party_Size: Integer;  Var Can_Attack: Party_Flag);
+
+{ This procedure will run one round of combat, getting the individual of the highest priority, run his/her attack, and then deleting
+  him/her.  It will repeat until the heap is empty }
+
+Var
+   Next: Attacker_Type;
+   Store_Delay_Constant: Real;
+   Store_Bells: Boolean;
+
+Begin
+   Store_Delay_Constant:=0;  Store_Bells:=False;
+   If Not Show_Messages then
+      Begin
+         Store_Delay_Constant:=Delay_Constant; Delay_Constant:=0;
+         Store_Bells:=Bells_On;  Bells_On:=False;
+         SMG$Begin_Display_Update (MessageDisplay);
+      End;
+
+   While Not ( Empty(Attacks) or Leave_Maze ) do
+      Begin
+         Next:=DeleteMin (Attacks);
+         If Next.Group<>0 then Handle_Attack (Next,Monster_Group,Member,Current_Party_Size,Party_Size,Can_Attack);
+         If Party_Dead (Member,Current_Party_Size) then MakeNull (Attacks);
+      End;
+
+   If Not Show_Messages then
+      Begin
+         Delay_Constant:=Store_Delay_Constant;
+         SMG$Erase_Display (MessageDisplay);
+         SMG$End_Display_Update (MessageDisplay);
+         Bells_On:=Store_Bells;
+      End;
+
+   End_of_Round_Update (Monster_Group,Member,Current_Party_Size,Party_Size,Can_Attack);
+End;
+
+(******************************************************************************)
+
+Function Get_Group_Number (Group: Encounter_Group;  Var Group1: Group_Type; Var Take_Back: Boolean);
+
+Var
+  Done: Boolean;
+  T: Line;
+  Temp: Integer;
+
+Begin
+   Take_Back:=False;
+   If Group[2].Curr_Group_Size>0 then
+      Begin
+         SMG$Begin_Display_Update (OptionsDisplay);
+         SMG$Erase_Display (OptionsDisplay);
+         T:='Cast spell on what group?';
+         SMG$Put_Chars (OptionsDisplay,T,3,27-(T.Length div 2));
+         SMG$End_Display_Update (OptionsDisplay);
+         Repeat
+            Begin
+              Done:=False;  Temp:=0;
+              Zero_Through_Six (Temp);
+              Done:=(Temp<5); { TODO: This is lazy programming }
+              If Done and (Temp>0) then
+                 Done:=Done and (Group[Temp].Curr_Group_Size>0);
+              If Done and (Temp>0) then
+                 Group1:=Temp;
+            End;
+         Until Done;
+         Take_Back:=(Temp=0);
+      End
+   Else
+      Group1:=1;
+End;
+
+(******************************************************************************)
+
+Function Get_Character_Number (Current_Party_Size: Party_Size_Type;  Party_Size: Integer;
+                                       Var Take_Back: Boolean): [Volatile]Integer;
+
+Var
+   T: Line;
+   Number: Integer;
+
+Begin
+   If Current_Party_Size>1 then
+      Begin
+         SMG$Begin_Display_Update (OptionsDisplay);
+         SMG$Erase_Display (OptionsDisplay);
+         T:='Cast spell on whom?';
+         SMG$Put_Chars (OptionsDisplay,T,3,27-(T.Length div 2));
+         SMG$End_Display_Update (OptionsDisplay);
+         Number:=Pick_Character_Number (Party_Size);
+         If Number:=0 then
+            Take_Back:=True;
+      End
+   Else
+      Number:=1;
+
+   Get_Character_Number:=Number;
+End;
+
+(******************************************************************************)
 
 { TODO: Enter this code }
 
