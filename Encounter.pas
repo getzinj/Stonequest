@@ -1176,6 +1176,117 @@ End;
 
 (******************************************************************************)
 
+[Global]Procedure Attack_Effects (Attack: Attack_Type; CharNum: Integer; Var Member: Party_Type; Var Can_Attack: Party_Flag);
+
+Var
+   Save: Boolean;
+   Character: Character_Type;
+   T: Line;
+
+Begin
+   Character:=Member[CharNum];
+   T:=Character.Name;
+   Save:=Made_Save (Character,Attack);
+   If Save then
+      T:T+' is unaffected!'
+   Else
+      Check_Attack (Character,Attack,T,CharNum);
+   SMG$Set_Cursor_ABS (MessageDisplay,2,1);
+   If T<>'' then
+      SMG$Put_Line (MessageDisplay,T);
+   Can_Attack[CharNum]:=(Character.Status in [Healthy,Poisoned,Zombie]);
+   Member[CharNum]:=Character;
+End;
+
+(******************************************************************************)
+
+[Global]Function Spell_Damage (Spell: Spell_Name;  Caster_Level: Integer:=0): Die_Type;
+
+Var
+   Temp: Die_Type;
+
+Begin
+   Temp:=Zero;
+   Case Spell of
+    CsLt: With Temp do
+             Begin
+               X:=1;
+               Y:=8;
+             End;
+    CsSe: With Temp do
+             Begin
+               X:=2;
+               Y:=8;
+             End;
+    CsVs: With Temp do
+             Begin
+               X:=3;
+               Y:=8;
+             End;
+    CsCr: With Temp do
+             Begin
+               X:=4;
+               Y:=8;
+             End;
+    Wrth: With Temp do
+             Begin
+               X:=1;
+               Y:=12;
+             End;
+    GrWr: With Temp do
+             Begin
+               X:=2;
+               Y:=12;
+             End;
+    HoWr: With Temp do
+             Begin
+               X:=4;
+               Y:=12;
+             End;
+    DiWr: With Temp do
+             Begin
+               X:=7;
+               Y:=12;
+             End;
+    MaMs: With Temp do
+             Begin
+               X:=Round(Caster_Level / 2.0);
+               Y:=4;
+               Z:=Round(Caster_Level / 2.0);
+             End;
+    CoCd: With Temp do
+             Begin
+               X:=Caster_Level;
+               Y:=4;
+               Z:=Caster_Level;
+             End;
+    LiBt: With Temp do
+             Begin
+               X:=Caster_Level;
+               Y:=6;
+             End;
+    FiBl: With Temp do
+             Begin
+               X:=Caster_Level;
+               Y:=6;
+             End;
+    MgFi: With Temp do
+             Begin
+               X:=Caster_Level;
+               Y:=6;
+               Z:=Caster_Level;
+             End;
+    Holo: With Temp do
+             Begin
+               X:=25;
+               Y:=5;
+             End;
+   End;
+   Spell_Damage:=Temp;
+End;
+
+(******************************************************************************)
+
 { TODO: Enter this code }
 
 (******************************************************************************)
