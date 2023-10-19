@@ -792,6 +792,55 @@ End;
 
 (******************************************************************************)
 
+[Global]Function Made_Save (Character: Character_Type; Attack: Attack_Type): [Volatile]Boolean;
+
+Var
+   Temp_Save: Boolean;
+
+Begin
+   Temp_Save:=(Roll_Die(20)>=Saving_Throw(Character,Attack));
+   If Attack=Charming then
+      If Character.Race in [Elven,Drow] then
+         Temp_Save:=Temp_Save or Made_Roll (90)
+      Else
+         If Character.Race=HfElf then
+            Temp_Save:=Temp_Save or Made_Roll(30);
+   Made_Save:=Temp_Save;
+End;
+
+(******************************************************************************)
+
+[Global]Function Monster_Save (Monster: Monster_Record;  Attack: Attack_Type): [Volatile]Boolean;
+
+Var
+   Temp: Integer;
+
+Begin
+   Temp:=10-(((Monster.Hit_Points.X-1) div 2));
+   If Attack in Monster.Resists then
+      Temp:=Temp-4;
+   Monster_Save:=(Roll_Die(20)>Temp);
+End;
+
+(******************************************************************************)
+
+Function Class_Base_Chance (Class: Class_Type; Level: Integer): Integer;
+
+Begin
+   Case Class of
+        Cleric:                                                    Class_Base_Chance:=10- (2*((level-1) div 3));
+        Fighter,Ranger,Monk,Samurai,Barbarian,Paladin,AntiPaladin: Class_Base_Chance:=10- (2*((level-1) div 2));
+        Wizard:                                                    Class_Base_Chance:=11- (2*((level-1) div 5));
+        Thief,Assassin,Bard:                                       Class_Base_Chance:=11- (2*((level-1) div 4));
+        Otherwise                                                  Class_Base_Chance:= 0;
+   End;
+End;
+
+(******************************************************************************)
+
+
+(******************************************************************************)
+
 { TODO: Enter this code }
 
 (******************************************************************************)
