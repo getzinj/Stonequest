@@ -1065,6 +1065,117 @@ End;
 
 (******************************************************************************)
 
+[Global]Function Know_Monster (Monster_Number: Integer; Member: Party_Type; Current_Party_Size: Party_Size_Type): [Volatile]Boolean;
+
+Var
+   Chance,CharNo: Integer;
+   In_Partys_Set: Boolean;
+
+Begin
+  In_Partys_Set:=False;
+  For CharNo:=1 to Current_Party_Size do
+     In_Partys_Set:=In_Partys_Set or Member[Chgar].Monsters_Seen[Monster_Number];
+
+  If In_Partys_Set then Chance:=85
+  Else                  Chance:= 5;
+
+  Know_Monster:=Made_Roll(Chance);
+End;
+
+(******************************************************************************)
+
+[Global]Procedure Change_Status (Var Character: Character_Type; Status: Status_Type; Var Changed: Boolean);
+
+Begin
+   Changed:=False;
+   Case Character.Status of
+      Healthy,Afraid,Sleep,Insane:  Changed:=True;
+      Paralyzed:                    Changed:=(Status in [Petrified,Dead]);
+      Petrified:                    Changed:=(Status=Dead);
+      Poisoned:                     Changed:=(Status in [Asleep,Insane,Healthy]);
+      Zombie:                       Changed:=(Status in [Ashes,Deleted]);
+      Otherwise:                    Changed:=False;
+   End;
+
+   If Changed then
+      Begin
+         Character.Status:=Status;
+         Character.Attack.Berserk:=False;
+         If Character.Curr_HP>Character.Max_HP then
+            Character.Curr_HP:=Character.Max_HP;
+      End;
+   If (Character.Status=Dead) or (Character.Status=Ashes) or (Character.Status=Deleted) then
+      Character.Curr_HP:=0;
+   If Character.Status=Deleted then
+      Character.Max_HP:=0;
+End;
+
+(******************************************************************************)
+
+Procedure Check_Attack (Var Character: Character_Type; Attack: Attack_Type; Var T: Line; CharNum: Integer);
+
+Var
+   Changed: Boolean;
+
+Begin
+   Changed:=False;
+   Case Attack of
+        Poison: Begin
+                   Change_Status (Character,Poisoned,Changed);
+                   Character.Regenerates:=Regenerates (Character,PosZ);
+                   If Changed then
+                      T:=T+' is poisoned!
+                   Else
+                      T:=T+' is unaffected!';
+                End;
+        Stoning: Begin
+                   Change_Status (Character,Petrified,Changed);
+                   If Changed then
+                      T:=T+' is turned into stone!
+                   Else
+                      T:=T+' is unaffected!';
+                 End;
+        Death:   Begin
+                    Change_Status (Character,Dead,Changed);
+                    If Changed then
+                       Begin
+                          Slay_Character (Character,Can_Attack[CharNum]);
+                          T:='';
+                       End
+                    Else
+                       T:=T+ ' is unaffected';
+                  End;
+        Insanity: Begin
+                    Change_Status (Character,Insane,Changed);
+                    If Changed then
+                       T:=T+' is driven mad!'
+                    Else
+                       T:=T+' is unaffected!';
+                  End;
+        Aging:    Begin
+                    Character.Age:=Character.Age+(Roll_Die (4) * 3650);
+                    T:=T+' is aged!';
+                  End;
+        Sleep:    Begin
+                    Change_Status (Character,Asleep,Changed);
+                    If Changed then
+                       T:=T+' is driven slept!'
+                    Else
+                       T:=T+' is unaffected!';
+                  End;
+        CauseFear:Begin
+                    Change_Status (Character,Afraid,Changed);
+                    If Changed then
+                       T:=T+' is made afraid!'
+                    Else
+                       T:=T+' is unaffected!';
+                  End;
+        Otherwise ;
+   End;
+End;
+
+(******************************************************************************)
+
 { TODO: Enter this code }
 
 (******************************************************************************)
