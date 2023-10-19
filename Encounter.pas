@@ -838,10 +838,119 @@ End;
 
 (******************************************************************************)
 
+Function Weapon_Plus_To_Hit (Character: Character_Type; Kind: Monster_Type;  PosZ: Integer): Integer;
+
+Var
+   Temp_Item: Item_Record;
+   Weapon_Plus,Item_No,Plus: Integer;
+
+[External]Procedure Plane_Difference (Var Plus: Integer; PosZ: Integer);External; { TODO: Make this a function. }
+
+Begin
+   Weapon_Plus:=0;
+   If Character.No_of_Items>0 then
+      For Item_No:=1 to Character.No_of_Items do
+         If Character.Item[Item_No].Equipted then
+            Begin
+               Temp_Item:=Item_List[Character.Item[Item_No].Item_Num];
+               Plus:=Temp_Item.Plus_To_Hit;
+               If Kind in Temp_Item.Versus then
+                  Plus:=Plus+(4 * Plus);
+               Plane_Difference (Plus,PosZ);
+               Weapon_Plus:=Weapon_Plus+Plus;
+            End;
+   Weapon_Plus_to_Hit:=Weapon_Plus;
+End;
 
 (******************************************************************************)
 
-{ TODO: Enter this code }
+Function Strength_Adjustment (Strength: Integer): Integer;
+
+Begin
+   Case Strength of
+                  3: Strength_Adjustment:=-3;
+                4,5: Strength_Adjustment:=-2;
+                6,7: Strength_Adjustment:=-1;
+              8..14: Strength_Adjustment:=0;
+                 15: Strength_Adjustment:=1;
+              16,17: Strength_Adjustment:=2;
+                 18: Strength_Adjustment:=3;
+                 19: Strength_Adjustment:=4;
+                 20: Strength_Adjustment:=5;
+                 21: Strength_Adjustment:=6;
+                 22: Strength_Adjustment:=7;
+              23,24: Strength_Adjustment:=8;
+                 25: Strength_Adjustment:=9;
+           Otherwise Strength_Adjustment:=0;
+   End;
+End;
+
+(******************************************************************************)
+
+[Global]Function To_hit_Roll (Character: Character_Type; AC: Integer; Monster: Monster_Record): Integer;
+
+Var
+   Weapon_Plus,Temp: Integer;
+   Cant_Hit: Boolean;
+
+Begin
+   Weapon_Plus:=Weapon_Plus_to_Hit (Character,Monster.Kind,PosZ);
+   Cant_Hit:=(Weapon_Plus<Monster.Weapon_Plus_Needed);
+   If Cant_Hit then
+      Temp:=MaxInt div 2
+   Else
+      Begin
+         Temp:=Min(Class_Base_Chance(Character.Class,Character.Level),
+                   Class_Base_Chance(Character.PreviousClass,Character.Previous_Lvl));
+         If Character.Attack.Berserk then Temp:=Temp-4;
+         If Character.Status=Zombie then Temp:=Class_Base_Chance (Fighter,Character.Level);
+         Temp:=Temp-(AC-10);
+         Temp:=Temp-Strength_plus_to_Hit (Character.Abilities[1]);
+
+         Temp:=Temp-Weapon_Plus;
+
+         If Temp>20 then Temp:=20
+         Else if Temp<2 then Temp:=2;
+      End;
+   To_Hit_Roll:=Temp;
+End;
+
+(******************************************************************************)
+
+Function Surprised (Monsters: Monster_Record; Member: Party_Type): [Volatile]Surprise_Type;
+
+Var
+   Die: Integer;
+   Surprise,Be_Surprised: Set of 1..12;
+
+Begin
+   Be_Surprised:=[11,12];
+   Surprise:=[1,2];
+   If ([Member[1].Class,Member[1].PreviousClass]*[Samurai,Monk,Ranger]<>[])
+      or (Member[1].Race in [Elven,Drow]) then
+         Begin
+            Surprise:=[1];
+            Be_Surprised:=[9,10,11,12];
+         End;
+   If (Member[1].Abilities[7]>15) then Be_Surprised:=Be_Surprised-[1];
+   If (Member[1].Abilities[7]>17) then Surprised:=Surprise+[10];
+   Case Monster.Kind of
+      Karateka,Demon: Be_Surprised:=Be_Surprised+[3,4];
+      Dragon: Surprise:=Surprise+[6];
+      Insect: Surprise:=[];
+      Otherwise ;
+   End;
+   If Not (CanBeSurprised in Monster.Properties) then Surprise:=[];
+
+   Die:=Roll_Die(12);
+   If Die in Be_Surprised then
+      Surprised:=PartySurprised
+   Else
+      If Die in Surprise then
+         Surprised:=MonsterSurprised
+      Else
+         Surprised:=NoSurprise;
+End;
 
 (******************************************************************************)
 
@@ -953,6 +1062,10 @@ Begin
         DeleteMin:=Temp;
      End;
 End;
+
+(******************************************************************************)
+
+{ TODO: Enter this code }
 
 (******************************************************************************)
 
