@@ -460,11 +460,11 @@ Var
    Done: Boolean;
 
 Begin
-  If Group.Origin_Group_Size>1 then
+  If Group.Orig_Group_Size>1 then
      Repeat
         Begin
            Done:=True;
-           For Slot:=Group.Origin_Group_Size downto 2 do
+           For Slot:=Group.Orig_Group_Size downto 2 do
               If Need_to_Swap (Group,Slot-1,Slot) then
                  Begin
                     Switch_Monsters (Group,Slot-1,Slot);
@@ -474,7 +474,7 @@ Begin
     Until Done;
 
     Group.Curr_Group_Size:=0;  Slot:=1;
-    While (Group.Status[Slot]<>Dead) and (Slot<=Group.Origin_Group_Size) do
+    While (Group.Status[Slot]<>Dead) and (Slot<=Group.Orig_Group_Size) do
        Begin
           Group.Curr_Group_Size:=Group.Curr_Group_Size+1;
           Slot:=Slot+1;
@@ -563,6 +563,15 @@ End;
 
 (******************************************************************************)
 
+Function Want_to_Pass (Group: Encounter_Group; Pos1,Pos2: Integer): [Volatile]Boolean;
+
+Begin
+{ TODO: This looks wrong. }
+   Want_to_Pass:=(Group[Pos1].Curr_Group_Size=Group[Pos2].Curr_Group_Size) and (Group[Pos2].Curr_Group_Size<>0) and Made_Roll(15);
+End;
+
+(******************************************************************************)
+
 Procedure Update_Monster_Box (Var Group: Encounter_Group);
 
 { This procedure will allow monsters groups to switch positions for more favorable attack advantages }
@@ -610,7 +619,7 @@ End;
 
 (******************************************************************************)
 
-Function Item_Attacker_Level (Attacker: Character_Type; Defender_Level): [Volatile]Boolean;
+Function Item_Attacker_Level (Attacker: Character_Type): Integer;
 
 Var
    Critical_Flag: Boolean;
@@ -630,6 +639,9 @@ End;
 (******************************************************************************)
 
 Function Class_Attacker_Level (Attacker: Character_Type): Integer;
+
+Var
+   Attacker_Level: Integer;
 
 Begin
    Attacker_Level:=0;
@@ -721,7 +733,7 @@ Begin
       For Item_No:=1 to Character.No_of_Items do
           If Character.Item[Item_No].Equipted then
              If (Attack in Item_List[Character.Item[Item_No].Item_Num].Resists) or
-                ((Attack in [Stoning,LvlDrain) and (Magic in Item_List[Character.Item[Item_No].Item_Num].Resists)) then
+                ((Attack in [Stoning,LvlDrain]) and (Magic in Item_List[Character.Item[Item_No].Item_Num].Resists)) then
                    Temp:=Temp+1;
    Magical_Adjustment:=Temp;
 End;
@@ -917,7 +929,7 @@ End;
 
 (******************************************************************************)
 
-Function Surprised (Monsters: Monster_Record; Member: Party_Type): [Volatile]Surprise_Type;
+Function Surprised (Monster: Monster_Record; Member: Party_Type): [Volatile]Surprise_Type;
 
 Var
    Die: Integer;
@@ -933,7 +945,7 @@ Begin
             Be_Surprised:=[9,10,11,12];
          End;
    If (Member[1].Abilities[7]>15) then Be_Surprised:=Be_Surprised-[1];
-   If (Member[1].Abilities[7]>17) then Surprised:=Surprise+[10];
+   If (Member[1].Abilities[7]>17) then Surprise:=Surprise+[10];
    Case Monster.Kind of
       Karateka,Demon: Be_Surprised:=Be_Surprised+[3,4];
       Dragon: Surprise:=Surprise+[6];
@@ -1074,7 +1086,7 @@ Var
 Begin
   In_Partys_Set:=False;
   For CharNo:=1 to Current_Party_Size do
-     In_Partys_Set:=In_Partys_Set or Member[Chgar].Monsters_Seen[Monster_Number];
+     In_Partys_Set:=In_Partys_Set or Member[CharNo].Monsters_Seen[Monster_Number];
 
   If In_Partys_Set then Chance:=85
   Else                  Chance:= 5;
@@ -1089,12 +1101,12 @@ End;
 Begin
    Changed:=False;
    Case Character.Status of
-      Healthy,Afraid,Sleep,Insane:  Changed:=True;
+      Healthy,Afraid,Asleep,Insane:  Changed:=True;
       Paralyzed:                    Changed:=(Status in [Petrified,Dead]);
       Petrified:                    Changed:=(Status=Dead);
       Poisoned:                     Changed:=(Status in [Asleep,Insane,Healthy]);
       Zombie:                       Changed:=(Status in [Ashes,Deleted]);
-      Otherwise:                    Changed:=False;
+      Otherwise                     Changed:=False;
    End;
 
    If Changed then
@@ -1124,51 +1136,64 @@ Begin
                    Change_Status (Character,Poisoned,Changed);
                    Character.Regenerates:=Regenerates (Character,PosZ);
                    If Changed then
-                      T:=T+' is poisoned!
+                      T:=T
++' is poisoned!;
                    Else
-                      T:=T+' is unaffected!';
+                      T:=T
++' is unaffected!';
                 End;
         Stoning: Begin
                    Change_Status (Character,Petrified,Changed);
                    If Changed then
-                      T:=T+' is turned into stone!
+                      T:=T
++' is turned into stone!'
                    Else
-                      T:=T+' is unaffected!';
+                      T:=T
++' is unaffected!';
                  End;
         Death:   Begin
                     Change_Status (Character,Dead,Changed);
                     If Changed then
                        Begin
                           Slay_Character (Character,Can_Attack[CharNum]);
-                          T:='';
+                          T:=
+'';
                        End
                     Else
-                       T:=T+ ' is unaffected';
+                       T:=T
++' is unaffected';
                   End;
         Insanity: Begin
                     Change_Status (Character,Insane,Changed);
                     If Changed then
-                       T:=T+' is driven mad!'
+                       T:=T
++' is driven mad!'
                     Else
-                       T:=T+' is unaffected!';
+                       T:=T
++' is unaffected!';
                   End;
         Aging:    Begin
                     Character.Age:=Character.Age+(Roll_Die (4) * 3650);
-                    T:=T+' is aged!';
+                    T:=T
++' is aged!';
                   End;
         Sleep:    Begin
                     Change_Status (Character,Asleep,Changed);
                     If Changed then
-                       T:=T+' is driven slept!'
+                       T:=T
++' is driven slept!'
                     Else
-                       T:=T+' is unaffected!';
+                       T:=T
++' is unaffected!';
                   End;
         CauseFear:Begin
                     Change_Status (Character,Afraid,Changed);
                     If Changed then
-                       T:=T+' is made afraid!'
+                       T:=T
++' is made afraid!'
                     Else
-                       T:=T+' is unaffected!';
+                       T:=T
++' is unaffected!';
                   End;
         Otherwise ;
    End;
@@ -1188,7 +1213,7 @@ Begin
    T:=Character.Name;
    Save:=Made_Save (Character,Attack);
    If Save then
-      T:T+' is unaffected!'
+      T:=T+' is unaffected!'
    Else
       Check_Attack (Character,Attack,T,CharNum);
    SMG$Set_Cursor_ABS (MessageDisplay,2,1);
@@ -1283,6 +1308,33 @@ Begin
              End;
    End;
    Spell_Damage:=Temp;
+End;
+
+(******************************************************************************)
+
+Function Uh_Oh (Group: Encounter_Group; Current_Party_Size: Party_Size_Type): [Volatile]Boolean;
+
+Var
+   GroupNum: Integer;
+   Orig,Curr: Integer;
+   Chance: Integer;
+
+Begin
+   Orig:=0; Curr:=0; Chance:=0;
+   For GroupNum:=1 to 4 do
+      Begin
+         Orig:=Orig+Group[GroupNum].Orig_Group_Size;
+         Curr:=Curr+Group[GroupNum].Curr_Group_Size;
+      End;
+   If (Current_Party_Size=0) or (Curr=0) or (Curr>(Current_Party_Size*2)) then
+      Uh_Oh:=False
+   Else
+      Begin
+         If Curr<(Orig*3/4) then Chance:=Chance+25;
+         If Curr<(Orig*1/2) then Chance:=Chance+25;
+         If Curr<(Orig*1/4) then Chance:=Chance+25;
+         Uh_Oh:=Made_Roll(Chance);
+      End;
 End;
 
 (******************************************************************************)

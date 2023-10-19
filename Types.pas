@@ -487,7 +487,7 @@ Type
   Flag            = [Bit]Boolean;
   Monster_Group   = Record
                        Monster: Monster_Record;
-                       Origin_Group_Size,Curr_Group_Size: [Word]0..999;
+                       Orig_Group_Size,Curr_Group_Size: [Word]0..999;
                        Max_HP,Curr_HP: Array [1..999] of Integer;
                        Status: Array [1..999] of Status_Type;
                        Silenced: Array [1..999] of Flag;
