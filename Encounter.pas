@@ -2211,7 +2211,307 @@ End;
 
 (******************************************************************************)
 
-{ TODO: Enter this code }
+Procedure Put_Options (Number: Integer; Var Options: Char_Set;  Member: Party_Type);
+
+Var
+  X,Y: Integer;
+  Character: Character_Type;
+  Classes: Set of Class_Type;
+
+Begin
+   Character:=Member[Number];
+   Classes:=[Character.Class]+[Character.PreviousClass];
+
+   SMG$Begin_Display_Update (OptionsDisplay);
+   SMG$Erase_Display (OptionsDisplay);
+   SMG$Put_Line (OptionsDisplay,Member[Number].Name+CHR(39)+'s options:',2);
+   Options:=[];  X:=1;  Y:=3;
+   If (Number<4) and (Character.Status in [Healthy,Poisoned,Zombie]) then
+      Begin
+         Print_Fight_Option ('F)ight',Y,X);
+         Options:=Options+['F'];
+      End;
+   If (Character.Status in [Healthy,Poisoned,Afraid,OnProbation]) then
+      Begin
+         Print_Fight_Option ('P)arry',Y,X);
+         Print_Fight_Option ('U)se item',Y,X);
+         Print_Fight_Option ('C)hange',Y,X);
+         Options:=Options+['P','U','C'];
+      End;
+   If ((Classes * [Barbarian])<>[]) and (Character.Status in [Healthy,Poisoned]) then
+      Begin
+         Print_Fight_Option ('B)erserk',Y,X);
+         Options:=Options+['B'];
+      End;
+   If ((Classes * [Cleric,Paladin,AntiPaladin])<>[]) and (Character.Status in [Healthy,Poisoned,OnProbation]) then
+      Begin
+         Print_Fight_Option ('T)urn',Y,X);
+         Options:=Options+['T'];
+      End;
+   If Has_Spells(Character) and (Character.Status in [Healthy,Poisoned,OnProbation]) then
+      Begin
+         Print_Fight_Option ('S)pell',Y,X);
+         Options:=Options+['S'];
+      End;
+   If (Number=1) and (Character.Status in [Healthy,Poisoned,Afraid,OnProbation]) then
+      Begin
+         Print_Fight_Option ('R)un',Y,X);
+         Options:=Options+['R'];
+      End;
+   Print_Fight_Option ('? = Help',Y,X);
+   Options:=Options+['?'];
+   SMG$End_Display_Update (OptionsDisplay);
+End;
+
+(******************************************************************************)
+
+Procedure Get_Character_Commands (Character_Number: Integer;  Var Stats: Attacker_Type;  Group: Encounter_Group;
+                                         Member: Party_Type;  Current_Party_Size: Party_Size_Type;  Party_Size: Integer;
+                                         Var Flee: Boolean);
+
+Var
+  Options: Char_Set;
+  Answer: Char;
+  Take_Back: Boolean;
+
+Begin
+  Stats.Attacker_Position:=Character_Number;
+  Stats.Group:=5;
+  If Not Member[Character_Number].Attack.Berserk then
+     If (Character_Number=1) and (Member[Character_Number].Status=Afraid) and Made_Roll (35) then
+        Character_Runs (Stats,Flee) { 35% chance afraid leaders will flee }
+     Else
+        Repeat
+           Begin
+              Take_Back:=False;
+              Options:=[];
+
+              Put_Options (Character_Number,Options,Member);
+              Answer:=Make_Choice (Options);
+              Case Answer of
+                'B': Character_Berserks (Stats,Flee,Group);
+                'C': Character_Changes_Items (Stats,Member[Character_Number],Take_Back);
+                'R': Character_Runs (Stats,Flee);
+                'P': Character_Parries (Stats,Flee);
+                'F': Character_Fights (Stats,Group,Flee,Take_Back);
+                'S': Character_Casts_a_Spell (Stats,Group,Member,Current_Party_Size,Party_Size,Flee,Take_Back,Character_Number);
+                'T': Character_Turns_Undead (Stats,Group,Flee,Take_Back);
+                'U': Character_Uses_Item (Stats,Group,Member,Current_Party_Size,Party_Size,Flee,Take_Back,Character_Number);
+                '?': Begin
+                        Print_Combat_Help;
+                        Take_Back:=True;
+                     End;
+                Otherwise Take_Back:=True;
+              End;
+           End;
+        Until Not (Take_Back)
+  Else
+     Character_is_Berserk (Stats,Group,Flee,Character_Number);
+End;
+
+(******************************************************************************)
+
+Procedure Init_Options (Var Commands: Party_Commands_Type);
+
+Var
+   Person: Integer;
+
+Begin
+   For Person:=1 to 6 do
+      Begin
+         Commands[Person].Attacker_Position:=1;
+         Commands[Person].Group:=5; { TODO: Create constant }
+         Commands[Person].Action:=Parry;
+         Commands[Person].Target_Group:=0;
+      End;
+End;
+
+(******************************************************************************)
+
+Procedure Change_Delay (Var Time_Delay: Integer);
+
+Var
+  Change: Integer;
+
+Begin
+   SMG$Erase_Display (MessageDisplay);
+   SMG$Put_Line (MessageDisplay,'Current time delay: '+String(Time_Delay));
+   SMG$Put_Chars (MessageDisplay,'New delay (0-999, -1 exits):');
+   Get_Num (Change,MessageDisplay);
+   If (Change>-1) and (change<1000) then
+      Time_Delay:=Change;
+   SMG$Erase_Display (MessageDisplay);
+   Delay_Constant:=Time_Delay/500;  { TODO: This is unexpected behavior. Abstract it to a method or class or something? }
+End;
+
+(******************************************************************************)
+
+Function Return_or_Change (Var Time_Delay: Integer): [Volatile]Char;
+
+Var
+   Answer: Char;
+   T: Line;
+
+Begin
+   SMG$Begin_Display_Update (OptionsDisplay);
+   SMG$Erase_Display (OptionsDisplay);
+
+   T:='T)ake back instructions, C)hange Time Delay';
+   SMG$Put_Chars (OptionsDisplay,T,2,(54 div 2)-(T.Length div 2));
+
+   T:='Turn combat M)essages '+Bool_String[Not Show_Messages]+', or [RETURN] to fight';
+   SMG$Put_Chars (OptionsDisplay,T,3,(54 div 2)-(T.Length div 2));
+
+   SMG$End_Display_Update (OptionsDisplay);
+
+   Answer:=Make_Choice(['M', 'C', 'T', CHR(13)]);
+
+   If Answer='C' then
+      Change_Delay (Time_Delay)
+   Else
+     If Answer='M' then
+        Show_Messages:=Not Show_Messages;
+
+   Return_or_Change:=Answer;
+End;
+
+(******************************************************************************)
+
+Procedure Get_Party_Commands (Var Commands: Party_Commands_Type;
+                                          Group: Encounter_Group;
+                                          Member: Party_Type;
+                                          Current_Party_Size: Party_Size_Type;
+                                          Party_Size: Integer;
+                                      Var Flee: Boolean;
+                                      Var Time_Delay: Integer;
+                                      Var Can_Attack: Party_Flag);
+
+Var
+   Answer: Char;
+   Person: Integer;
+   Ready: Boolean;
+
+Begin
+   Init_Options (Commands);
+   SMG$Erase_Display (OptionsDisplay);
+   SMG$Paste_Virtual_Display (OptionsDisplay,Pasteboard,SpellsY,SpellsX);
+   Ready:=False;
+   Answer:=' ';
+   Repeat
+      Begin
+         For Person:=1 to Current_Party_Size do
+            If Not (Flee) and (Can_Attack[Person]) then
+                Get_Character_Commands (Person,Commands[Person],Group,Member,Current_Party_Size,Party_Size,Flee);
+        If Not Flee then
+           Repeat
+              Answer:=Return_or_Change (Time_Delay);
+           Until Not (Answer in ['C','M'])
+        Else
+           Ready:=True;
+        Ready:=(Answer=CHR(13));
+      End;
+   Until Ready or Flee;
+   SMG$Unpaste_Virtual_Display (OptionsDisplay,Pasteboard);
+End;
+
+(******************************************************************************)
+
+Function Dex_Adjustment (Character: Character_Type): Integer;
+
+Var
+   Temp: Integer;
+
+Begin
+   Case Character.Abilities[4] of
+         3: Temp:=-4;
+         4: Temp:=-3;
+         5: Temp:=-2;
+         6: Temp:=-1;
+         17: Temp:=1;
+         18: Temp:=2;
+         19: Temp:=3;
+         20,21: Temp:=4;
+         22,23: Temp:=5;
+         24,25: Temp:=6;
+         Otherwise Temp:=0;
+   End;
+   Dex_Adjustment:=Temp*500;
+End;
+
+(******************************************************************************)
+
+Function Character_Priority (Character: Character_Type): [Volatile]Integer;
+
+Var
+   Level: Integer;
+
+Begin
+   Level:=Max(Character.Level,Character.Previous_Lvl);
+   Character_Priority:=Roll_Die (6000)-Dex_Adjustment (Character)-(Level*200);
+End;
+
+(******************************************************************************)
+
+Procedure Insert_Character_Action (Individual: Attacker_Type;  Var Attacks: PriorityQueue;  Group: Encounter_Group;
+                                        Member: Party_Type;  Current_Party_Size: Party_Size_Type);
+
+Var
+   Character: Integer;
+
+Begin
+   Character:=Individual.Attacker_Position;
+   If Individual.Action<>Parry then
+      Begin
+         Individual.Priority:=Character_Priority (Member[Character]);
+         Insert (Individual,Attacks);
+         If (Character=1) and (Member[Character].Attack.Berserk) then
+            Begin
+               { Berserk barbarians get double attacks }
+               Individual.Target_Group:=1;
+               Individual.Priority:=Character_Priority (member[Character]);
+               Insert (Individual,Attacks);
+            End
+      End
+End;
+
+(******************************************************************************)
+
+Procedure Insert_Party (Var Attacks: PriorityQueue; Group: Encounter_Group; Member: Party_Type;
+                                Current_Party_Size: Party_Size_Type;  Party_Size: Integer; Var Flee: Boolean;
+                                Var Time_Delay: Integer; Var Can_Attack: Party_Flag);
+
+Var
+   Party_Actions: Party_Commands_Type;
+   Character: Integer;
+
+Begin
+   Get_Party_Commands (Party_Actions,Group,Member,Current_Party_Size,Party_Size,Flee,Time_Delay,Can_Attack);
+   For Character:=1 to Current_Party_Size do
+      If (Not Flee) and (Can_Attack[Character]) then
+          Insert_Character_Action (Party_Actions[Character],Attacks,Group,Member,Current_Party_Size);
+End;
+
+(******************************************************************************)
+
+Function Successful_Flee_Chance (Group: Encounter_Group;  Current_Party_Size: Party_Size_Type;
+                                      Party_Size: Integer): [Volatile]Integer;
+
+Var
+  Temp,Group_num: Integer;
+
+Begin { Successful Flee }
+   Temp:=100-(5*(Party_Size-Current_Party_Size))+Party_Size;
+   For Group_Num:=1 to 4 do
+      If (CantEscape in group[Group_Num].Monster.Properties) or (Temp<0) then
+         Temp:=-65035
+      Else
+         Begin
+            Temp:=Temp+(20*(Group[Group_Num].Orig_Group_Size-Group[Group_Num].Curr_Group_Size));
+            Temp:=Temp-(5*Group[Group_Num].Curr_Group_Size);
+         End;
+   If Temp<0 then Temp:=0;
+   Successful_Flee_Chance:=Temp;
+End;  { Successful Flee }
 
 (******************************************************************************)
 
@@ -2239,6 +2539,8 @@ Begin
                End;
          End;
 End;
+
+(******************************************************************************)
 
 { TODO: Enter this code }
 
@@ -2275,8 +2577,6 @@ Begin
    If Killer_Party then Alignment_Drift (Evil,Member,Current_Party_Size)
    Else                 Alignment_Drift (Good,Member,Current_Party_Size);
 End;
-
-
 
 (******************************************************************************)
 
