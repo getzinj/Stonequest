@@ -2542,6 +2542,46 @@ End;
 
 (******************************************************************************)
 
+Procedure Melee_Round (Var Group: Encounter_Group; Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type;
+                          Party_Size: Integer;  Var Flee: Boolean; Var Time_Delay: Integer;  Var Can_Attack: Party_Flag);
+
+{ This procedure will semi-randomly put the combatants onto a priority queue for combat purposes.  If a DELETEMIN produces an inactive
+  individual, it is simply ignored, and the next attacker is access via DELETEMIN. }
+
+{ Scheme: Assign each combatant a semi-random priority, and then insert him or her into the appropriate place in the queue. Total time complexity:
+  O(n log n). Oh well. }
+
+Var
+   Attacks: PriorityQueue;
+   Pic: Picture;
+
+Begin
+   Flee:=False;
+   MakeNull (Attacks);
+   SMG$Erase_Display (MessageDisplay);
+   Insert_Monster_Attacks (Group,Attacks);
+   Insert_Party (Attacks,Group,Member,Current_Party_Size,Party_Size,Flee,Time_Delay,Can_Attack);
+   Flee:=Flee and Made_Roll(Successful_Flee_Chance(Group,Current_Party_Size,Party_Size));
+
+   If Not Flee then
+      One_Round (Attacks,Group,Member,Current_Party_Size,Party_Size,Can_Attack);
+
+   Yikes:=Yikes or Uh_Oh(Group,Current_Party_Size);
+   If (Not Flee) and Yikes then
+      Begin
+         Pic:=Pics[Group[1].Monster.Picture_Number];
+
+         SMG$Begin_Display_Update (FightDisplay);
+         If (Pic.Right_Eye.X>0) and (Pic.Right_Eye.Y>0) then
+            SMG$Put_Chars (FightDisplay,Pic.Eye_Type+'',Pic.Right_Eye.Y+0,Pic.Right_Eye.X+0);
+         If (Pic.Left_Eye.X>0) and (Pic.Left_Eye.Y>0) then
+            SMG$Put_Chars (FightDisplay,Pic.Eye_Type+'',Pic.Left_Eye.Y+0,Pic.Left_Eye.X+0);
+         SMG$End_Display_Update (FightDisplay);
+      End;
+End;
+
+(******************************************************************************)
+
 { TODO: Enter this code }
 
 (******************************************************************************)
