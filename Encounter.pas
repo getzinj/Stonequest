@@ -611,7 +611,7 @@ Var
    Num: Integer;
 
 Begin
-   Can_Attack:=Update_Can_Attack (Member,Party_Size);
+   Can_Attack:=Update_Can_Attacks (Member,Party_Size);
    SMG$Begin_Display_Update (CharacterDisplay);
    For Num:=1 to Party_size do
       Print_Party_Line (Member,Party_Size,Num);
@@ -1831,7 +1831,7 @@ Begin
    Take_Back:=True;
    SMG$Begin_Display_Update (OptionsDisplay);
    SMG$Erase_Display (OptionsDisplay);
-   SMG$Put_Chars (OptionsDisplay,Message,3,1+27-(Message.Legth div 2));
+   SMG$Put_Chars (OptionsDisplay,Message,3,1+27-(Message.Length div 2));
    SMG$End_Display_Update (OptionsDisplay);
    Delay (2.5);
 End;
@@ -1843,7 +1843,7 @@ Procedure Character_Casts_a_Spell (Var Stats: Attacker_Type; Group: Encounter_Gr
                                            Var Fee,Take_Back: Boolean; Character_Number: Integer);
 
 Var
-  Spell_Chose: Spell_Name;
+  Spell_Chosen: Spell_Name;
   Character: Character_Type;
   Class,Level: Integer;
 
@@ -1874,7 +1874,7 @@ Begin
          Begin
             Find_Spell_Group (Spell_Chosen,Character,Class,Level);
             Take_Back:=Not(Spell_Chosen in Character.Cleric_Spells+Character.Wizard_Spells);
-            Take_Back:=Take_Back of ((Class<>Cler_Spell) and (Class<>Wiz_Spell)) or (Level=0) or (Level=10);
+            Take_Back:=Take_Back or ((Class<>Cler_Spell) and (Class<>Wiz_Spell)) or (Level=0) or (Level=10);
             If Take_Back then
                Spell_Mistake (
                   '* * * Thou don''t know that spell * * *',Take_Back)
@@ -1956,12 +1956,176 @@ Begin { Use an item }
         Get_Spell_Info (Stats.WhatSpell,Group,Character_Number,Current_Party_Size,Party_Size,Stats.Target_Group,
                         Stats.Target_Individual,Take_Back);
         Stats.Action:=UseItem;
-        States.Caster_Level:=8;
+        Stats.Caster_Level:=8;
         Stats.Old_Item:=Item_Choice;
         Member[Character_Number]:=Character;
      End
   Else
      Take_Back:=True;
+End;
+
+(******************************************************************************)
+
+Procedure Character_Is_Berserk (Var Stats: Attacker_Type;  Group: Encounter_Group;  Var Flee: Boolean;  Number: Integer);
+
+Begin
+   Stats.WhatSpell:=NoSp;
+   If Number=1 then
+      Begin
+         Stats.Action:=Attack;
+         Stats.Target_Group:=1;
+      End
+   Else
+      Begin
+         Stats.Action:=Parry; { Parries as he makes his way to the front }
+         Stats.Target_Group:=0;
+      End
+End;
+
+(******************************************************************************)
+
+Function Can_Equip (Character: Character_Type; Stats: Equipment_Type;  Classes: ClassSet): Boolean;
+
+Var
+   Temp: Boolean;
+
+Begin
+   Temp:=(Character.Class in Item_List[Stats.Item_Num].Usable_By); { If usable }
+   Temp:=Temp or (Character.PreviousClass in Item_List[Stats.Item_Num].Usable_By);
+
+   If Item_List[Stats.Item_Num].Alignment<>NoAlign then
+      Temp:=Temp and (Character.Alignment=Item_List[Stats.Item_Num].Alignment);
+
+   Temp:=Temp and (Item_List[Stats.Item_Num].Kind in [Weapon,Ring,Helmet]*Classes);
+   Can_Equip:=Temp;
+End;
+
+(******************************************************************************)
+
+Procedure Unequipp_Ring (Var Stats: Attacker_Type; Character: Character_Type);
+
+Var
+   Item: Integer;
+
+Begin
+   Stats.New_Item:=0;
+   Stats.Old_Item:=0;
+   If Character.No_of_Items>0 then
+      For Item:=1 to Character.No_of_Items do
+         If Item_List[Character.Item[Item].Item_Num].Kind=Ring then
+            Stats.Old_Item:=Item;
+End;
+
+(******************************************************************************)
+
+Procedure Unequipp_Weapon (Var Stats: Attacker_Type; Character: Character_Type);
+
+Var
+   Item: Integer;
+
+Begin
+   Stats.New_Item:=0;
+   Stats.Old_Item:=0;
+   If Character.No_of_Items>0 then
+      For Item:=1 to Character.No_of_Items do
+         If Item_List[Character.Item[Item].Item_Num].Kind=Weapon then
+            Stats.Old_Item:=Item;
+End;
+
+(******************************************************************************)
+
+Procedure Character_Changes_Items (Var Stats: Attacker_Type; Character: Character_Type;  Var Redo: Boolean);
+
+Var
+  Choice: Integer;
+  Answer: Char;
+  Options: Char_Set;
+  Item: Integer;
+  One_Usable: Boolean;
+  T: Line;
+  Classes: ClassSet;
+
+Begin
+   Stats.Action:=SwitchItems;
+   Classes:=[Weapon,Ring];
+   One_Usable:=False;
+   Options:=[CHR(13)];
+   If Character.No_of_items>0 then
+      For Item:=1 to Character.No_of_items do
+         If Character.Item[Item].Cursed then
+            Classes:=Classes-[Item_List[Character.Item[Item].Item_Num].Kind];
+
+   SMG$Begin_Display_Update (OptionsDisplay);
+   SMG$Erase_Display (OptionsDisplay);
+   SMG$Label_Border (OptionsDisplay,
+      '[RETURN] exits',SMG$K_BOTTOM);
+   SMG$Put_Line (OptionsDisplay,
+       'Equip which item? (R=No Ring, W=No Weapon)');
+   T:='';
+   If Character.No_of_Items>0 then
+      Begin
+         For Item:=1 to Character.No_of_items do
+            Begin
+               If (Item mod 2)<>0 then
+                  T:=''  { Beginning of a new line }
+               Else
+                  T:=T+'     ';
+               If Can_Equip (Character,Character.Item[Item],Classes) then
+                  Begin
+                     If Character.Item[Item].Equipted then
+                        T:=T+'*) '
+                     Else
+                        Begin
+                           Options:=Options+[CHR(Item+ZeroOrd)];
+                           T:=T+String (Item,1)
+                              +') ';
+                           One_Usable:=True;
+                        End;
+                     If Character.Item[Item].Ident then
+                        T:=T+Item_List[Character.Item[Item].Item_Num].True_Name
+                     Else
+                        T:=T+Item_List[Character.Item[Item].Item_Num].Name;
+                  End
+               Else
+                  T:=T+'                       ';
+               If (Item mod 2)=0 then
+                  Begin
+                     SMG$Put_Line (OptionsDisplay,T);
+                     T:='';
+                  End;
+            End;
+      End;
+   If (Character.No_of_Items) mod 2<>0 then
+      SMG$Put_Line (OptionsDisplay,T,0);
+   If Not One_Usable then
+      Begin
+         T:='Thou have no items that thou can equip.';
+         SMG$Set_Cursor_ABS (OptionsDisplay,3,27-(t.Length div 2));
+         SMG$Put_Line (OptionsDisplay,T);
+      End;
+   SMG$End_Display_Update (OptionsDisplay);
+   Options:=Options+['R','W'];
+   Answer:=Make_Choice (Options);
+   SMG$Label_Border (OptionsDisplay,'');
+   ReDo:=False;
+   If Answer=CHR(13) then
+      ReDo:=True
+   Else
+      If Answer='W' then
+         Unequipp_Weapon (Stats,Character)
+      Else
+         If Answer='R' then
+            Unequipp_Ring (Stats,Character)
+         Else
+            Begin
+               Choice:=Ord(Answer)-ZeroOrd;
+               Stats.New_Item:=Choice;
+               If Character.No_of_Items>0 then
+                  For Item:=1 to Character.No_of_Items do
+                     If Item<>Choice then
+                        If Item_List[Character.Item[Choice].Item_Num].Kind=Item_List[Character.Item[Item].Item_Num].Kind then
+                           Stats.Old_Item:=Item;
+            End;
 End;
 
 (******************************************************************************)
