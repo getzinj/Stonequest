@@ -1716,6 +1716,256 @@ End;
 
 (******************************************************************************)
 
+Procedure Select_Combat_Spell (Var SpellChosen: Spell_Name;  Character: Character_Type);
+
+Var
+   SpellName: Line;
+   Done: Boolean;
+   Location,Loop: Spell_Name;
+   Long_Spell: [External]Array [Spell_Name] of Varying[25] of Char;
+
+Begin
+  Done:=False;
+  Location:=NoSp;
+  SpellName:='';
+  Repeat
+     Begin
+        SMG$Set_Cursor_ABS (OptionsDisplay,3,1);
+        Cursor;
+        SMG$Read_String (Keyboard,SpellName,Display_Id:=OptionsDisplay,
+           Prompt_String:='--->');
+        No_Cursor;
+        If SpellName<>'?' then
+           Begin
+              For Loop:=CrLt to DetS do
+                 If (STR$Case_Blind_Compare(Spell[Loop]+'',SpellName)=0) or
+                    (STR$Case_Blind_Compare(Long_Spell[Loop]+'',SpellName)=0) then
+                       Location:=Loop;
+              Done:=True;
+           End
+        Else
+           List_Spells (Character);
+     End;
+  Until Done;
+  SpellChosen:=Location;
+End;
+
+(******************************************************************************)
+
+Procedure Character_Berserks (Var Stats: Attacker_Type; Var Flee: Boolean; Group: Encounter_Group);
+
+Begin
+   Stats.Action:=Berserker_Rage;
+   Stats.WhatSpell:=NoSp;
+   Flee:=False;
+   Stats.Target_Group:=1;
+End;
+
+(******************************************************************************)
+
+Procedure Character_Runs (Var Stats: Attacker_Type; Var Flee: Boolean);
+
+Begin
+  Stats.Action:=Run;
+  Stats.Target_Group:=1;
+  Stats.WhatSpell:=NoSp;
+  Flee:=True;
+End;
+
+
+(******************************************************************************)
+
+Procedure Character_Parries (Var Stats: Attacker_Type; Var Flee: Boolean);
+
+Begin
+  Stats.Action:=Parry;
+  Stats.Target_Group:=1;
+  Stats.WhatSpell:=NoSp;
+  Flee:=False;
+End;
+
+(******************************************************************************)
+
+Procedure Character_Fights (Var Stats: Attacker_Type; Group: Encounter_Group; Var Flee: Boolean;  Var Take_Back: Boolean);
+
+Var
+   T: Line;
+   DoAgain: Boolean;
+   GroupNum: Integer;
+
+Begin
+   Flee:=False;
+   If Group[2].Curr_Group_Size>0 then
+      Begin
+         SMG$Begin_Display_Update (OptionsDisplay);
+         SMG$Erase_Display (OptionsDisplay);
+         T:='Attack which group?';
+         SMG$Put_Chars (OptionsDisplay,T,3,27-(T.Length div 2));
+         SMG$End_Display_Update (OptionsDisplay);
+         DoAgain:=False;
+         Repeat
+            Begin
+               Repeat
+                  Zero_through_Six (GroupNum)
+               Until (GroupNum<3);
+               If GroupNum=0 then
+                  Take_Back:=True
+               Else
+                  DoAgain:=(Group[GroupNum].Curr_Group_Size=0);
+            End;
+         Until Not DoAgain;
+      End
+   Else
+      GroupNum:=1;
+
+   Stats.Action:=Attack;
+   Stats.Target_Group:=GroupNum;
+   Stats.WhatSpell:=NoSp;
+End;
+
+(******************************************************************************)
+
+Procedure Spell_Mistake (Message: Line; Var Take_Back: Boolean);
+
+Begin
+   Take_Back:=True;
+   SMG$Begin_Display_Update (OptionsDisplay);
+   SMG$Erase_Display (OptionsDisplay);
+   SMG$Put_Chars (OptionsDisplay,Message,3,1+27-(Message.Legth div 2));
+   SMG$End_Display_Update (OptionsDisplay);
+   Delay (2.5);
+End;
+
+(******************************************************************************)
+
+Procedure Character_Casts_a_Spell (Var Stats: Attacker_Type; Group: Encounter_Group; Var Member: Party_Type;
+                                           Var Current_Party_Size: Party_Size_Type;  Party_Size: Integer;
+                                           Var Fee,Take_Back: Boolean; Character_Number: Integer);
+
+Var
+  Spell_Chose: Spell_Name;
+  Character: Character_Type;
+  Class,Level: Integer;
+
+[External]Procedure Find_Spell_Group (Spell: Spell_Name; Character: Character_Type; Var Class,Level: Integer);external;
+[External]Function Caster_Level (Cls: Integer; Character: Character_Type):Integer;external;
+
+Begin
+   Character:=Member[Stats.Attacker_Position];
+   SMG$Begin_Display_Update (OptionsDisplay);
+   SMG$Erase_Display (OptionsDisplay);
+   SMG$Put_Chars (OptionsDisplay,
+       'Cast what spell? (''?'' lists)',2,1);
+   Select_Combat_Spell (Spell_Chosen, Character);
+
+   Stats.Action:=CastSpell;
+   Stats.WhatSpell:=NoSp;
+   Stats.Target_Group:=0;
+   Stats.WhatSpell:=Spell_Chosen;
+
+   If Spell_Chosen=NoSp then
+      Spell_Mistake (
+         '* * * What? * * *',
+         Take_Back)
+   Else
+      If Spell_Chosen=ReDo then
+         Take_Back:=True
+      Else
+         Begin
+            Find_Spell_Group (Spell_Chosen,Character,Class,Level);
+            Take_Back:=Not(Spell_Chosen in Character.Cleric_Spells+Character.Wizard_Spells);
+            Take_Back:=Take_Back of ((Class<>Cler_Spell) and (Class<>Wiz_Spell)) or (Level=0) or (Level=10);
+            If Take_Back then
+               Spell_Mistake (
+                  '* * * Thou don''t know that spell * * *',Take_Back)
+            Else
+               If Character.SpellPoints[Class,Level]<1 then
+               Spell_Mistake (
+                  '* * * Spell Points exhausted * * *',Take_Back)
+            Else
+               If Not (Spell_Chosen in Encounter_Spells) then
+                  Spell_Mistake (
+                     '* * * Thou can''t cast that now! * * *',Take_Back)
+               Else
+                  Begin
+                     Get_Spell_Info (Spell_Chosen,Group,Character_Number,Current_Party_Size,Party_Size,Stats.Target_Group,
+                                     Stats.Target_Individual,Take_Back);
+                     Stats.Caster_Level:=Caster_Level (Class,Character);
+                  End;
+         End;
+End;
+
+(******************************************************************************)
+
+Function More_Than_One_Active_Group (Group: Encounter_Group): Boolean;
+
+Begin
+   More_Than_One_Active_Group:=Group[2].Curr_Group_Size > 0;
+End;
+
+
+(******************************************************************************)
+
+Procedure Character_Turns_Undead (Var Stats: Attacker_Type; Group: Encounter_Group; Var Flee,Take_Back: Boolean);
+
+Var
+   T: Line;
+   GroupNum: Integer;
+
+Begin
+   Flee:=False;
+
+   if More_Than_One_Active_Group(Group) then
+      Begin
+         SMG$Begin_Display_Update (OptionsDisplay);
+         SMG$Erase_Display (OptionsDisplay);
+         T:='Turn which group?';
+         SMG$Put_Chars (OptionsDisplay,T,3,27-(T.Length div 2));
+         SMG$End_Display_Update (OptionsDisplay);
+         Repeat
+            Zero_Through_Six (GroupNum)
+         Until (GroupNum=0) or ((Group[GroupNum].Curr_Group_Size>0) and (GroupNum<3));
+         Take_Back:=(GroupNum=0);
+      End
+   Else
+      GroupNum:=1;
+
+   Stats.Action:=TurnUndead;
+   Stats.Target_Group:=GroupNum;
+   Stats.WhatSpell:=NoSp;
+End;
+
+(******************************************************************************)
+
+Procedure Character_Uses_Item (Var Stats: Attacker_Type; Group: Encounter_Group; Var Member: Party_Type;
+                                  Var Current_Party_Size: Party_Size_Type;  Party_Size: Integer;
+                                  Var Flee,Take_Back: Boolean;  Character_Number: Integer);
+
+Var
+   Character: Character_Type;
+   Item_Choice: Integer;
+
+Begin { Use an item }
+  Take_Back:=False;
+  Stats.WhatSpell:=NoSp;
+  Character:=Member[Character_Number];
+  Item_Choice:=Choose_Item_Num (Character);
+  If Item_Choice>0 then
+     Begin
+        Stats.WhatSpell:=Item_List[Character.Item[Item_Choice].Item_Num].Spell_Cast;
+        Get_Spell_Info (Stats.WhatSpell,Group,Character_Number,Current_Party_Size,Party_Size,Stats.Target_Group,
+                        Stats.Target_Individual,Take_Back);
+        Stats.Action:=UseItem;
+        States.Caster_Level:=8;
+        Stats.Old_Item:=Item_Choice;
+        Member[Character_Number]:=Character;
+     End
+  Else
+     Take_Back:=True;
+End;
+
+(******************************************************************************)
+
 { TODO: Enter this code }
 
 (******************************************************************************)
