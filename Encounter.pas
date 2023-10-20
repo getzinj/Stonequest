@@ -2582,6 +2582,194 @@ End;
 
 (******************************************************************************)
 
+Function Return_or_Change_Time (Var Time_Delay: Integer): [Volatile]Char;
+
+Var
+   Answer: Char;
+   T: Line;
+
+Begin
+   T:='Turn combat M)essages '+Bool_String[Not Show_Messages]+', or [RETURN] to fight';
+
+   SMG$Begin_Display_Update (OptionsDisplay);
+   SMG$Erase_Display (OptionsDisplay);
+   SMG$Put_Chars (OptionsDisplay,'C)hange Time Delay',2,20);
+   SMG$Put_Chars (OptionsDisplay,T,3,(54 div 2)-(T.Length div 2));
+   SMG$End_Display_Update (OptionsDisplay);
+
+   Answer:=Make_Choice (['M','C',CHR(13)]);
+
+   If Answer='C' then
+      Change_Delay (Time_Delay)
+   Else
+      If Answer='M' then
+         Show_Messages:=Not Show_Messages;
+
+   Return_or_Change_Time:=Answer;
+End;
+
+(******************************************************************************)
+
+Procedure Monster_attacks_first (Var Group: Encounter_Group;  Var Time_Delay: Integer;  Var Member: Party_Type;
+                                        Var Current_Party_Size: Party_Size_Type; Party_Size: Integer; Var Can_Attack: Party_Flag);
+
+Var
+   Attacks: PriorityQueue;
+
+Begin
+   MakeNull (Attacks);
+   Insert_Monster_Attacks (Group,Attacks);
+
+   SMG$Erase_Display (OptionsDisplay);
+   SMG$Paste_Virtual_Display (OptionsDisplay,Pasteboard,SpellsY,SpellsX);
+   Repeat
+   Until Return_or_Change_Time(Time_Delay)=CHR(13);
+   SMG$Unpaste_Virtual_Display (OptionsDisplay,Pasteboard,SpellsY,SpellsX);
+
+   One_Round (Attacks,Group,Member,Current_Party_Size,Can_Attack);
+End;
+
+(******************************************************************************)
+
+Procedure Party_attacks_first (Var Group: Encounter_Group;  Var Member: Party_Type; Var Current_Party_Size: Party_Size_Type;
+                               Party_Size: Integer; Var Flee: boolean;  Var Time_Delay: Integer;  Var Can_Attack: Party_Flag);
+
+Var
+   Attacks: PriorityQueue;
+
+Begin
+   SMG$Erase_Display (OptionsDisplay);
+   MakeNull (Attacks);
+   Flee:=False;
+   Insert_Party (Attacks,Group,Member,Current_Party_Size,Party_Size,Flee,Time_Delay,Can_Attack);
+   If Flee then
+      Flee:=Made_Roll (Successful_Flee_Chance(Group,Current_Party_Size,Party_Size))
+   Else
+      One_Round (Attacks,Group,Member,Current_Party_Size,Party_Size,Can_Attack);
+End;
+
+(******************************************************************************)
+
+Function Have_Monster_Item (Monster_Name: Monster_Name_Type; Member: Party_Type; Party_Size: Integer): Boolean;
+
+Var
+   Person,Item: Integer;
+
+Begin
+   For Person:=1 to Party_Size do
+      If Member[Person].No_of_Items>0 then
+         For Item:=1 to Member[Person].No_of_Items do
+            If STR$POSITION(Monster_Name,Item_List[Member[Person].Item[Item].Item_Num].True_Name)<>0 then
+               Have_Monster_Item:=True; { TODO: What the heck is this FOR?!?!? }
+End;
+
+(******************************************************************************)
+
+Function Reaction (Monster: Monster_Record; Member: Party_Type; Party_Size: Integer;
+                   Friends: Boolean:=False): Reaction_Type;
+
+Var
+   Chance,Person: Integer;
+   Best_Align,Worst_Align: Align_Type;
+
+Begin
+   Best_Align:=Monster.Alignment;  Worst_Align:=Monster.Alignment;
+   For Person:=1 to Party_Size do
+      If ABS(Ord(Best_Align)-Ord(Member[Person].Alignment)) > ABS(Ord(Best_Align)-Ord(Worst_Align)) then
+         Worst_Align:=Member[Person].Alignment;
+
+   Case Best_Align of
+      Good: Case Worst_Align of
+              Good: Chance:=95;
+              Neutral: Chance:=10;
+              Evil: Chance:=5;
+              Otherwise Chance:=0;
+            End;
+      Neutral: Case Worst_Align of
+                 Good: Chance:=15;
+                 Neutral: Chance:=20;
+                 Evil: Chance:=10;
+                 Otherwise Chance:=0;
+               End;
+      Evil:   Case Worst_Align of
+                 Good: Chance:=5;
+                 Neutral: Chance:=5;
+                 Evil: Chance:=10;
+                 Otherwise Chance:=0;
+              End;
+      Otherwise Chance:=0;
+   End;
+
+   If Have_Monster_Item (Monster.Real_Name,Member,Party_Size) then
+      Chance:=Chance=50;
+
+   If Friends then
+      Chance:=Chance+60;
+   If Chance>99 then
+      Chance:=99
+
+   If Made_Roll(Chance) then
+      Reaction:=Friendly
+   Else
+      Reaction:=Hostile;
+
+   If CantBeFriend in Monster.Properties then
+      Reaction:=Hostile;
+End;
+
+(******************************************************************************)
+
+Procedure Init_Encounter (Number: Integer; Var Encounter: Encounter_Group;  Member: Party_Type;
+                                  Current_Party_Size: Party_Size_Type);
+
+Var
+  Chara,A_Monster,Group: Integer;
+  Done: Boolean;
+
+[External]Function Get_Monster (Monster_Number: Integer): Monster_Record;External;
+
+Begin
+   Encounter:=0;
+   Group:=1;
+   Done:=False;
+   Repeat
+      If (Group<5) then
+         Begin { If we do not already have four groups }
+            If (Number<1) or (Number>450) then
+               Number:=1;  { Error! }
+
+            Encounter[Group].Monster:=Get_Monster(Number);
+
+            Encounter[Group].Orig_Group_Size:=Random_Number(Encounter[Group].Monster.Number_Appearing);
+            Encounter[Group].Curr_Group_Size:=Encounter[Group].Orig_Group_Size;
+
+            Encounter[Group].Identified:=Know_Monster (Group,Member,Current_Party_Size);
+
+            For Chara:=1 to Current_Party_Size do
+               Member[Chara].Monsters_Seen[Number]:=True;
+
+            For A_Monster:=1 to Encounter[Group].Orig_Group_Size do
+               Begin
+                  Encounter[Group].Curr_HP[A_Monster]:=Random_Number(Encounter[Group].Monster.Hit_Points);
+                  Encounter[Group].Max_HP[A_Monster]:=Encounter[Group].Curr_HP[A_Monster];
+                  Encounter[Group].Status[A_Monster]:=Healthy;
+               End;
+
+            If Made_Roll (Encounter[Group].Monster.Gate_Success_Percentage) then
+               Begin
+                  Number:=Encounter[Group].Monster.Monster_Called;
+                  Group:=Group+1;
+                  If Group=5 then
+                     Done:=True;
+               End
+            Else
+               Done:=True;
+         End;
+   Until Done;
+End;
+
+(******************************************************************************)
+
 { TODO: Enter this code }
 
 (******************************************************************************)
