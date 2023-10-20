@@ -116,7 +116,7 @@ Type
   { The different attack types in Stonequest.  Note: Some are not used.
     In general, CHARMING is used as a null attack when one is needed.   }
 
-  Attack_Type    = (Fire,Frost,Posion,LvlDrain,Stoning,Magic,Death,CauseFear,Electricity,Charming,Insanity,Aging,Sleep);
+  Attack_Type    = (Fire,Frost,Poison,LvlDrain,Stoning,Magic,Death,CauseFear,Electricity,Charming,Insanity,Aging,Sleep);
 
   { Classification of items }
 

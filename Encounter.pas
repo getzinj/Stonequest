@@ -33,7 +33,8 @@ Var
   MonsterDisplay,CommandsDisplay,ViewDisplay            : [External]Unsigned;
   MessageDisplay,SpellsDisplay                          : [External]Unsigned;
   SpellListDisplay,OptionsDisplay                       : [External]Unsigned;
-  WizSpells,ClerSpells                                  : [External]Array [Spell_Name] of Varying [4] of Char;
+  WizSpells,ClerSpells                                  : [External]Spell_List;
+  Spell                                                 : [External]Array [Spell_Name] of Varying [4] of Char;
   Maze                                                  : [External]Level;
   PosX,PosY                                             : [External]Horizontal_Type;
   PosZ                                                  : [External]Vertical_Type;
@@ -1137,7 +1138,7 @@ Begin
                    Character.Regenerates:=Regenerates (Character,PosZ);
                    If Changed then
                       T:=T
-+' is poisoned!;
++' is poisoned!'
                    Else
                       T:=T
 +' is unaffected!';
@@ -1342,12 +1343,12 @@ End;
 [External]Procedure Handle_Monster_Attack (Attacker: Attacker_Type;  Var Monster_Group1: Encounter_Group;
                                                  Var Member: Party_Type; Var Current_Party_Size: Party_Size_Type;
                                                  Party_Size: Integer; Var Can_Attack: Party_Flag);external;
-[External]Procedure Handle_Character_Attack (Attacker_Record: Attacker_Type; Var MonsterGroup: EncounterGroup;
+[External]Procedure Handle_Character_Attack (Attacker_Record: Attacker_Type; Var MonsterGroup: Encounter_Group;
                                              Var Member: Party_Type; Var Current_Party_Size: Party_Size_Type);External;
 (******************************************************************************)
 
 Procedure Character_Attack (Attacker: Attacker_Type; Var Monster_Group: Encounter_Group; Var Member: Party_Type;
-                       Var Current_Party_Size: Party_Size_Type; Party_Size: Integer; Var Can_Attack: Party_Flag);
+                       Var Current_Party_Size: Party_Size_Type; Var Can_Attack: Party_Flag);
 
 Var
    Character: Character_Type;
@@ -1366,7 +1367,7 @@ End;
 (******************************************************************************)
 
 Procedure Monster_Attack (Attacker: Attacker_Type; Var Monster_Group: Encounter_Group; Var Member: Party_Type;
-                                                Var Current_Party_Size: Party_Size_Type; Var Can_Attack: Party_Flag);
+                                                Var Current_Party_Size: Party_Size_Type; Party_Size: Integer; Var Can_Attack: Party_Flag);
 
 Begin
    If (Monster_Group[Attacker.Group].Status[Attacker.Attacker_Position]=Healthy) then
@@ -1459,7 +1460,7 @@ End;
 
 (******************************************************************************)
 
-Function Get_Group_Number (Group: Encounter_Group;  Var Group1: Group_Type; Var Take_Back: Boolean);
+Procedure Get_Group_Number (Group: Encounter_Group;  Var Group1: Group_Type; Var Take_Back: Boolean);
 
 Var
   Done: Boolean;
@@ -1510,13 +1511,207 @@ Begin
          SMG$Put_Chars (OptionsDisplay,T,3,27-(T.Length div 2));
          SMG$End_Display_Update (OptionsDisplay);
          Number:=Pick_Character_Number (Party_Size);
-         If Number:=0 then
+         If Number=0 then
             Take_Back:=True;
       End
    Else
       Number:=1;
 
    Get_Character_Number:=Number;
+End;
+
+(******************************************************************************)
+
+Procedure Get_Spell_Info (Spell: Spell_Name; Group: Encounter_Group; Caster: Integer; Current_Party_Size: Party_Size_Type;
+                           Party_Size: Integer;  Var Group1: Group_Type;  Var Number: Individual_Type;
+                           Var Take_Back: Boolean);
+
+Begin
+   Take_Back:=False;
+   Group1:=0;  Number:=0;
+   If Spell in Caster_Spell then
+      Begin
+         Group1:=5;
+         Number:=Caster;
+      End
+   Else
+      If Spell in Party_Spell+All_Monsters_Spell+Area_Spell then
+         Get_Group_Number (Group,Group1,Take_Back)
+      Else
+         If Spell in Group_Spell then
+            Get_Group_Number (Group,Group1,Take_Back)
+         Else
+            If Spell in Person_Spell then
+               Begin
+                  Group1:=5;
+                  Number:=Get_Character_Number (Current_Party_Size,Party_Size,Take_Back);
+               End;
+End;
+
+(******************************************************************************)
+
+Function Can_Use (Character: Character_Type;  Stats: Equipment_Type): Boolean;
+
+Var
+  Temp: Boolean;
+
+Begin
+   Temp:=(Character.Class in Item_List[Stats.Item_Num].Usable_By) or
+         (Character.PreviousClass in Item_List[Stats.Item_Num].Usable_By);
+
+   Temp:=Temp and (Stats.Equipted or (Item_List[Stats.Item_Num].Kind=Scroll));
+                                   { If the item is equipped... }
+
+   If Item_List[Stats.Item_Num].Alignment<>NoAlign then
+      Temp:=Temp and (Character.Alignment=Item_List[Stats.Item_Num].Alignment);
+
+   Temp:=Temp and (Item_List[Stats.Item_Num].Spell_Cast<>NoSp);
+   Can_Use:=Temp
+End;
+
+(******************************************************************************)
+
+Function Choose_Item_Num (Var Character: Character_Type): [Volatile]Integer;
+
+Var
+   Answer: Char;
+   Options: Char_Set;
+   Item: Integer;
+
+Begin
+   Options:=[CHR(13)];
+   SMG$Begin_Display_Update (OptionsDisplay);
+   SMG$Erase_Display (OptionsDisplay);
+   SMG$Label_Border (OptionsDisplay,
+       'Use which item? ([RETURN] exits)',
+       SMG$K_BOTTOM);
+   If Character.No_of_Items>0 then
+      For Item:=1 to Character.No_of_Items do
+         If Can_Use (Character,Character.Item[Item]) then
+            Begin
+               Options:=Options+[CHR(Item+ZeroOrd)];
+               SMG$Set_Cursor_ABS (OptionsDisplay,((Item+1) div 2),23-(22*(Item Mod 2)));
+               SMG$Put_Chars (OptionsDisplay,
+                  String(Item,1)
+                  +') ');
+               If Character.Item[Item].Ident then
+                  SMG$Put_Chars (OptionsDisplay,Item_List[Character.Item[Item].Item_Num].True_Name)
+               Else
+                  SMG$Put_Chars (OptionsDisplay,Item_List[Character.Item[Item].Item_Num].Name);
+            End;
+   SMG$End_Display_Update (OptionsDisplay);
+   Answer:=Make_Choice (Options);
+   SMG$Label_Border (OptionsDisplay,
+      '');
+   If Answer=CHR(13) then
+      Choose_Item_Num:=0
+   Else
+      Choose_Item_Num:=Ord(Answer)-ZeroOrd;
+End;
+
+(******************************************************************************)
+
+Procedure Print_List_of_Spells (Character: Character_Type; Spell_Type: Integer);
+
+Var
+   Loop: Spell_Name;
+   Level,X,Y: Integer;
+   SpellList: Set of Spell_Name;
+   Long_Spell: [External]Array [Spell_Name] of Varying[25] of Char;
+
+[External]Procedure Wait_Key (Time_Out: Integer:=-1);External;
+
+Begin
+   SMG$Begin_Display_Update (SpellListDisplay);
+   SMG$Erase_Display (SpellListDisplay);
+   Case Spell_Type of
+      Wiz_Spell: Begin
+                   SMG$Label_Border (SpellListDisplay,
+                      ' '
+                      +Character.Name
+                      +'''s available wizard spells ',
+                      SMG$K_TOP);
+                   SpellList:=Character.Wizard_Spells;
+                 End;
+      Cler_Spell: Begin
+                   SMG$Label_Border (SpellListDisplay,
+                      ' '
+                      +Character.Name
+                      +'''s available cleric spells ',
+                      SMG$K_TOP);
+                   SpellList:=Character.Cleric_Spells;
+                 End;
+      Otherwise SpellList:=[];
+   End;
+   SpellList:=SpellList*Encounter_Spells;
+   For Level:=1 to 9 do
+      Begin
+         If (Spell_Type=Wiz_Spell) and (Character.SpellPoints[Wiz_Spell,Level]=0) then
+            Begin
+               { TODO: This was cut off in the printout. $$$ }
+               { SpellList:=SpellList-(WizSpells[Level]-Chara }
+            End;
+         If (Spell_Type=Cler_Spell) and (Character.SpellPoints[Cler_Spell,Level]=0) then
+            Begin
+               { TODO: This was cut off in the printout. $$$ }
+               { SpellList:=SpellList-(ClerSpells[Level]-Cha }
+            End;
+      End;
+
+   { SpellList now contains a set of all usable spells }
+
+   If SpellList=[] then
+      Begin
+         Case Spell_Type of
+            Cler_Spell: SMG$Put_Chars (SpellListDisplay,
+               'Thou have no usable cleric spells.',,23);
+            Wiz_Spell: SMG$Put_Chars (SpellListDisplay,
+               'Thou have no usable wizard spells.',,23);
+         End;
+      End
+   Else
+      Begin
+         X:=1;  Y:=1;
+         For Loop:=CrLt to DetS do
+            If Loop in SpellList then
+               Begin
+                  SMG$Put_Chars (SpellListDisplay,Long_Spell[Loop],y,x);
+                  SMG$Put_Chars (SpellListDisplay,
+                     ' ('
+                     +Spell[Loop]
+                     +')');
+                  Y:=Y+1;
+                  If Y>21 then
+                     Begin
+                        Y:=1;
+                        X:=X+33;
+                     End;
+               End;
+      End;
+   SMG$Put_Chars (SpellListDisplay,'Press any key to continue...',22,23,1);
+   SMG$End_Display_Update (SpellListDisplay);
+
+   Case Spell_Type of
+      Wiz_Spell: ;
+      Otherwise  SMG$Paste_Virtual_Display (SpellListDisplay,Pasteboard,2,2); { TODO: This case statement is bizarre! $$$ }
+
+      { TODO: Oh, I see. In List_Spells() below, we print the cleric spells first, so we paste it on the first call, which is
+        for Cler_Spells. Ugly code, Jeff. Ugly code!!!
+
+        We should do a Begin_Pasteboard_Update instead, or just move this code to the end of List_Spells(). }
+   End;
+   Wait_Key;
+End;
+
+(******************************************************************************)
+
+Procedure List_Spells (Character: Character_Type);
+
+Begin
+   Print_List_of_Spells (Character,Cler_Spell);
+   Print_List_of_Spells (Character,Wiz_Spell);
+   SMG$Put_Chars (OptionsDisplay,' ',3,5); { Get rid of Question mark }
+   SMG$Unpaste_Virtual_Display (SpellListDisplay,Pasteboard);
 End;
 
 (******************************************************************************)
