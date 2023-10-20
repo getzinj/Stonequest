@@ -2130,6 +2130,87 @@ End;
 
 (******************************************************************************)
 
+Function Has_Spell_Points (Character: Character_Type): Boolean;
+
+Var
+  Y,X: Integer;
+  Temp: Boolean;
+
+Begin
+  Temp:=False;
+  For Y:=1 to 2 do { type of spell }
+     For X:=1 to 9 do
+        Temp:=Temp or (Character.SpellPoints[Y,X]>0);
+  Has_Spell_Points:=Temp;
+End;
+
+(******************************************************************************)
+
+Function Has_Spells (Character: Character_Type): Boolean;
+
+Var
+  Temp: Boolean;
+
+Begin
+   Temp:=(Character.Wizard_Spells+Character.Cleric_Spells)<>[];
+   Temp:=Temp and Has_Spell_Points (Character);
+   Has_Spells:=Temp;
+End;
+
+(******************************************************************************)
+
+Procedure Print_Fight_Option (Option: Line; Var Y,X: Integer);
+
+Begin
+   SMG$Put_Chars (OptionsDisplay,Option,Y,X);
+   X:=X+11;
+   If X>44 then
+      Begin
+         X:=1;
+         Y:=Y+1;
+      End;
+End;
+
+(******************************************************************************)
+
+Procedure Print_Combat_Help;
+
+Var
+  HelpMeDisplay: Unsigned;
+
+[External]Procedure Wait_Key (Time_Out: Integer:=-1);External;
+
+Begin
+   SMG$CREATE_VIRTUAL_DISPLAY (22,78,HelpMeDisplay,1);
+   SMG$ERASE_DISPLAY (HelpMeDisplay);
+
+   SMG$PUT_LINE (HelpMeDisplay,'Combat Options:',2);
+   SMG$PUT_LINE (HelpMeDisplay,' Fight       - This allows you to engage in hand-to-hand combat with a');
+   SMG$PUT_LINE (HelpMeDisplay,'               monster in the first two ranks.');
+   SMG$PUT_LINE (HelpMeDisplay,' Parry       - Perform no action for this round, but just defend');
+   SMG$PUT_LINE (HelpMeDisplay,'               against attacks.');
+   SMG$PUT_LINE (HelpMeDisplay,' Use Item    - Invoke the magic (if any) of an item owned by the character.');
+   SMG$PUT_LINE (HelpMeDisplay,' Change Item - Allows the character to put down one item and/or pick up one.');
+   SMG$PUT_LINE (HelpMeDisplay,' Berserk     - Allows a barbarian to go into a battle range. Once a char-');
+   SMG$PUT_LINE (HelpMeDisplay,'               acter has gone berserk, he/she can not stop until he/she is');
+   SMG$PUT_LINE (HelpMeDisplay,'               rendered incapable, or all enemies are dead.');
+   SMG$PUT_LINE (HelpMeDisplay,' Turn        - Allows a character with clerical abilities to attempt to');
+   SMG$PUT_LINE (HelpMeDisplay,'               dispel undead creatures or creatures from other planes.');
+   SMG$PUT_LINE (HelpMeDisplay,' Spell       - Allows a spell-using character to cast a spell he/she knows.');
+   SMG$PUT_LINE (HelpMeDisplay,' Run         - Allows the leader of the group to turn tail and run, dragging');
+   SMG$PUT_LINE (HelpMeDisplay,'               the rest of the part with him/her.  Attempting to run does');
+   SMG$PUT_LINE (HelpMeDisplay,'               not ensure a getaway. If you do not get away, the monsters');
+   SMG$PUT_LINE (HelpMeDisplay,'               will have a free round of attacks.');
+   SMG$PUT_LINE (HelpMeDisplay,'',3);
+   SMG$PUT_LINE (HelpMeDisplay,'Press any key to continue...');
+   SMG$PASTE_VIRTUAL_DISPLAY (HelpMeDisplay,Pasteboard,2,2);
+   Wait_Key;
+   SMG$UNPASTE_VIRTUAL_DISPLAY (HelpMeDisplay,Pasteboard);
+   SMG$DELETE_VIRTUAL_DISPLAY (HelpMeDisplay);
+End;
+
+(******************************************************************************)
+
 { TODO: Enter this code }
 
 (******************************************************************************)
