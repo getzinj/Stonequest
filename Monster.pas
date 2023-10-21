@@ -95,7 +95,7 @@ Value
 [External]Procedure Cursor;External;
 [External]Procedure No_Cursor;External;
 [External]Function String(Num: Integer; Len: Integer:=0):Line;external;
-[External]Procedure Get_Num (Var Number: Integer; Display: Unsigned);External;
+[External]Function Get_Num (Display: Unsigned): Integer;External;
 [External]Function Make_Choice (Choices: Char_Set;  Time_Out:  Integer:=-1;
     Time_Out_Char: Char:=' '): Char;External;
 (******************************************************************************)
@@ -311,7 +311,7 @@ Begin
         SMG$End_Display_Update (ScreenDisplay);
         SMG$Put_Chars (ScreenDisplay,
             'Change which type? (1-150)',15,1);
-        Get_Num (Num, ScreenDisplay);
+        Num:=Get_Num(ScreenDisplay);
         If Num>150 then
            Num:=0
         Else
@@ -412,7 +412,7 @@ Begin
                     SMG$Set_Cursor_ABS (ScreenDisplay,16,1);
                     SMG$Put_Line (ScreenDisplay,
                         'Enter an integer ');
-                    Get_Num (Num,ScreenDisplay);
+                    Num:=Get_Num(ScreenDisplay);
                     IF ABS(num)<128 then Monsters[Number].Armor_Class:=Num;
                  End;
              6:   If Monsters[Number].Alignment=Evil then
@@ -425,11 +425,11 @@ Begin
                      Monsters[Number].Kind:=Succ(Monsters[Number].Kind);
             7,8: Begin
                       SMG$Put_Chars (ScreenDisplay, 'Enter X: ',15,1);
-                      Get_Num (X1,ScreenDisplay);
+                      X1:=Get_Num(ScreenDisplay);
                       SMG$Put_Chars (ScreenDisplay, 'Enter Y: ',15,1);
-                      Get_Num (Y1,ScreenDisplay);
+                      Y1:=Get_Num(ScreenDisplay);
                       SMG$Put_Chars (ScreenDisplay, 'Enter Z: ',15,1);
-                      Get_Num (Z1,ScreenDisplay);
+                      Z1:=Get_Num(ScreenDisplay);
                       Case Ord(Answer)-64 of
                           8: Begin
                                 Monsters[Number].Hit_Points.X:=X1;
@@ -564,19 +564,19 @@ Begin (* Edit_Attacks *)
          SMG$End_Display_Update (ScreenDisplay);
          SMG$Put_Chars (ScreenDisplay,
              'Change which attack? >',,1,1);
-         Get_Num (Number,ScreenDisplay);
+         Number:=Get_Num(ScreenDisplay);
          SMG$Put_Line (ScreenDisplay, '');
          If (Number<=20) and (Number>=1) then
             Begin (* If in range *)
                SMG$Put_Chars (ScreenDisplay,
                    'Enter X: ',16,1);
-               Get_Num (X1,ScreenDisplay);
+               X1:=Get_Num(ScreenDisplay);
                SMG$Put_Chars (ScreenDisplay,
                    'Enter Y: ',17,1);
-               Get_Num (Y1,ScreenDisplay);
+               Y1:=Get_Num(ScreenDisplay);
                SMG$Put_Chars (ScreenDisplay,
                    'Enter Z: ',18,1);
-               Get_Num (Z1,ScreenDisplay);
+               Z1:=Get_Num(ScreenDisplay);
                Attack[Number].X:=X1;
                Attack[Number].Y:=Y1;
                Attack[Number].Z:=Z1;
@@ -660,7 +660,7 @@ Begin (* Edit_Screen2_Properties *)
              SMG$Set_Cursor_ABS (ScreenDisplay,22,1);
              SMG$Put_Line (ScreenDisplay,
                  'Enter an Integer.');
-             Get_Num (Num,ScreenDisplay);
+             Num:=Get_Num(ScreenDisplay);
              Case ORD(Answer)-52 of
                     13: If ABS(Num)<32768 then
                            Monsters[Number].Levels_Drained:=Num;
@@ -822,7 +822,7 @@ Begin
                        Begin
                           SMG$Put_Chars (ScreenDisplay,
                               'Change which monster? --->',24,1,1);
-                          Get_Num (Number,ScreenDisplay);
+                          Number:=Get_Num(ScreenDisplay);
                           If (Number>0) and (Number<451) then
                              Change_Monster (Number);
                        End;
@@ -842,13 +842,13 @@ Begin
    SMG$Put_Chars (ScreenDisplay,
        'Swap record A ->');
    Repeat
-      Get_Num (Old_Slot,ScreenDisplay)
+      Old_Slot:=Get_Num(ScreenDisplay)
    Until (Old_Slot>-1) and (Old_Slot<451);
 
    SMG$Put_Chars (ScreenDisplay,
       'Swap record B ->');
    Repeat
-      Get_Num (New_Slot,ScreenDisplay)
+      New_Slot:=Get_Num(ScreenDisplay)
    Until (New_Slot>-1) and (New_Slot<451);
 
    SMG$Put_Line (ScreenDisplay,
@@ -880,7 +880,7 @@ Begin
       Begin
          SMG$Put_Chars (ScreenDisplay,
              'Record to copy ->',1,1);
-         Get_Num (Old_Slot,ScreenDisplay);
+         Old_Slot:=Get_Num(ScreenDisplay);
       End;
    Until (Old_Slot>-1) and (Old_Slot<451);
 
@@ -888,7 +888,7 @@ Begin
       Begin
          SMG$Put_Chars (ScreenDisplay,
              'Record to copy over ->',1,1);
-         Get_Num (New_Slot,ScreenDisplay);
+         New_Slot:=Get_Num(ScreenDisplay);
       End;
    Until (New_Slot>-1) and (New_Slot<451);
 
@@ -920,7 +920,7 @@ Begin
       Begin
          SMG$Put_Chars (ScreenDisplay,
             'Slot to insert monster ->');
-            Get_Num (New,ScreenDisplay);
+            New:=Get_Num(ScreenDisplay);
       End;
    Until (New>-1) and (New<451);
 
@@ -953,7 +953,7 @@ Begin
    SMG$Put_Chars (ScreenDisplay,
        'Slot to delete monster ->');
    Repeat
-      Get_Num (Old,ScreenDisplay);
+      Old:=Get_Num(ScreenDisplay);
    Until (Old>-1) and (Old<451);
 
    SMG$Put_Line (ScreenDisplay,
@@ -995,7 +995,7 @@ Begin
              +' lists, -1 exits)',3,1);
          SMG$Put_Chars (ScreenDisplay,
              '--->',4,1);
-         Get_Num (Number,ScreenDisplay);
+         Number:=Get_Num(ScreenDisplay);
          SMG$Set_Cursor_ABS (ScreenDisplay,4,1);
          If (Number > 0) and (Number < 451) then Change_Monster (Number);
          If Number=-2 then Print_Table;

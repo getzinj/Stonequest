@@ -72,7 +72,7 @@ Special_Kind_Name[Cliff]        := 'Cliff';
 [External]Function String (Num: Integer; Len: Integer:=0):Line;external;
 [External]Procedure Cursor;External;
 [External]Procedure No_Cursor;External;
-[External]Procedure Get_Num (Var Number: Integer; Display: Unsigned);External;
+[External]Function Get_Num (Display: Unsigned): Integer;External;
 [External]Function Make_Choice (Choices: Char_Set; Time_Out: Integer:=-1;
     Time_Out_Char: Char:=' '): Char;External;
 [External]Function Yes_or_No (Time_Out: Integer:=-1;
@@ -306,7 +306,7 @@ Begin
             Begin
                SMG$Put_Chars (ScreenDisplay,
                    'Enter an integer: ',13,1);
-               Get_Num (Number,ScreenDisplay);
+               Number:=Get_Num(ScreenDisplay);
                Case Answer of
                   'A': If (Number<=450) and (Number>=0) then
                          Enc.Base_Monster_Number:=Number
@@ -322,11 +322,11 @@ Begin
             If Answer='B' then
                Begin
                   SMG$Put_Chars(ScreenDisplay,'Enter X: ',13,1);
-                  Get_Num (Enc.Addition.X,ScreenDisplay);
+                  Enc.Addition.X:=Get_Num(ScreenDisplay);
                   SMG$Put_Chars(ScreenDisplay,'Enter Y: ',14,1);
-                  Get_Num (Enc.Addition.Y,ScreenDisplay);
+                  Enc.Addition.Y:=Get_Num(ScreenDisplay);
                   SMG$Put_Chars(ScreenDisplay,'Enter Z: ',15,1);
-                  Get_Num (Enc.Addition.Z,ScreenDisplay);
+                  Enc.Addition.Z:=Get_Num(ScreenDisplay);
                End;
       End;
    Until Answer='E'
@@ -570,13 +570,13 @@ Begin
                         'P': Begin
                                 SMG$Put_Chars (ScreenDisplay,
     'Enter Pointer1: ',22,1,1);
-                                Get_Num (Table[Number].Pointer1, ScreenDisplay);
+                                Table[Number].Pointer1:=Get_Num(ScreenDisplay);
                                 SMG$Put_Chars (ScreenDisplay,
     'Enter Pointer2: ',22,1,1);
-                                Get_Num (Table[Number].Pointer2, ScreenDisplay);
+                                Table[Number].Pointer2:=Get_Num(ScreenDisplay);
                                 SMG$Put_Chars (ScreenDisplay,
     'Enter Pointer3: ',22,1,1);
-                                Get_Num (Table[Number].Pointer3, ScreenDisplay);
+                                Table[Number].Pointer3:=Get_Num(ScreenDisplay);
                                 Print_Item (Table,Number);
                              End;
                   End; { Case }

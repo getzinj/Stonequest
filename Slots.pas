@@ -24,7 +24,7 @@ Value
 
 
 (******************************************************************************)
-[External]Procedure Get_Num (Var Number: Integer; Display: Unsigned);External;
+[External]Function Get_Num (Display: Unsigned): Integer;External;
 [External]Procedure Delay (Seconds: Real);External;
 [External]Procedure Ring_Bell (Display_Id: Unsigned; Number_of_Times: Integer:=1);External;
 [External]Function Roll_Die (Die_Type: Integer): [Volatile]Integer;External;
@@ -301,7 +301,7 @@ Begin
         'How much?');
     SMG$Put_Chars (BetDisplay,
         '--->');
-    Get_Num (Bet,BetDisplay);
+    Bet:=Get_Num(BetDisplay);
   End;
  Until (Bet>=0) and (Bet<=Money) and (Bet<=100);
  SMG$Begin_Display_Update (BetDisplay);

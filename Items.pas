@@ -59,7 +59,7 @@ Value
         Monster_T[Reptile]:='Reptile';
         Monster_T[Enchanted]:='Enchanted';
 
-[External]Procedure Get_Num (Var Number: Integer; Display: Unsigned);External;
+[External]Function Get_Num (Display: Unsigned): Integer;External;
 [External]Procedure Change_Class_Set (Var ClassSet: Class_Set; T1: Line);external;
 [External]Procedure Change_Attack_Set (Var AttackSet: Attack_Set; T1: Line);External;
 [External]Procedure Cursor;External;
@@ -396,7 +396,7 @@ Begin
              SMG$Put_Line (ScreenDisplay,
                  'Enter an integer.');
              SMG$Set_Cursor_ABS (ScreenDisplay,2,40);
-             Get_Num (Num,ScreenDisplay);
+             Num:=Get_Num (ScreenDisplay);
              Case Choice_Num of
                 1: If Num<251 then Item.Item_Number:=Num;
                 7: Item.Special_Occurance_No:=Num;
@@ -418,13 +418,13 @@ Begin
        18: Begin
              SMG$Put_Chars (ScreenDisplay,
                  'Enter X: ',1,40);
-             Get_Num (Item.Damage.X, ScreenDisplay);
+             Item.Damage.X:=Get_Num(ScreenDisplay);
              SMG$Put_Chars (ScreenDisplay,
                  'Enter Y: ',2,40);
-             Get_Num (Item.Damage.Y, ScreenDisplay);
+             Item.Damage.Y:=Get_Num(ScreenDisplay);
              SMG$Put_Chars (ScreenDisplay,
                  'Enter Z: ',3,40);
-             Get_Num (Item.Damage.Z, ScreenDisplay);
+             Item.Damage.Z:=Get_Num(ScreenDisplay);
            End;
        12: SpellCast (Item.Spell_Cast);
        13: Change_Class_Set (Item.Usable_By,
@@ -544,11 +544,11 @@ Var
 Begin
    SMG$Put_Chars (ScreenDisplay,
        'Record A -->');
-   Get_Num (Old_Slot,ScreenDisplay);
+   Old_Slot:=Get_Num(ScreenDisplay);
 
    SMG$Put_Chars (ScreenDisplay,
        'Record B -->');
-   Get_Num (New_Slot,ScreenDisplay);
+   New_Slot:=Get_Num(ScreenDisplay);
 
    T:='Swap: ';
    T:=T
@@ -620,7 +620,7 @@ Begin { Edit Item }
              '(0-250, -4 to insert,'
              +' -3 swaps, -2 lists,'
              +' -1 exits)',3,1);
-         Get_Num (Number,ScreenDisplay);
+         Number:=Get_Num(ScreenDisplay);
          SMG$Set_Cursor_ABS (ScreenDisplay,4,1);
          If (Number > -1) and (Number < 251) then
             Change_Item (Number,Item_List);

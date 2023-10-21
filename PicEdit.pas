@@ -12,7 +12,7 @@ Var
 (******************************************************************************)
 [External]Function Get_Key (Time_Out: Integer:=-1; Time_out_Char: Integer:=32): [Volatile]Integer;External;
 [External]Function String(Num: Integer; Len: Integer:=0):Line;External;
-[External]Procedure Get_Num (Var Number: Integer; Display: Unsigned);External;
+[External]Function Get_Num (Display: Unsigned): Integer;External;
 (******************************************************************************)
 
 Procedure Display_Image (Image: Image_Type;  Start_Row, Start_Column: Integer:=1);
@@ -454,7 +454,7 @@ Begin { Pic Edit }
                SMG$Put_Chars (ScreenDisplay,
                   'Edit which image? (0-150, -1 exits) --->');
                SMG$End_Display_Update (ScreenDisplay);
-               Get_Num (Response,ScreenDisplay);
+               Response:=Get_Num(ScreenDisplay);
             End;
          Until (Response<=150) and (Response>-2);
          If Response<>-1 then

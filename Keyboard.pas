@@ -152,13 +152,14 @@ End;
 
 {**********************************************************************************************************************************}
 
-[Global]Procedure Get_Num (Var Number: Integer; Display: Unsigned);
+[Global]Function Get_Num (Display: Unsigned): Integer;
 
 { This procedure will get a number and store it in NUMBER, echoing to DISPLAY }
 
 Var
    Response: Line;
    Position: Integer;
+   Number: Integer;
 
 Begin { Get Num }
 
@@ -176,5 +177,7 @@ Begin { Get Num }
              Response.Body[Position]:='0';
 
    ReadV (Response,Number,Error:=Continue);
+
+   Get_Num:=Number;
 End;  { Get Num }
 End.  { Keyboard }

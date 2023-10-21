@@ -60,7 +60,7 @@ Var
     Time_Out_Char: Char:='0'): Char;External;
 [External]Procedure Race_Adjustments (Var Character: Character_Type; Race: Race_Type);External;
 [External]Procedure Wait_Key (Time_Out: Integer:=-1);External;
-[External]Procedure Get_Num (Var Number: Integer; Display: Unsigned);External;
+[External]Function Get_Num (Display: Unsigned): Integer;External;
 [External]Function Roll_Die (Die_Type: Integer): [Volatile]Integer;External;
 [External]Function Random_Number (Die: Die_Type): [Volatile]Integer;External;
 [External]Function  Made_Roll (Needed: Integer): [Volatile]Boolean;external;
@@ -668,7 +668,7 @@ Begin { Trade Gold }
         '--->');
    SMG$End_Display_Update (ScreenDisplay);
    Cursor;
-   Get_Num (Amount,ScreenDisplay);
+   Amount:=Get_Num(ScreenDisplay);
    No_Cursor;
    If Character.Gold<Amount then
       Begin

@@ -97,7 +97,7 @@ Value
    DirectionName[East]:=  ' East ';    DirectionName[West]:= ' West ';
 
 (******************************************************************************)
-[External]Procedure Get_Num (Var Number: Integer; Display: Unsigned);External;
+[External]Function Get_Num (Display: Unsigned): Integer;External;
 [External]Procedure Show_Image (Number: Pic_Type; Var Display: Unsigned);External;
 [External]Function Random_Number (Die: Die_Type): [Volatile]Integer;External;
 [External]Function Make_Choice (Choices: Char_Set; Time_Out: Integer:=-1;
@@ -800,7 +800,7 @@ Begin
    SMG$Erase_Display (MessageDisplay);
    SMG$Put_Line (MessageDisplay,'Current time delay: '+String(Time_Delay));
    SMG$Put_Chars (MessageDisplay,'New Delay (0-999, -1 exits) :');
-   Get_Num (Change,MessageDisplay);
+   Change:=Get_Num(MessageDisplay);
    If (Change>-1) and (change<1000) then
       Time_Delay:=Change;
    SMG$Erase_Display (MessageDisplay);
