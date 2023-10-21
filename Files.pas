@@ -57,7 +57,7 @@ Begin { Save Pictures }
          History:=OLD,
          Sharing:=READONLY);
    ReWrite (PicFile);
-   For Loop:=1 to 150 do
+   For Loop:=0 to 150 do
       Begin
          Write (PicFile,Pics[Loop]);
       End;
