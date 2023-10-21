@@ -1,4 +1,4 @@
-[Inherit ('Types','SMGRTL')]Module Monster_Attack;
+[Inherit ('Types','SMGRTL','PriorityQueue')]Module Monster_Attack;
 
 { TODO: Enter this code }
 

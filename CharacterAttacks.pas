@@ -1,4 +1,4 @@
-[Inherit ('Types','Librtl','SmgRtl','StrRtl')]Module Character_Attacks;
+[Inherit ('Types','Librtl','SmgRtl','StrRtl','PriorityQueue')]Module Character_Attacks;
 
 { TODO: Enter this code }
 

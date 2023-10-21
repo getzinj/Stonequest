@@ -1,4 +1,4 @@
-[Inherit ('SYS$LIBRARY:STARLET','Types','SMGRTL','StrRtl')]Module Encounter;
+[Inherit ('SYS$LIBRARY:STARLET','Types','SMGRTL','StrRtl','PriorityQueue')]Module Encounter;
 
 { This is the main module for combat. It handles all phases of combat,
   including treasure and fleeing. }
@@ -76,6 +76,11 @@ Value
 [External]Procedure Print_Party_Line (Member: Party_Type;  Party_Size,Position: Integer);External;
 [External]Procedure Time_Effects (Position: Integer; Var Member: Party_Type; Party_Size: Integer);External;
 [External]Procedure Dead_Character (Position: Integer; Var Member: Party_Type; Party_Size: Integer);External;
+[External]Function Empty (A: PriorityQueue): Boolean;External;
+[External]Procedure MakeNull (Var A: PriorityQueue);External;
+[External]Function P (A: Attacker_Type): Integer;External;
+[External]Procedure Insert (X: Attacker_Type; Var A: PriorityQueue);External;
+[External]Function DeleteMin (Var A: PriorityQueue): Attacker_Type;External;
 (******************************************************************************)
 
 Function Insane_Leader (Party: Party_Type; Var Name: Line): Boolean;
@@ -963,117 +968,6 @@ Begin
          Surprised:=MonsterSurprised
       Else
          Surprised:=NoSurprise;
-End;
-
-(******************************************************************************)
-
-Function Empty (A: PriorityQueue): Boolean;
-
-Begin
-   Empty:=(A.Last=0)
-End;
-
-(******************************************************************************)
-
-Procedure MakeNull (Var A: PriorityQueue);
-
-Begin
-   A:=Zero;
-End;
-
-(******************************************************************************)
-
-Function P (A: Attacker_Type): Integer;
-
-Begin
-   P:=A.Priority;
-End;
-
-(******************************************************************************)
-
-Procedure Insert (X: Attacker_Type; Var A: PriorityQueue);
-
-Var
-   NotDone: Boolean;
-   i: Integer;
-   Temp: Attacker_Type;
-
-Begin
-   If A.Last>4007 then
-      Begin
-        SMG$Erase_Display (CharacterDisplay);
-        SMG$Put_Line (CharacterDisplay,
-            'Error: heap insert overflow.');
-        Delay(13);
-      End
-   Else
-      Begin
-         A.Last:=A.Last + 1;
-         A.Contents[A.Last] := x;
-         i := A.Last; { i is index of current position of x }
-         If I>1 then NotDone:=(P(A.Contents[i])<P(A.Contents[i div 2]))
-         Else        NotDone:=False;
-         While NotDone do
-            Begin { Push x up the tree by exchanging it with its parent of larger priority. Recall p computes the priority of a
-                    Attacker_Type element }
-               Temp:=A.Contents[i];
-               A.Contents[i]:=A.Contents[i div 2];
-               A.Contents[i div 2]:=Temp;
-
-               i:=i div 2;
-
-               If I>1 then
-                   NotDone:=(P(A.Contents[i])<P(A.Contents[i div 2]))
-               Else
-                   NotDone:=False
-            End
-      End
-End;
-
-(******************************************************************************)
-
-Function DeleteMin (Var A: PriorityQueue): Attacker_Type;
-
-Var
-   i,j: Integer;
-   Temp,minimum: Attacker_Type;
-
-Begin
-  If A.last>0 then
-     Begin
-        Minimum:=A.Contents[1];
-        A.Contents[1]:=A.Contents[A.Last];
-        A.Last:=A.Last-1;
-
-        i:=1;
-        While (i <= (A.Last div 2)) do
-           Begin
-              If 2*i=A.last then J:=2*i
-              Else If P(A.Contents[2*i])<P(A.Contents[2*i+1]) then
-                      j:=2*i
-                   Else
-                      j:=2*i+1;
-
-              If P(A.Contents[i]) > P(A.Contents[j]) then
-                 Begin
-                    Temp:=A.Contents[i];
-                    A.Contents[i]:=A.Contents[j];
-                    A.Contents[j]:=Temp;
-                    i:=j;
-                 End
-              Else
-                 Begin
-                    DeleteMin:=Minimum;
-                    i:=(A.Last div 2)+1;
-                 End
-           End;
-        DeleteMin:=Minimum;
-     End
-  Else
-     Begin
-        Temp.Group:=0;
-        DeleteMin:=Temp;
-     End;
 End;
 
 (******************************************************************************)

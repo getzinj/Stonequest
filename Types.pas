@@ -461,25 +461,6 @@ Type
   Option_Type       = (Run,Gate,Breathe,CastSpell,Attack,UseItem,TurnUndead,
                        Parry,Berserker_Rage,SwitchItems);
 
-  Group_Choice    = [Byte]1..5;
-  Group_Type      = 0..4;
-  Individual_Type = 0..6;
-  Attacker_Type = Record
-                     Priority: Integer;                           { order of attacks }
-                     Attacker_Position: [Word]1..999;             { Which monsters }
-                     Caster_Level: Integer;                       { For spell casting }
-                     Case Group: Group_Choice of                  { Which monster group }
-                          5: (Action: Option_Type;                { What action }
-                             Target_Group: Group_Type;            { Who is being attacked }
-                             Target_Individual: Individual_Type;  {  "  "   "      "      }
-                             WhatSpell: Spell_Name;
-                             Old_Item,New_Item: Integer)
-                  End;
-  Party_Commands_Type = Array [1..6] of Attacker_Type;
-  PriorityQueue = Record
-                     Contents: Array [1..4008] of Attacker_Type;
-                     Last:  Integer;
-                  End;
 
   Surprise_Type = (PartySurprised,MonsterSurprised,NoSurprise);
   Reaction_Type = (Friendly,Hostile);
