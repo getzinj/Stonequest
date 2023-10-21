@@ -27,4 +27,9 @@ TYPE
    %descr compare_string: VARYING [$len6] OF CHAR) : UNSIGNED;
         EXTERNAL;
 
+
+[ASYNCHRONOUS, UNBOUND]FUNCTION STR$Position
+  (%descr string: VARYING [$len7] OF CHAR;
+   %descr compare_string: VARYING [$len8] OF CHAR) : UNSIGNED;
+        EXTERNAL;
 END.

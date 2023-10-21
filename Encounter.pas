@@ -877,24 +877,24 @@ End;
 
 (******************************************************************************)
 
-Function Strength_Adjustment (Strength: Integer): Integer;
+Function Strength_Plus_to_Hit (Strength: Integer): Integer;
 
 Begin
    Case Strength of
-                  3: Strength_Adjustment:=-3;
-                4,5: Strength_Adjustment:=-2;
-                6,7: Strength_Adjustment:=-1;
-              8..14: Strength_Adjustment:=0;
-                 15: Strength_Adjustment:=1;
-              16,17: Strength_Adjustment:=2;
-                 18: Strength_Adjustment:=3;
-                 19: Strength_Adjustment:=4;
-                 20: Strength_Adjustment:=5;
-                 21: Strength_Adjustment:=6;
-                 22: Strength_Adjustment:=7;
-              23,24: Strength_Adjustment:=8;
-                 25: Strength_Adjustment:=9;
-           Otherwise Strength_Adjustment:=0;
+                  3: Strength_Plus_to_Hit:=-3;
+                4,5: Strength_Plus_to_Hit:=-2;
+                6,7: Strength_Plus_to_Hit:=-1;
+              8..14: Strength_Plus_to_Hit:=0;
+                 15: Strength_Plus_to_Hit:=1;
+              16,17: Strength_Plus_to_Hit:=2;
+                 18: Strength_Plus_to_Hit:=3;
+                 19: Strength_Plus_to_Hit:=4;
+                 20: Strength_Plus_to_Hit:=5;
+                 21: Strength_Plus_to_Hit:=6;
+                 22: Strength_Plus_to_Hit:=7;
+              23,24: Strength_Plus_to_Hit:=8;
+                 25: Strength_Plus_to_Hit:=9;
+           Otherwise Strength_Plus_to_Hit:=0;
    End;
 End;
 
@@ -2624,9 +2624,9 @@ Begin
    SMG$Paste_Virtual_Display (OptionsDisplay,Pasteboard,SpellsY,SpellsX);
    Repeat
    Until Return_or_Change_Time(Time_Delay)=CHR(13);
-   SMG$Unpaste_Virtual_Display (OptionsDisplay,Pasteboard,SpellsY,SpellsX);
+   SMG$Unpaste_Virtual_Display (OptionsDisplay,Pasteboard);
 
-   One_Round (Attacks,Group,Member,Current_Party_Size,Can_Attack);
+   One_Round (Attacks,Group,Member,Current_Party_Size,Party_Size,Can_Attack);
 End;
 
 (******************************************************************************)
@@ -2701,12 +2701,12 @@ Begin
    End;
 
    If Have_Monster_Item (Monster.Real_Name,Member,Party_Size) then
-      Chance:=Chance=50;
+      Chance:=Chance+50;
 
    If Friends then
       Chance:=Chance+60;
    If Chance>99 then
-      Chance:=99
+      Chance:=99;
 
    If Made_Roll(Chance) then
       Reaction:=Friendly
@@ -2729,7 +2729,7 @@ Var
 [External]Function Get_Monster (Monster_Number: Integer): Monster_Record;External;
 
 Begin
-   Encounter:=0;
+   Encounter:=Zero;
    Group:=1;
    Done:=False;
    Repeat
@@ -2769,8 +2769,441 @@ Begin
 End;
 
 (******************************************************************************)
+[External]Function Experience (Number: Integer; Group: Monster_Group): Real;external;
+(******************************************************************************)
 
-{ TODO: Enter this code }
+Function Group_Experience (Group: Monster_Group; Party_Size: Integer): Real;
+
+Var
+   Temp: Real;
+   Loop: Integer;
+
+Begin
+   Temp:=0;
+   If Group.Orig_Group_Size>0 then
+      For Loop:=1 to Group.Orig_Group_Size do
+         Temp:=Temp+Experience(Loop,Group);
+
+   If Group.Orig_Group_Size>(4 * Party_size) then
+      Temp:=Temp+ Round(Temp*(1/5))
+   Else
+      If Group.Orig_Group_Size>(2 * Party_Size) then
+         Temp:=Temp+ Round(Temp*(3/20));
+
+   Group_Experience:=Temp;
+End;
+
+(******************************************************************************)
+
+Function Encounter_Experience (Encounter: Encounter_Group; Party_Size: Integer): Real;
+
+Var
+   Temp: Real;
+   Loop: Integer;
+
+Begin
+   Temp:=0;
+   For Loop:=1 to 4 do
+      Temp:=Temp+Group_Experience(Encounter[Loop],Party_Size);
+   Encounter_Experience:=Temp;
+End;
+
+(******************************************************************************)
+
+Procedure Award_Experience (Encounter: Encounter_Group; Var Member: Party_Type;  Current_Party_Size,Party_Size: Integer);
+
+Var
+  Character: Integer;
+  XP,XP_Sum: Real;
+
+Begin
+  XP_Sum:=Encounter_Experience (Encounter,Party_Size);
+  XP:=XP_Sum/Current_Party_Size;
+
+  SMG$Erase_Display (MessageDisplay);
+
+  SMG$Begin_Display_Update (MonsterDisplay);
+
+  SMG$Erase_Display (MonsterDisplay);
+  SMG$Put_Line (MonsterDisplay,' For defeating thine enemies, each survivor gets');
+  SMG$Put_Line (MonsterDisplay,' '+String (Trunc(XP))+' experience points.',0);
+
+  SMG$End_Display_Update(MonsterDisplay);
+
+  For Character:=1 to Current_Party_Size do
+     If Alive (Member[Character]) and (Member[Character].Status<>Zombie) then
+        Member[Character].Experience:=Member[Character].Experience+XP;
+
+  Delay (2);
+
+  SMG$Erase_Display (MonsterDisplay);
+End;
+
+(******************************************************************************)
+[External]Procedure Give_Treasure (Encounter: Encounter_Group; Area: Area_Type; Var Member: Party_Type;
+                                           Var Current_Party_Size: Party_Size_Type;  Party_Size: Integer;  Var Alarm_Off: Boolean);external;
+(******************************************************************************)
+
+Procedure Party_is_Surprised (Var Encounter: Encounter_Group; Var Member: Party_Type;
+                                         Var Current_Party_Size: Party_Size_Type;  Party_Size: Integer; Var Time_Delay: Integer;
+                                         Var Can_Attack: Party_Flag);
+
+Begin
+   SMG$Put_Line (MessageDisplay,'The monsters surprised thee!',0);
+   Ring_Bell (MessageDisplay);
+   Monster_Attacks_First (Encounter,Time_Delay,Member,Current_Party_Size,Party_Size,Can_Attack);
+End;
+
+(******************************************************************************)
+
+Procedure Monsters_Return_Hailing;
+
+Begin
+  Delay(1);
+
+  SMG$Begin_Display_Update (MessageDisplay);
+  SMG$Erase_Display (MessageDisplay);
+  SMG$Put_Line (MessageDisplay,'They return thine hailing and leave thee in peace!');
+  SMG$End_Display_Update (MessageDisplay);
+
+  Delay(1);
+End;
+
+
+(******************************************************************************)
+
+Procedure Dont_Accept_Hailing;
+
+Var
+  T: Line;
+
+Begin
+  Delay(1);
+
+  SMG$Begin_Display_Update (MessageDisplay);
+  SMG$Erase_Display (MessageDisplay);
+
+  Case Roll_Die (12) of
+    1: T:='Shove off, kobold breath!';
+    2: T:='Eat steal, carrion crawler!';
+    3: T:='Die, scum!';
+    4: T:='Meet thy maker, paladin-lover!';
+    5: T:='Die, knave!';
+    6: T:='I think not.';
+    7: T:='Thou''re not getting away that easy...';
+    8: T:='Grrrrrrr....';
+    9: T:='The game master''s put a warrant out on thee...';
+   10: T:='Not a chance, muck-sucker!';
+   11: T:='No way, Jose!';
+   12: T:='Yeah, right?';
+   Otherwise T:='Thou''re going down!';
+  End;
+
+  SMG$Put_Line (MessageDisplay,T);
+  SMG$End_Display_Update (MessageDisplay);
+
+  Delay(1);
+End;
+
+(******************************************************************************)
+
+Procedure Check_Class_and_Alignment_Aux (Var Class: Class_Type; Alignment: Align_Type);
+
+Begin
+   Case Class of
+      Ranger: If Alignment<>Good then Class:=Fighter;
+      Paladin: If Alignment=Evil then
+                   Class:=Antipaladin
+               Else
+                  If Alignment=Neutral then Class:=Fighter;
+      Antipaladin: If Alignment<>Evil then Class:=Fighter;
+      Barbarian: If Alignment=Good then Class:=Fighter;
+      Assassin: If Alignment<>Evil then Class:=Thief;
+   End;
+End;
+
+(******************************************************************************)
+
+Procedure Check_Class_And_Alignment (Var Character: Character_Type);
+
+Begin
+  Check_Class_And_Alignment_Aux (Character.Class,Character.Alignment);
+  Check_Class_And_Alignment_Aux (Character.PreviousClass,Character.Alignment);
+End;
+
+(******************************************************************************)
+
+Procedure Alignment_Drift (Drift_Alignment: Align_Type; Var Member: Party_Type; Current_Party_Size: Integer);
+
+Var
+  Person,Chance: Integer;
+
+Begin
+   For Person:=1 to Current_Party_Size do
+      If Member[Person].Alignment<>Drift_Alignment then
+         Begin
+            If Member[Person].Alignment=Neutral then Chance:=2 else Chance:=1;
+            If Made_Roll (Chance) then
+               Begin
+                  If Ord(Drift_Alignment)<Ord(Member[Person].Alignment) then
+                     Member[Person].Alignment:=Pred(Member[Person].Alignment)
+                  Else
+                     Member[Person].Alignment:=Succ(Member[Person].Alignment);
+                  Check_Class_and_Alignment (Member[Person]);
+               End;
+         End;
+End;
+
+(******************************************************************************)
+
+Procedure Monsters_Are_Surprised (Var Encounter: Encounter_Group; Var Member: Party_Type;
+                                             Var Current_Party_Size: Party_Size_Type;  Party_Size: Integer;
+                                             Var Flee,Friends: Boolean;  Var Time_Delay: Integer; Var Can_Attack: Party_Flag);
+
+Var
+   Decision: Char;
+   Hail: Boolean;
+
+Begin
+   SMG$Begin_Display_Update (MessageDisplay);
+   SMG$Erase_Display (MessageDisplay);
+   SMG$Put_Line (MessageDisplay,'Thou surprised the monsters!');
+   Ring_Bell (MessageDisplay);
+   SMG$Put_Line (MessageDisplay,'Dost thou wish to F)ight them, or H)ail them in welcome?');
+   SMG$End_Display_Update (MessageDisplay);
+   Decision:=Make_Choice (['F','H']);
+   Hail:=(Decision='H');
+   If Hail then Alignment_Drift (Good,Member,Party_Size);
+
+   Friends:=Hail and (Reaction(Encounter[1].Monster,Member,Party_Size,Friends:=True)=Friendly);
+   If Friends then
+      Monsters_Return_Hailing
+   Else
+      If Hail then
+         Begin
+            Dont_Accept_Hailing;
+            Melee_Round (Encounter,Member,Current_Party_Size,Party_Size,Flee,Time_Delay,Can_Attack)
+         End
+      Else
+         Party_Attacks_First (Encounter,Member,Current_Party_Size,Party_Size,Flee,Time_Delay,Can_Attack)
+End;
+
+(******************************************************************************)
+
+Function Monsters_Left (Encounter: Encounter_Group): Integer;
+
+{ This function returns the number of monsters left in the encounter }
+
+Var
+  MonstersRemaining,Group_Num: Integer;
+
+Begin
+   MonstersRemaining:=0;
+   For Group_Num:=1 to 4 do
+      MonstersRemaining:=MonstersRemaining+Encounter[Group_Num].Curr_Group_Size;
+   Monsters_Left:=MonstersRemaining;
+End;
+
+(******************************************************************************)
+
+Procedure Post_Encounter_Revertion (Var Member: Party_Type; Party_Size: Integer);
+
+{ Now that the fight is over, combat spells wear off }
+
+Var
+   Loop: Integer;
+   Can_Attack: Party_Flag;
+
+Begin
+  Can_Attack:=Zero;
+  For Loop:=1 to Party_Size do
+     Begin {Change characters back to normal }
+       Compute_AC_And_Regenerates (Member[Loop]);
+       Member[Loop].Curr_HP:=Min(Member[Loop].Curr_HP,Member[Loop].Max_HP);
+       Member[Loop].Attack.Berserk:=False;
+     End;
+  Update_Character_Box (Member,Party_Size,Can_Attack);
+End;
+
+(******************************************************************************)
+
+Procedure Kill_Image (Image_Num: Pic_Type);
+
+Var
+   Pic: Picture;
+
+Begin
+   Pic:=Pics[Image_Num];
+
+   SMG$Begin_Display_Update (FightDisplay);
+   Show_Monster_Image (Image_Num, FightDisplay);
+   If (Pic.Right_Eye.X>0) and (Pic.Right_Eye.Y>0) then SMG$Put_Chars (FightDisplay,'x',Pic.Right_Eye.Y+0,Pic.Right_Eye.X+0);
+   If (Pic.Left_Eye.X>0) and (Pic.Left_Eye.Y>0) then SMG$Put_Chars (FightDisplay,'x',Pic.Left_Eye.Y+0,Pic.Left_Eye.X+0);
+   SMG$End_Display_Update (FightDisplay);
+End;
+
+(******************************************************************************)
+
+Procedure Spoils_of_Victory (Encounter: Encounter_Group; Var Member: Party_Type; Var Current_Party_Size: Party_Size_Type;
+                                Party_Size: Integer; Place: Area_Type; Var Alarm_Off: Boolean;  Var Can_Attack: Party_Flag);
+
+{ This procedure delivers experience and treasure to the party.  In addition, it 'x's the eyes of the monster picture, restoring
+  later after the display has been unpasted. }
+
+Begin
+   Kill_Image (Encounter[1].Monster.Picture_Number);
+   Update_Character_Box (Member,Party_Size,Can_Attack);
+   Award_Experience (Encounter,Member,Current_Party_Size,Party_Size);
+   Give_Treasure (Encounter,Place,Member,Current_Party_Size,Party_Size,Alarm_Off);
+   SMG$Unpaste_Virtual_Display (FightDisplay,Pasteboard);
+End;
+
+(******************************************************************************)
+
+Procedure Time_Flies (Var Encounter: Encounter_Group; Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type;
+                          Party_Size: Integer; Var Can_Attack: Party_Flag);
+
+{ This procedure marks time.  It implements the effect of poison, the effect of regeneration, and the effect of time-dependent
+  spells. }
+
+Var
+   Individual,Group: Integer;
+
+Begin
+   For Group:=1 to 4 do
+      For Individual:=1 to Encounter[Group].Curr_Group_Size do
+         Begin
+            Encounter[Group].Curr_HP[Individual]:=Min(
+                Encounter[Group].Curr_HP[Individual] + Encounter[Group].Monster.Regenerates,
+                Encounter[Group].Max_HP[Individual]
+            );
+            If Encounter[Group].Curr_HP[Individual]<1 then
+               Encounter[Group].Status[Individual]:=Dead;
+         End;
+
+   For Individual:=1 to Current_Party_Size do
+      Time_Effects (Individual, Member, Party_Size);
+   Dead_Characters (Member,Current_Party_Size,Party_Size,Can_Attack);
+
+   Update_Character_Box (Member,Party_Size,Can_Attack);
+End;
+
+(******************************************************************************)
+
+Procedure Handle_Combat (Var Encounter: Encounter_Group; Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type;
+                                                 Party_Size: Integer; Var Flee: Boolean; Var Time_Delay: Integer; Var Can_Attack: Party_Flag);
+
+Var
+   Round_Count,MonstersRemaining: Integer;
+   Finished: Boolean;
+
+Begin
+   Round_Count:=1;
+   MonstersRemaining:=Monsters_Left (Encounter);
+   Finished:=(Current_Party_Size=0) or (MonstersRemaining=0);
+
+   While Not (Finished or Flee or Leave_Maze) do
+      Begin
+         Melee_Round (Encounter,Member,Current_Party_Size,Party_Size,Flee,Time_Delay,Can_Attack);
+         MonstersRemaining:=Monsters_Left (Encounter);
+         Round_Count:=Round_Count+1;
+         If Round_Count=3 then
+            Begin
+               Time_Flies (Encounter,Member,Current_Party_Size,Party_Size,Can_Attack);
+               Round_Count:=0;
+            End;
+         Finished:=(Current_Party_Size=0) or (MonstersRemaining=0);
+      End;
+End;
+
+(******************************************************************************)
+
+Procedure Handle_Flight (Var Places: Place_Stack);
+
+Var
+  X,Num: Integer;
+  P1,P2: Horizontal_Type;
+  P3: Vertical_Type;
+
+[External]Procedure POP (Var PosX,PosY: Horizontal_Type; Var PosZ: Vertical_Type; Var Stack: Place_Stack);external;
+[External]Function Get_Level (Level_Number: Integer; Maze: Level; PosZ: Vertical_Type:=0): [Volatile]Level;External;
+[External]Function Empty_Stack (Stack: Place_Stack): Boolean;external;
+
+Begin
+  P1:=PosX;  P2:=PosY;  P3:=PosZ;
+  Num:=Roll_Die(Places.Length);
+  For X:=1 to Num do
+     If Not Empty_Stack(Places) then
+        POP(P1,P2,P3,PLACES);
+  Maze:=Get_Level (P3,Maze,PosZ); { TODO: This may be a bug in that planned monsters slain may return }
+  PosX:=P1; PosY:=P2; PosZ:=P3;
+End;
+
+(******************************************************************************)
+
+Procedure Fight (Var Encounter: Encounter_Group; Var Member: Party_Type; Var Current_Party_Size: Party_Size_Type;
+                     Party_Size: Integer; NotSurprised: Boolean; Place: Area_Type;  Var Time_Delay: Integer;
+                 Var Alarm_Off: Boolean;  Var Can_Attack: Party_Flag);
+
+{ This procedure is called when combat is joined.  It checks surprise, and handles it if it occurs, runs combat, and then delivers
+  experience and treasure. }
+
+Var
+  Surprise_Status: Surprise_Type;
+  Friends,Flee: Boolean;
+
+Begin
+   SMG$Erase_Display (MessageDisplay);
+   Flee:=False;  Friends:=False;
+   If NotSurprised then { If the monsters blew their surprise chance... }
+      Surprise_Status:=NoSurprise  { ... no one is surprised }
+   Else
+      Surprise_Status:=Surprised (Encounter[1].Monster,Member);
+
+   If Surprise_Status=PartySurprised then
+      Party_is_Surprised (Encounter,Member,Current_Party_Size,Party_Size,Time_Delay,Can_Attack)
+   Else
+      If Surprise_Status=MonsterSurprised then
+         Monsters_Are_Surprised (Encounter,Member,Current_Party_Size,Party_Size,Flee,Friends,Time_Delay,Can_Attack);
+
+   If Not (Flee or Friends) then
+      Handle_Combat (Encounter,Member,Current_Party_Size,Party_Size,Flee,Time_Delay,Can_Attack);
+
+   Post_Encounter_Revertion (Member,Party_Size);
+
+   If Not (Flee or Friends or Leave_Maze) and (Current_Party_Size>0) then
+      Spoils_of_Victory (Encounter,Member,Current_Party_Size,Party_Size,Place,Alarm_Off,Can_Attack);
+
+   Update_Character_Box (Member,Party_Size,Can_Attack);
+
+   If Flee then Handle_Flight (Places)
+   Else
+      If Current_Party_Size=0 then
+         SMG$Begin_Pasteboard_Update (Pasteboard);  { SMG$END_PASTEBOARD_UPDATE is in grave routine }
+End;
+
+(******************************************************************************)
+
+Procedure Print_Hailing (Lead_Monster: Monster_Group);
+
+Var
+  T: Line;
+  Name: Monster_Name_Type;
+
+Begin { Print Hailing }
+   Name:=Monster_Name (Lead_Monster.Monster,Lead_Monster.Orig_Group_Size,Lead_Monster.Identified);
+   If Lead_Monster.Orig_Group_Size>1 then
+      T:=Name+' hail'
+   Else
+      T:=Name+' hails';
+   T:='The ' + T + ' thee in welcome.  Thou may:';
+
+   SMG$Begin_Display_Update (MessageDisplay);
+   SMG$Erase_Display (MessageDisplay);
+   SMG$Put_Line (MessageDisplay,T);
+   SMG$Put_Line (MessageDisplay, 'F)ight or L)eave in peace');
+   SMG$End_Display_Update (MessageDisplay);
+End;  { Print Hailing }
 
 (******************************************************************************)
 
