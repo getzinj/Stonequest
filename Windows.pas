@@ -87,14 +87,83 @@ End;  { Message_Trap }
 (******************************************************************************)
 
 [Global]Procedure Printing_Message;
+
+Var
+   BroadcastDisplay: Unsigned;
+   Msg: Line;
+
 Begin { Printing Message }
-    { TODO: Enter this code }
+   If Broadcast_On then
+      Begin
+         SMG$Set_Cursor_Mode (Pasteboard, 1); { TODO: Use NoCursor }
+
+         Create_And_Label (BroadcastDisplay,'> Stonequest Printer <');
+
+         Msg:='Job SMGPBD.LIS queued to '+Print_Queue;
+         If Msg.Length>78 then Msg:=SubStr(Msg,1,78);
+         SMG$Put_Chars (BroadcastDisplay,Msg,3,39-(Msg.Length div 2));
+
+         SMG$Paste_Virtual_Display (BroadcastDisplay,Pasteboard,2,2);
+
+         LIB$Wait (2.0);
+
+         SMG$Unpaste_Virtual_Display (BroadcastDisplay,Pasteboard);
+         SMG$Delete_Virtual_Display (BroadcastDisplay);
+
+         If Cursor_Mode then SMG$Set_Cursor_Mode (Pasteboard, 0);
+      End;
 End;  { Printing Message }
+
+(******************************************************************************)
+
+Function Time_To_Print (Minutes_Until_Closing: Integer;  minutes_Left: Integer): Boolean;
+
+Begin
+  Time_to_Print:=(Minutes_Until_Closing<Minutes_Left) and
+                 ((Minutes_Left>=60) or (Minutes_Left=30) or (Minutes_Left=15) or (Minutes_Left<11));
+End;
+
+(******************************************************************************)
 
 
 [Global]Procedure Closing_Warning (Minutes_Until_Closing: Integer;  Var minutes_Left: Integer);
 
+Var
+   BroadcastDisplay: Unsigned;
+   Msg: Line;
+
 Begin { Printing Message }
-    { TODO: Enter this code }
+  If Time_To_Print (Minutes_Until_Closing, Minutes_Left) then
+     Begin
+        If Minutes_Until_Closing<11 then
+           Minutes_Left:=Minutes_Until_Closing
+        Else
+           If Minutes_Until_Closing<15 then
+              Minutes_Left:=10
+           Else
+              If Minutes_Until_Closing<30 then
+                 Minutes_Left:=15
+              Else
+                 Minutes_Left:=30;
+
+        SMG$Set_Cursor_Mode (Pasteboard, 1);
+
+        Create_And_LAbel (BroadcastDisplay,'> Stonequest Closing Warning <');
+
+        WriteV (Msg,Minutes_Left: 0);
+        Msg:='Stonequest is closing in'+Msg+' minutes.';
+        If Msg.Length>78 then Msg:=SubStr(Msg,1,78);
+        SMG$Put_Chars (BroadcastDisplay,Msg,3,39-(Msg.Length div 2));
+        Ring_Bell (BroadcastDisplay,3);
+
+        SMG$Paste_Virtual_Display (BroadcastDisplay,Pasteboard,2,2);
+
+        LIB$WAIT (2.0);
+
+        SMG$Unpaste_Virtual_Display (BroadcastDisplay,Pasteboard);
+        SMG$Delete_Virtual_Display (BroadcastDisplay);
+
+        If Cursor_Mode then SMG$Set_Cursor_Mode (Pasteboard, 0);
+     End;
 End;  { Printing Message }
 End.  { Windows }
