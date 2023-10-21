@@ -24,7 +24,7 @@ Program Stonequest (Input,Output,Char_File,Item_File,Monster_File,Message_File,T
   This game is dedicated to the memory of my late grandmother, Jenny Mayer on this day, 10/13/1988 }
 
 Const
-   Owner_Account = 'JGETZIN';
+   Owner_Account = 'SYSTEM';
 
    Up_Arrow          = CHR(18);         Down_Arrow      = CHR(19);
    Left_Arrow        = CHR(20);         Right_Arrow     = CHR(21);

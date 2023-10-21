@@ -30,4 +30,6 @@ TYPE
   (%descr command: VARYING [$len4] OF CHAR ) : UNSIGNED;
         EXTERNAL;
 
+[ASYNCHRONOUS, UNBOUND]FUNCTION lib$spawn : UNSIGNED;
+        EXTERNAL;
 END.
