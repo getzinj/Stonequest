@@ -1,7 +1,7 @@
 [Inherit ('SYS$LIBRARY:STARLET','LibRtl','Types','SMGRTL')]Module Windows;
 
 Type
-   Signed_Word = [Word]-32767...32767;
+   Signed_Word = [Word]-32767..32767;
    Long_Line = Varying [390] of Char;
 
 Var
@@ -10,13 +10,15 @@ Var
    Cursor_Mode,Broadcast_On: [External]Boolean;
 
 (******************************************************************************)
+[External]Procedure Ring_Bell (Display_Id: Unsigned; Number_of_Times: Integer:=1);External;
+(******************************************************************************)
 
 Procedure Create_And_Label (Var Display_ID: Unsigned; Message_Text: Line);
 
 Begin
    SMG$Create_Virtual_Display (5,78,Display_ID,1);
    SMG$Erase_Display (Display_ID);
-   SMG$Label_Border (Display_ID,Messge_Text,SMG$K_TOP);
+   SMG$Label_Border (Display_ID,Message_Text,SMG$K_TOP);
 End;
 
 (******************************************************************************)
@@ -29,7 +31,8 @@ Var
 Begin
    If Msg.Length>0 then
       For X:=1 to Msg.Length do
-         If (Ord[Msg[X]<32) then Msg[X]:=' ';
+         If (Ord(Msg[X])<32) then
+            Msg[X]:=' ';
 End;
 
 
@@ -47,7 +50,7 @@ Var
 
 Begin { Message Trap }
    Msg:='';
-   SMG$Get_Broadcast_Messge (Pasteboard,Msg,Len);          { Get the message }
+   SMG$Get_Broadcast_Message (Pasteboard,Msg,Len);          { Get the message }
    Strip_Controls (Msg);
 
    If Broadcast_On then

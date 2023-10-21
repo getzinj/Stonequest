@@ -556,7 +556,7 @@ Begin (* Edit_Attacks *)
                    +'+';
                T:=T+String(Attack[Loop].Z,0);
                If Odd (Loop) then
-                  SMG$Put_Chars (ScreenDisplay,T);
+                  SMG$Put_Chars (ScreenDisplay,T)
                Else
                   SMG$Put_Line (ScreenDisplay,T);
                SMG$Put_Line (ScreenDisplay, '');

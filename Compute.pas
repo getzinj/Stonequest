@@ -363,23 +363,174 @@ End;  { Add Bonus }
 
 (******************************************************************************)
 
-{ TODO: Add this code }
+Procedure Restore (Var Character: Character_Type; Class: Class_Type; Level: Integer);
+
+{ This procedure restores all spells to Character of Class, CLASS, and level, LEVEL }
+
+Var
+   TempNum,Level_Loop,Max_Level,Max_Number: Integer;
+   Spell_Type: 1..2;
+
+Begin { Restore }
+   Max_Level:=Max_Spell_Level (Class,Level);  { Get the maximum spell level }
+
+   { Determine how many spells of the highest level are known }
+
+   Max_Number:=1;                                { Usually, it's 1... }
+   If Max_Level>9 then                           { But if the caster is REALLY powerful... }
+      Begin { More than nine levels }
+         Max_Number:=1+((Max_Level-9) div 2);    { ... he gets more 9th level spells ... }
+         Max_Level:=9;                           { ... but he can still only cast up to 9th level spells }
+      End;  { More than nine levels }
+
+  { Determine what spell group we're working with... }
+
+  Case Class of
+     AntiPaladin,Paladin,Cleric: Spell_Type:=Cler_Spell;
+     Wizard,Ranger,Bard:         Spell_Type:=Wiz_Spell;
+     Otherwise                   Spell_Type:=Cler_Spell;
+  End;
+
+  { Assign all the spell points now, by level, starting from the highest level, and working our way to 1st }
+
+  TempNum:=Max_Number;
+  For Level_Loop:=Max_Level downto 1 do
+     Begin { For Each Level }
+        TempNum:=Min(TempNum,9);
+        Character.SpellPoints[Spell_Type,Level_Loop]:=Character.SpellPoints[Spell_Type,Level_Loop]+TempNum;
+        TempNum:=TempNum+1;                                       { Each lower level has one more point }
+     End;  { For each level }
+
+  { Add bonus spell points for high ability scores }
+
+  Add_Bonus (Character,Spell_Type,Max_Level);
+End; { Restore }
 
 (******************************************************************************)
 
 [Global]Procedure Restore_Spells (Var Character: Character_Type);
 
+{ This procedure will restore all spell points CHARACTER has.  All spells of the Previous class will be restored, then all spells of
+  the current class will be restored, with any conflict in points (e.g., Cleric/Paladin multi-class be resolved by adding the
+  amount together. }
+
 Begin { Restore_Spells }
-   { TODO: Enter this code }
+   Character.SpellPoints:=Zero;
+
+   If Character.PreviousClass in [Bard,Cleric,Paladin,Ranger,AntiPaladin,Wizard] then
+      Restore (Character,Character.PreviousClass,Character.Previous_Lvl);
+   If Character.Class in [Bard,Cleric,Paladin,Ranger,AntiPaladin,Wizard] then
+      Restore (Character,Character.Class,Character.Level);
 End;  { Restore_Spells }
 
-{ TODO: Enter this code }
+(******************************************************************************)
+
+Function Dexterity_Change (Dexterity: Integer): Integer;
+
+{ This function returns the amount that should be added to the Armor Class of a person whose dexterity is DEXTERITY. }
+
+Begin { Dexterity_Change }
+   Case Dexterity of  { Dexterity provides base Armor Class }
+                  3: Dexterity_Change:=4;
+                  4: Dexterity_Change:=3;
+                  5: Dexterity_Change:=2;
+                  6: Dexterity_Change:=1;
+              7..14: Dexterity_Change:=0;
+                 15: Dexterity_Change:=(-1);
+                 16: Dexterity_Change:=(-2);
+                 17: Dexterity_Change:=(-3);
+           18,19,20: Dexterity_Change:=(-4);
+           21,22,23: Dexterity_Change:=(-5);
+              24,25: Dexterity_Change:=(-6);
+           Otherwise Dexterity_Change:=0;
+   End;
+End;  { Dexterity_Change }
+
+(******************************************************************************)
+
+Function Compute_Monk_Level (Character: Character_Type): Integer;
+
+{ This function computes the level of monk-like skills CHARACTER has. }
+
+Begin { Compute Monk Level }
+  If Character.Class in [Monk,Ninja] then
+     If Character.PreviousClass in [Monk,Ninja] then
+        Compute_Monk_Level:=Max (Character.Level,Character.Previous_Lvl)
+     Else
+        Compute_Monk_Level:=Character.Level
+  Else
+     If Character.PreviousClass in [Monk,Ninja] then
+        Compute_Monk_Level:=Character.Previous_Lvl
+     Else
+        Compute_Monk_Level:=0;
+End;  { Compute Monk Level }
+
+(******************************************************************************)
 
 [Global]Function Compute_AC (Character: Character_Type; POSZ: Integer:=0): Integer;
 
+{ This function will return the Armor Class value for CHARACTER }
+
+Var
+   Rounds_Left:                                  [External]Array [Spell_Name] of Unsigned;
+   Item:                                         Item_Record;
+   Total_Plus,Plus,ItemNo,AC,Monk_Level,Monk_AC: Integer;
+   Wearing_Armor:                                Boolean;
+
 Begin { Compute AC }
-   { TODO: Enter this code }
-   Compute_AC:=0;
+   Monk_Level:=Compute_Monk_Level (Character);
+
+   If Character.Status=Zombie then
+      Begin
+         Character.Abilities[4]:=5;  { Remember, not a VAR parameter }
+         Monk_Level:=0;
+      End;
+
+   AC:=10;
+
+   { Armor and magic items can lower AC }
+
+   Wearing_Armor:=False;
+   Total_Plus:=0;
+   If Character.No_of_Items>0 then  { If CHARACTER has items... }
+      For ItemNo:=1 to Character.No_of_Items do  { For each item... }
+         If Character.Item[ItemNo].Equipted then { If equipped... }
+            Begin
+               Item:=Item_List[Character.Item[ItemNo].Item_Num];
+
+               Plus:=Item.AC_Plus;
+               If Item.Kind in [Armor,Helmet,Gloves,Shield] then
+                  Wearing_Armor:=True;
+
+               Plane_Difference (Plus,PosZ);
+
+               Total_Plus:=Total_Plus+Plus;
+            End;
+   AC:=AC+Total_Plus;  { Add AC adjustment }
+
+   { Compute what level of class Monk CHARACTER is }
+
+   Monk_AC:=10-(2*(Monk_Level div 2))+Total_Plus;
+   If Wearing_Armor then
+      Monk_AC:=10;
+
+   { If character is monk, choose best AC: Monk's natural AC, or the AC provided by armor and dexterity }
+
+   If Monk_Level>0 then
+      AC:=Min (AC,Monk_AC);
+
+   { If any of the protection spells are still in effect, add their bonuses }
+
+   If Monk_Level=0 then AC:=AC+Dexterity_Change (Character.Abilities[4]);
+
+   If Rounds_Left[DiPr]>0 then AC:=AC-2;
+   If Rounds_Left[HgSh]>0 then AC:=AC-4;
+
+   { Return the Armor Class result }
+
+   If Not (Character.Status in [Healthy,Poisoned,Zombie,Afraid]) then AC:=12;
+   AC:=Max(AC, -15);
+   Compute_AC:=AC;
 End;  { Compute AC }
 
 (******************************************************************************)
