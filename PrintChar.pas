@@ -332,7 +332,95 @@ End;  { Choose Character }
 
 (******************************************************************************)
 
+Procedure Handle_ID_Spell (Spell: Spell_Name;  Var Character: Character_Type; Var Casted: Boolean);
 
+Var
+   Item: Integer;
+   Chance: Integer;
+
+Begin
+   Casted:=False;
+   Item:=Choose_Item (Character,'Identify');
+   If Item>0 then
+      If Not (Character.Item[Item].Ident) then
+         Begin
+            Casted:=True;
+            Case Spell of
+               LtID: Chance:=35;
+               BgID: Chance:=85;
+               Otherwise Chance:=0;
+            End;
+            If Made_Roll (Chance) then
+               Begin
+                  SMG$Put_Chars (ScreenDisplay,Success,23,Center_Text(Success));
+                  Character.Item[Item].Ident:=True;
+               End
+            Else
+               SMG$Put_Chars (ScreenDisplay,Failure,23,Center_Text(Failure));
+         End;
+End;
+
+(******************************************************************************)
+
+Function Cure_Amount (Spell: Spell_Name;  Target: Character_Type): [Volatile]Die_Type;
+
+Var
+   Amount: Die_Type;
+
+Begin
+  Amount:=Zero;
+  Amount.Y:=8;
+  Case Spell of
+     CrLt:  Amount.X:=1;
+     CrSe:  Amount.X:=2;
+     CrVs:  Amount.X:=3;
+     CrCr:  Amount.X:=4;
+     Heal:  With Amount do
+              Begin
+                 Y:=0;
+                 Z:=Max((Target.Max_HP-Target.Curr_HP)-Roll_Die(4), 0);
+              End;
+  End;
+  Cure_Amount:=Amount;
+End;
+
+(******************************************************************************)
+
+Function Cure_Result (Spell: Spell_Name; Healed: Integer; Cured: Boolean; Target: Character_Type): Line;
+
+Begin
+   Case Spell of
+      CrPs: If Cured then
+              Cure_Result:='unpoisoned'
+            Else
+              Cure_Result:='not helped';
+      CrPa: If Cured then
+              Cure_Result:='unparalyzed'
+            Else
+              Cure_Result:='not helped';
+      ReFe: If Cured then
+              Cure_Result:='made unafraid'
+            Else
+              Cure_Result:='not helped';
+      Heal: If Healed=0 then
+               If Cured then
+                 Cure_Result:='cured'
+               Else
+                 Cure_Result:='not helped'
+            Else
+               If Cured then
+                 Cure_Result:='cured and partially healed'
+               Else
+                 Cure_Result:='partially healed';
+      Otherwise If Healed=0 then
+                   Cure_Result:='not helped'
+                Else
+                   If Target.Curr_HP=Target.Max_HP then
+                      Cure_Result:='fully healed'
+                   Else
+                      Cure_Result:='partially healed';
+   End;
+End;
 
 { TODO: Enter this code }
 
