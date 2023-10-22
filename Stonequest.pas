@@ -3,6 +3,14 @@ Program Stonequest (Input,Output,Char_File,Item_File,Monster_File,Message_File,T
                    MazeFile,SaveFile,PicFile,AmountFile,
                    ScoresFile,LogFile,HoursFile,PrintMazeFile);
 
+{
+ Adding two types of comments next to each Var parameter.
+
+ If the data pointed to by the var parameter is modified, the comment will be "VAR$OBJECT".
+
+ If the pointer itself is reassigned, the comment will be "VAR$REASSIGNED".
+}
+
 { This is Stonequest, a game.  But it's not just any game - far from it!  This
   game was originally based on the Sir-Tech game, "Wizardry", for the Apple II
   computer.  At the time, "Wizardry" was the best.  I wrote "Stonequest" just
