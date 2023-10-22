@@ -893,7 +893,163 @@ End;  { Delete Character }
 
 {******************************************************************************)
 
-{ TODO: Enter this code }
+Procedure Rename_Character (Var Character: Character_Type);
+
+{ This procedure will change a character's name.  Note that this procedure isn't as simple as it might sound, since if we were to
+  just naively change the name field of a character, duplicate characters may occur on the high score list.  So the technique is
+  as follows: }
+
+Var
+   New: Line;
+   Old: Name_Type;
+   Confirm: Char;
+   Dummy: Integer;
+   TmpStatus: Status_Type;
+
+[External]Function User_Name: Line; External;
+[External]Procedure Cursor;External;
+[External]Procedure No_Cursor;External;
+
+Begin { Rename Character }
+
+  { Get the character's old name }
+
+  Old:=Character.Name;
+
+  { Get the new name }
+
+  SMG$Put_Chars (ScreenDisplay,'Current name: '+Old,12,1);
+  SMG$Put_Chars (ScreenDisplay,'Change to: ',13,1);
+
+  Cursor;
+  SMG$Read_String (Keyboard,New,Display_Id:=ScreenDisplay);
+  No_Cursor;
+
+  { Cut the new name down to acceptable size }
+
+  If New.Length>20 then
+     New:=Substr(New,1,20);
+
+  { If the name is valid, and it is not already being used, change the name }
+
+  If (New<>'') then  { If a valid name }
+     If (Character_Exists (New, Dummy)) and (STR$Case_Blind_Compare(New,Old)<>1) then
+        Begin
+           SMG$Put_Line (ScreenDisplay,'That character alread exists!');
+           Delay (2);
+        End  { If already exists }
+     Else
+        Begin { Has entered a valid name }
+
+          { Confirm name change }
+
+          SMG$Put_Chars (ScreenDisplay,'Change '+old+' to '+new+'? (Y/N)',14,1);
+
+          Confirm:=Yes_or_No;
+
+          { If confirmed, change the name }
+
+          If Confirm='Y' then
+             Begin
+
+               { Save the current character's status }
+
+               TmpStatus:=Character.Status;
+
+               { Delete him and update the high scores, i.e.,take this character off the high scores }
+
+               Character.Status:=Deleted;
+               Store_Character (Character);
+               Update_High_Scores (User_Name);
+
+               { Restore the character's status; basically, an entirely NEW character in terms of the high scores }
+
+               Character.Status:=TmpStatus;
+
+               { Change the name }
+
+               Character.Name:=New;
+
+               { TODO: Shouldn't we update the high scores again? }
+             End;
+        End;
+End;
+
+{******************************************************************************)
+
+Procedure View_Character (Character: Character_Type);
+
+Begin
+   SMG$Begin_Pasteboard_Update (Pasteboard);
+   { End in printcharacter }
+
+   Print_Character (Party,Party_Size,Character,Leave_Maze,Automatic:=False);
+End;
+
+{******************************************************************************)
+
+Procedure Examine_Character (Character_Number: Integer);
+
+{ This procedure is called when a valid character has been referred to.  This sub-menu allows the player to change or view his or
+  her character }
+
+Var
+   Character: Character_Type;
+   Answer: Char;
+   Choices: Set of Char;
+   Character_Deleted: Boolean;
+
+[External]Function User_Name: Line;External;
+
+Begin
+   Character_Deleted:=False;  { Character hasn't been deleted at this point }
+   Repeat
+      Begin
+         Choices:=['D','V','E','R'];
+
+         { Make a temporary storage character }
+
+         Character:=Roster[Character_Number];
+
+         SMG$Begin_Display_Update (ScreenDisplay);
+         SMG$Erase_Display (ScreenDisplay);
+
+         SMG$Put_Chars (ScreenDisplay,Character.Name,1,1,0,1);
+         SMG$Put_Line (ScreenDisplay,'  level '+String(Character.Level)+' '+ClassName[Character.Class],2);
+
+         SMG$Put_Line (ScreenDisplay,'Thou may: ');
+
+         If Character.PreviousClass=NoClass then
+            Begin
+               SMG$Put_Line (ScreenDisplay, 'C)hange this character''s class');
+               Choices:=Choices+['C'];
+            End;
+
+         SMG$Put_Line (ScreenDisplay, 'R)ename this character');
+         SMG$Put_Line (ScreenDisplay, 'D)elete this character');
+         SMG$Put_Line (ScreenDisplay, 'V)iew this character');
+         SMG$Put_Line (ScreenDisplay, 'E)xit',2);
+         SMG$Put_Line (ScreenDisplay, 'Which?');
+         SMG$End_Display_Update (ScreenDisplay);
+
+         Answer:=Make_Choice (Choices);
+
+         Case Answer of
+            'R': Rename_Character (Character);
+            'C': Change_Class     (Character);
+            'V': View_Character   (Character);
+            'D': Delete_Character (Character,Character_Deleted);
+            'E': ;
+         End;
+
+         Roster[Character_Number]:=Character;  { Store modified(?) character }
+      End;
+   Until (Answer='E') or Character_Deleted;
+
+   { If the character has been deleted, erase the name from the high scores }
+
+   Update_High_Scores (User_Name);
+End;
 
 {******************************************************************************)
 
@@ -973,7 +1129,7 @@ End;  { Get Name }
 
 Procedure Handle_Name (Var NameTxt: Line);
 
-{ This procedure handes the name that was entered.  If it's a "?" it will display a roster of available characters.  If it is the
+{ This procedure handles the name that was entered.  If it's a "?" it will display a roster of available characters.  If it is the
   name of an existing character, it will go to the Examine Character sub-menu, otherwise, it had to be the name of a new character,
   and it will be made }
 
@@ -987,7 +1143,7 @@ Begin { Handle Name }
    Else
       If NameTxt<>'' then
          If Character_Exists (NameTxt,Slot) then
-            { TODO: Uncomment this Examine_Character (Slot) }
+            Examine_Character (Slot)
          Else
             New_Character (NameTxt);
 End;  { Handle Name }
