@@ -935,7 +935,7 @@ Begin { Rename Character }
   If (New<>'') then  { If a valid name }
      If (Character_Exists (New, Dummy)) and (STR$Case_Blind_Compare(New,Old)<>1) then
         Begin
-           SMG$Put_Line (ScreenDisplay,'That character alread exists!');
+           SMG$Put_Line (ScreenDisplay,'That character already exists!');
            Delay (2);
         End  { If already exists }
      Else
