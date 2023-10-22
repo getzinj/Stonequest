@@ -422,6 +422,73 @@ Begin
    End;
 End;
 
+(******************************************************************************)
+
+Procedure Handle_Heal_Spell (Spell: Spell_Name; Var Casted: Boolean;  Var Party: Party_Type;  Party_Size: Integer);
+
+Var
+   Recipient,Healed:  Integer;
+   Target: Character_Type;
+   T: Line;
+   Amount: Die_Type;
+   Cured: Boolean;
+
+Begin
+   Cured:=False;
+   Casted:=False;
+   Recipient:=Choose_Character ('Cast spell on whom?',Party,Party_Size,HP:=TRUE);
+   If Recipient>0 then
+      Begin
+         Casted:=True;
+         Target:=Party[Recipient];
+
+         Case Spell of
+            Heal:  If Not (Target.Status in [Deleted,Ashes,Dead,Zombie]) then
+               Begin
+                  Cured:=Not (Target.Status in [Deleted,Ashes,Dead,Zombie,Healthy]);
+                  Target.Status:=Healthy;
+               End;
+            CrPs: If Target.Status=Poisoned then
+               Begin
+                  Target.Status:=Healthy;
+                  Cured:=True;
+               End;
+            CrPa:  If Target.Status=Paralyzed then
+               Begin
+                  Target.Status:=Healthy;
+                  Cured:=True;
+               End;
+            ReFe: If Target.Status=Afraid then
+               Begin
+                  Target.Status:=Healthy;
+                  Cured:=True;
+               End;
+         End;
+         Target.Regenerates:=Regenerates(Target,PosZ);
+
+         { Compute how much the character is ACTUALLY healed, e.g., you can't cure a dead guy! }
+
+         Amount:=Cure_Amount (Spell,Target);                { Find how much the spell heals }
+         Healed:=Random_Number (Amount);                    { And get a random number from within that range }
+         If Healed<0 then Healed:=0;                        { You can't be healed a negative amount }
+         If Not Alive(target) then Healed:=0;               { Dead people ain't very lucky }
+         If Target.Curr_HP=target.Max_HP then Healed:=0;    { You can't get cured over your maximum }
+
+         { Add the amount healed points and make sure it's not more than the character's maximum }
+
+         Target.Curr_HP:=Min(Target.Curr_HP+Healed,Target.Max_HP);
+
+         { Let the player know how successful the spell was }
+
+         T:='* * * '+Target.Name+' is '+Cure_Result (Spell,Healed,Cured,Target)+'! * * *';
+         SMG$Put_Chars (ScreenDisplay,T,23,Center_Text(T));
+
+         Party[Recipient]:=target;
+      End;
+End;
+
+(******************************************************************************)
+
 { TODO: Enter this code }
 
 (******************************************************************************)
