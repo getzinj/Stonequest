@@ -721,7 +721,7 @@ Begin { Print Roster }
            SMG$Put_Chars (ScreenDisplay,
                           Pad(ClassName[Roster[Slot].Class],' ',16));
            SMG$Put_Chars (ScreenDisplay,String (Roster[Slot].Level,3));
-           SMG$Put_Chars (ScreenDisplay,'           '
+           SMG$Put_Line (ScreenDisplay,'           '
                           +StatusName[Roster[Slot].Status]);
         End  { Print the occupant }
       Else { Otherwise print a blank line }
