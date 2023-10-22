@@ -875,7 +875,7 @@ Begin { Delete Character }
    { Confirm the deletion }
 
    SMG$Put_Line(ScreenDisplay,
-       'Delete'
+       'Delete '
        +Character.Name
        +': Confirm? (Y/N)');
    Confirm:=Yes_or_No;
