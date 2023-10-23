@@ -1,4 +1,4 @@
-[Inherit ('Types','SMGRTL')]Module Messages;
+[Inherit ('SYS$LIBRARY:STARLET','Types','SMGRTL')]Module Messages;
 
 { This module allows the editing of the scenario messages. It is simply a
   full-screen line editor. }
@@ -44,7 +44,7 @@ Var
    Place: Integer;
    Num: Integer;
    T: Line;
-   
+
 Begin
   T:='';
   For Place:=1 to L.Length do
@@ -66,7 +66,7 @@ End;
 
 (******************************************************************************)
 
-Procedure Print_Message (Top,Bottom,Curs: Integer);
+Procedure Print_Messages (Top,Bottom,Curs: Integer);
 
 Var
    Position: Integer;
@@ -86,13 +86,158 @@ End;
 
 (******************************************************************************)
 
-{ TODO: Enter this code }
+Procedure Get_Replacement (Var Line_Text: Line; Curs,Top: Integer);
+
+Begin
+  SMG$Put_Chars (ScreenDisplay,'R',1,79,0,1);
+  SMG$Set_Cursor_ABS (ScreenDisplay,Y_Pos(Top, Curs),1);
+  Cursor;
+  SMG$Read_String (Keyboard,Line_Text,Display_ID:=ScreenDisplay,prompt_string:=Line_Text,Rendition_Set:=SMG$M_REVERSE);
+  No_Cursor;
+End;
+
+(******************************************************************************)
+
+Procedure Jump (Var Top,Bottom,Curs: Integer);
+
+Var
+  Temp: Integer;
+
+Begin
+   Temp:=0;
+   SMG$Begin_Display_Update (ScreenDisplay);
+   SMG$Put_Chars (ScreenDisplay,'J',1,79,0,1);
+   SMG$Put_Chars (ScreenDisplay,'Jump to what line number? ('+String(Curs,3)+' is default)',22,1,1);
+   SMG$End_Display_Update (ScreenDisplay);
+
+   Temp:=Get_Num (ScreenDisplay);
+
+   If (Temp>0) and (Temp<=999) then
+      Begin
+         Top:=Temp;
+         Curs:=Temp;
+         Bottom:=Min(Top+18,999); { TODO: Make constant for page size }
+      End;
+
+   SMG$Erase_Display (ScreenDisplay,22,1);
+End;
+
+(******************************************************************************)
+
+Procedure Move_Down (Var Top,Bottom,Curs: Integer);
+
+Begin
+   Curs:=Curs+1;
+   If Curs>Bottom then
+      Begin
+         Top:=Curs-1;
+         Bottom:=Min(Top+18,999);
+         Print_Messages (Top,Bottom,Curs);
+      End;
+
+   SMG$Begin_Display_Update (ScreenDisplay);
+
+   SMG$Set_Cursor_ABS (ScreenDisplay,Y_Pos (Top,Curs-1),1);
+   Print_Out (Messages[Curs-1]);
+
+   SMG$Set_Cursor_ABS (ScreenDisplay,Y_Pos (Top,Curs),1);
+   Inverse:=True;
+   Print_Out (Messages[Curs]);
+   Inverse:=False;
+
+   SMG$End_Display_Update (ScreenDisplay);
+End;
+
+(******************************************************************************)
+
+Procedure Move_Up (Var Top,Bottom,Curs: Integer);
+
+Begin
+   Curs:=Curs-1;
+   If Curs>Bottom then
+      Begin
+         Bottom:=Curs+1;
+         Top:=Max(Bottom-18,1);
+         Print_Messages (Top,Bottom,Curs);
+      End;
+
+   SMG$Begin_Display_Update (ScreenDisplay);
+
+   SMG$Set_Cursor_ABS (ScreenDisplay,Y_Pos (Top,Curs+1),1);
+   Print_Out (Messages[Curs+1]);
+
+   SMG$Set_Cursor_ABS (ScreenDisplay,Y_Pos (Top,Curs),1);
+   Inverse:=True;
+   Print_Out (Messages[Curs]);
+   Inverse:=False;
+
+   SMG$End_Display_Update (ScreenDisplay);
+End;
+
+(******************************************************************************)
+
+Procedure Handle_Jump (Var Top,Bottom,Curs: Integer);
+
+Begin
+   Jump (Top,Bottom,Curs);
+   SMG$Begin_Display_Update (ScreenDisplay);
+   Print_Messages (Top,Bottom,Curs);
+   SMG$End_Display_Update (ScreenDisplay);
+End;
+
+(******************************************************************************)
+
+Procedure Replace_Line (Var Message: Line;  Var Top,Curs: Integer);
+
+Begin
+   Get_Replacement (Message,Curs,Top);
+   SMG$Set_Cursor_ABS (ScreenDisplay,Y_Pos(Top,Curs),1);
+   Inverse:=True;
+   Print_Out (Message);
+   Inverse:=False;
+End;
+
+(******************************************************************************)
 
 [Global]Procedure Edit_Messages;
 
+Const
+   Page_Heading = '          Up-down arrows, "J" jumps, [RETURN] edits, <SPACE> quits ';
+
 Begin
+   Messages:=Read_Messages;
+   Inverse:=False;  Curs:=1;  Top:=1;  Bottom:=19;  Done:=False;
+   SMG$Begin_Display_Update (ScreenDisplay);
+   SMG$Erase_Display (ScreenDisplay);
+   SMG$Put_Line (ScreenDisplay,Page_Heading,0,1);
+   Print_Messages (Top,Bottom,Curs);
+   SMG$End_Display_Update (ScreenDisplay);
 
-{ TODO: Enter this code }
+   Repeat
+      Begin
+        SMG$Begin_Display_Update (ScreenDisplay);
+        SMG$Put_Chars (ScreenDisplay,'M',1,79,0,1);
+        SMG$Put_Chars (ScreenDisplay,String(Curs,3),1,1,0,1);
+        SMG$Put_Chars (ScreenDisplay,String(Messages[Curs].Length,2),1,5,0,1);
+        SMG$End_Display_Update (ScreenDisplay);
 
+        Options:=[Up_Arrow,Down_Arrow,CHR(32),CHR(13),'J'];
+        If (Curs=1) then
+           Options:=Options-[Up_Arrow]
+        Else if (Curs=999) then
+           Options:=Options-[Down_Arrow];
+
+        Answer:=Make_Choice (Options);
+
+        Case Answer of
+                   'J': Handle_Jump (Top,Bottom,Curs);
+               CHR(13): Replace_Line (Messages[Curs],Top,Curs);
+               CHR(32): Done:=True;
+              Up_Arrow: Move_Up   (Top,Bottom,Curs);
+            Down_Arrow: Move_Down (Top,Bottom,Curs);
+        End;
+      End;
+   Until Done;
+   Save_Messages (Messages);
 End;
 End.  { Messages }
