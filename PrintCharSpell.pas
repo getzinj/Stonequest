@@ -132,11 +132,10 @@ Begin
                  Cure_Result:='partially healed';
       Otherwise If Healed=0 then
                    Cure_Result:='not helped'
+                Else If Target.Curr_HP=Target.Max_HP then
+                   Cure_Result:='fully healed'
                 Else
-                   If Target.Curr_HP=Target.Max_HP then
-                      Cure_Result:='fully healed'
-                   Else
-                      Cure_Result:='partially healed';
+                   Cure_Result:='partially healed';
    End;
 End;
 

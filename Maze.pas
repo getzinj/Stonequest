@@ -632,7 +632,7 @@ Procedure Initialize (Var Member: Party_Type; Var Current_Party_Size: Party_Size
                       Var Time_Delay: Integer;  Var Round_Counter: Integer; Var Previous_Spot: Area_Type);
 
 [External]Procedure Kill_Save_File;External;
-[External]Procedure Read_Messages (Var Messages: Message_Group);External;
+[External]Function Read_Messages: Message_Group;external;
 [External]Function Load_Saved_Game: [Volatile]Save_Record;External;
 
 Var
