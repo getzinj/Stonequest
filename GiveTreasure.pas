@@ -91,7 +91,6 @@ Begin
    Print_Message ('* * * Thou can''t cast it! * * *');
 End;
 
-
 (******************************************************************************)
 
 Procedure Print_Trap (Trap: Trap_Type);
@@ -169,6 +168,105 @@ Begin
 End;
 
 (******************************************************************************)
+
+Function Class_Chance (Class: Class_Type; Level: Integer): Integer;
+
+Begin
+   Case Class of
+     Thief,Ninja:            Class_Chance:=15+(5*Level);
+     Antipaladin,Assassin:   Class_Chance:=5+(4*Level);
+     Bard:                   Class_Chance:=3*Level;
+     NoClass:                Class_Chance:=0;
+     Otherwise               Class_Chance:=Level;
+   End;
+End;
+
+(******************************************************************************)
+
+Function Detect_Trap_Chance (Character: Character_Type; Trap: Trap_Type): Integer;
+
+Var
+  Chance: Integer;
+
+Begin
+   Chance:=Max(Class_Chance(Character.Class, Character.Level),
+               Class_Chance(Character.PreviousClass,Character.Previous_Lvl));
+
+   Case Character.Race of
+      Dwarven:              Chance:=Chance+15;
+      Gnome:                Chance:=Chance+10;
+      Hobbit,HfOrc:         Chance:=Chance+5;
+      HfOgre:               Chance:=Chance-10;
+      Quickling,Drow,Elven: Chance:=Chance+20;
+   End;
+
+   Case Character.Abilities[4] of
+        3..8: Chance:=Chance-20;
+        9,10: Chance:=Chance-10;
+          11: Chance:=Chance-5;
+          18: Chance:=Chance+5;
+       19,20: Chance:=Chance+10;
+       21,22: Chance:=Chance+15;
+       23,24: Chance:=Chance+20;
+          25: Chance:=Chance+25;
+   End;
+
+   Chance:=Chance - Round(1.25 * Ord(Trap));
+
+   Chance:=Chance + (2 * (Character.Abilities[7]-9));  { Add luck into it }
+
+   If Character.Psionics then
+      Chance:=Chance + Character.DetectTrap;
+
+   If Character.Status=Zombie then
+      Chance:=0;
+
+   Detect_Trap_Chance:=Max(0, Min(Chance, 95));
+End;
+
+
+(******************************************************************************)
+
+Procedure Already_Looked;
+
+Begin
+   Print_Message ('* * * Thou already looked! * * *');
+End;
+
+(******************************************************************************)
+
+Procedure Search_Chest (Trap: Trap_Type; Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type);
+
+Var
+   Chance,Looker: Integer;
+   TS: Trap_Set;
+
+Begin
+   Looker:=Get_Person ('Who will look?',Member,Current_Party_Size);
+   If Looker>0 then
+      If Looked[Looker] then
+         Already_Looked
+      Else
+         Begin
+            Looked[Looker]:=True;
+
+            Chance:=Detect_Trap_Chance (Member[Looker],Trap);
+
+            SMG$Begin_Display_Update (OptionsDisplay);
+            SMG$Erase_Display (OptionsDisplay);
+
+            TS:=[Trapless .. Stunner]-[Trap];
+
+            If Made_Roll (Chance) then
+               Member[looker].Experience:=Member[Looker].Experience+15
+            Else
+               Trap:=Choose_Trap(TS);  { If didn't make chance, give a false(?) trap }
+            Print_Trap (Trap);
+         End;
+End;
+
+(******************************************************************************)
+
 
 { TODO: Enter code }
 
