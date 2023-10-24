@@ -333,6 +333,100 @@ End;
 
 (******************************************************************************)
 
+Procedure Trap_Off (Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type;  Party_Size: Integer;
+                    Trap_Given: Trap_Type; Victim: Integer; Var CantHave: Boolean;  Var Alarm_Off: Boolean);
+
+Var
+   T: Line;
+   Dummy: Boolean;
+   Wizards,Clerics: Set of Class_Type;
+
+[External]Function Made_Save (Character: Character_Type; Attack: Attack_Type): [Volatile]Boolean;External;
+[External]Procedure Change_Status (Var Character: Character_Type; Status: Status_Type; Var Changed: Boolean);External;
+[External]Function Regenerates (Character: Character_Type; PosZ: Integer:=0): Integer;external;
+[External]Procedure Update_Character_Box (Member: Party_Type; Party_Size: Integer; Var Can_Attack: Party_Flag);External;
+
+Begin
+   Wizards:=[Ranger,Wizard,Bard]; { TODO: Repeated code }
+   Clerics:=[Cleric,Paladin,Antipaladin];
+
+   SMG$Begin_Display_Update (OptionsDisplay);
+   SMG$Erase_Display (OptionsDisplay);
+
+   Case Roll_Die(10) of
+      1: T:='Yikes';
+      2: T:='Zoinks';
+      3: T:='Argh';
+      4: T:='Whoops';
+      5: T:='Egads';
+      6: T:='Uh uh';
+      7: T:='Gasp';
+      8: T:='Zounds';
+      9: T:='Gads';
+     10: T:='Jinkies';
+   End;
+
+   T:=T+'!  ';
+   T:=T+TrapName[Trap_Given]+'!';
+
+   SMG$Set_Cursor_ABS (OptionsDisplay,3,(27-(T.length div 2)));
+   SMG$Put_Line (OptionsDisplay,T,0,1);
+
+   Case Trap_Given of
+        PoisonNeedle: Change_Status (Member[victim],Poisoned,Dummy);
+        Alarm: Alarm_Off:=True;
+        Teleporter:
+            Begin
+               Handle_Random_Teleport;
+               CantHave:=True;
+            End;
+        Darts: Trap_Damage (Member,Current_Party_Size,Party_Size,
+                            Roll_Die(Current_Party_Size),Darts);
+        Blades: Trap_Damage (Member,Current_Party_Size,Party_Size,Victim,Blades);
+        SnoozeAlarm: Begin
+                        If Not (Made_Save(Member[Victim],Sleep)) then
+                            Change_Status (Member[Victim],Asleep,Dummy);
+                        Alarm_Off:=True;
+                     End;
+        GasCloud: For Victim:=1 to Current_Party_Size do
+                     If Not (Made_Save(Member[Victim],Poison)) then
+                         Change_Status (Member[Victim],Poisoned,Dummy);
+        Acid: Trap_Damage (Member,Current_Party_Size,Party_Size,Victim,Acid);
+        Paralyzer: If Not (Made_Save(Member[Victim],Magic)) then
+                            Change_Status (Member[Victim],Paralyzed,Dummy);
+        BoobyTrap: If Not (Made_Save(Member[Victim],Insanity)) then
+                            Change_Status (Member[Victim],Insane,Dummy);
+        Sleeper: For Victim:=1 to Current_Party_Size do
+                     If Not (Made_Save(Member[Victim],Sleep)) then
+                         Change_Status (Member[Victim],Asleep,Dummy);
+        AntiWizard: For Victim:=1 to Current_Party_Size do
+                      If (Member[Victim].Class in Wizards) or (Member[Victim].PreviousClass in Wizards) then
+                         If Not (Made_Save(Member[Victim],Poison)) then
+                             Change_Status (Member[Victim],Paralyzed,Dummy);
+        AntiCleric: For Victim:=1 to Current_Party_Size do
+                      If (Member[Victim].Class in Clerics) or (Member[Victim].PreviousClass in Clerics) then
+                         If Not (Made_Save(Member[Victim],Poison)) then
+                             Change_Status (Member[Victim],Paralyzed,Dummy);
+        CrossbowBolt: Trap_Damage (Member,Current_Party_Size,Party_Size,Roll_Die(Current_Party_Size),CrossbowBolt);
+        ExplodingBox: Begin
+                          For Victim:=1 to Current_Party_Size do
+                             Trap_Damage (Member,Current_Party_Size,Party_Size,Victim,ExplodingBox);
+                          CantHave:=True;
+                      End;
+        Splinters: Trap_Damage (Member,Current_Party_Size,Party_Size,Victim,Splinters);
+        Stunner: If Not (Made_Save(Member[Victim],Magic)) then
+                            Change_Status (Member[Victim],Petrified,Dummy);
+   End;
+
+   Member[Victim].Regenerates:=Regenerates (Member[Victim]);
+   SMG$End_Display_Update (OptionsDisplay);
+   Delay(2.5);
+   Update_Character_Box (Member,Party_Size,Can_Attack);
+End;
+
+(******************************************************************************)
+
+
 { TODO: Enter code }
 
 (******************************************************************************)
