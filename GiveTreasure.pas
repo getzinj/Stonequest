@@ -267,6 +267,76 @@ End;
 
 (******************************************************************************)
 
+Procedure Trap_Damage (Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type;  Party_Size: Integer; Victim: Integer;
+                       Trap_Used: Trap_Type);
+
+Var
+   Character: Character_Type;
+   Dummy: Boolean;
+   Damage: Integer;
+
+[External]Procedure Change_Status (Var Character: Character_Type;  Status: Status_Type;  Var Changed: Boolean);External;
+[External]Procedure Dead_Characters (Var Member: Party_Type; Var Current_Party_Size: Party_Size_Type; Party_Size: Integer;
+                                     Var Can_Attack: Party_Flag);External;
+
+Begin
+   Damage:=0;
+   Character:=Member[Victim];
+
+   Case Trap_Used of
+      Darts:         Damage:=(Roll_Die(5)*RolL_Die(3));
+      Blades:        Damage:=(4 * Roll_Die (6));
+      Acid:          Damage:=(3 * Roll_Die (10));
+      CrossbowBolt:  Damage:=Roll_Die (6) + 1;
+      Splinters:     Damage:=(Roll_Die(2)*Roll_Die(3));
+      ExplodingBox:  Damage:=(3 * Roll_Die(6));
+   End;
+
+   If (Character.Status=Asleep) and (Damage>0) then
+      Character.Status:=Healthy;
+
+   Character.Curr_HP:=Character.Curr_HP-Damage;
+   If Character.Curr_HP<1 then
+      Begin
+         Character.Curr_HP:=0;
+         Change_Status (Character,Dead,Dummy);
+      End;
+   Member[Victim]:=Character;
+   Dead_Characters (Member,Current_Party_Size,Party_Size,Can_Attack);
+End;
+
+(******************************************************************************)
+
+Procedure Handle_Random_Teleport;
+
+Var
+   Safe: Boolean;
+   NewX,NewY,NewZ: Integer;
+   Temp: Level;
+   Maze: [External]Level;
+   PosX,PosY: [External]Horizontal_Type;
+   PosZ: [External]Vertical_Type;
+
+[External]Function Get_Level (Level_Number: Integer; Maze: Level; PosZ: Vertical_Type:=0): [Volatile]Level;External;
+
+Begin
+   Repeat
+      Begin
+         NewX:=Roll_Die(20);  NewY:=Roll_Die(20);  NewZ:=Roll_Die(9);
+         Temp:=Get_Level (NewZ,Maze,PosZ);
+         Safe:=(Temp.Special_Table[Temp.Room[NewX,NewY].Contents].Special=Nothing);
+      End;
+   Until Safe;
+   Maze:=Temp;
+   PosX:=NewX;  PosY:=NewY;  PosZ:=NewZ;
+End;
+
+(******************************************************************************)
+
+{ TODO: Enter code }
+
+(******************************************************************************)
+
 
 { TODO: Enter code }
 
