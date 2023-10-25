@@ -426,23 +426,310 @@ End;
 
 (******************************************************************************)
 
+Procedure Already_Tried;
 
-{ TODO: Enter code }
-
-(******************************************************************************)
-
-
-{ TODO: Enter code }
+Begin
+   Print_Message ('* * * Thou already tried! * * *');
+End;
 
 (******************************************************************************)
 
-{ TODO: Enter this code }
+Function Get_Trap_Name: [Volatile]Line;
+
+Var
+  TrapToDisarm: Line;
+
+[External]Procedure Cursor;External;
+[External]Procedure No_Cursor;External;
+
+Begin
+   SMG$Begin_Display_Update (OptionsDisplay);
+   SMG$Erase_Display (OptionsDisplay);
+   SMG$End_Display_Update (OptionsDisplay);
+   SMG$Put_Chars (OptionsDisplay,'Disarm what trap? >',3,2);
+
+   Cursor;
+   SMG$Read_String (Keyboard,TrapToDisarm,Display_ID:=OptionsDisplay);
+   No_Cursor;
+
+   Get_Trap_Name:=TrapToDisarm;
+End;
+
+(******************************************************************************)
+
+Procedure Attempt_to_Disarm (Opener: Integer; Var Member: Party_Type; Var Current_Party_Size: Party_Size_Type;
+                             Party_Size: Integer; Var Trap: Trap_Type; Var Blown: Boolean; Var Alarm_Off: Boolean);
+
+Var
+  TrapToDisarm: Line;
+  Chance: Integer;
+  Right_Trap,Yikes: Boolean;
+
+Begin
+   Yikes:=False;
+   If Disarmed[Opener] then
+      Already_Tried
+   Else
+      Begin
+         Disarmed[Opener]:=True;
+         Chance:=Detect_Trap_Chance (Member[Opener],Trap);
+         TrapToDisarm:=Get_Trap_Name;
+
+         Right_Trap:=(STR$Case_Blind_Compare(TrapToDisarm,TrapName[Trap]+'')=0);
+
+         If Right_Trap and Made_Roll(Chance) then
+            Begin
+               Trap:=Trapless;
+               Print_Message('* * * Thou disarmed it! * * *');
+               Member[Opener].Experience:=Member[Opener].Experience+15*Ord(Trap);
+            End
+         Else
+            Begin
+               Chance:=Round(Chance * 75/100);
+               If Made_Roll (Chance) then
+                  Print_Message ('* * * Thine attempt failed! * * *')
+               Else
+                  Begin
+                     Print_Message  ('* * * Thou set it off! * * *');
+                     Yikes:=True;
+                  End;
+            End;
+
+         If Yikes and (Trap<>Trapless) then
+            Begin
+               Trap_Off (Member,Current_Party_Size,Party_Size,Trap,Opener,Blown,Alarm_Off);
+               Trap:=Trapless;
+            End
+      End
+End;
+
+(******************************************************************************)
+
+Procedure Disarm_Trap (Var Trap: Trap_Type;  Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type;
+                       Party_Size: Integer;  Var Blown: Boolean;  Var Alarm_Off: Boolean);
+
+{ This procedure allows a character to disarm a trap on a chest.  It does not actually say if the trap the character is trying to
+  disarm is the trap that is actually on the chest. }
+
+Var
+   Opener: Integer;
+
+Begin
+   Opener:=Get_Person ('Who will attempt to disarm?',Member,Current_Party_Size);
+   If Opener>0 then Attempt_to_Disarm (Opener,Member,Current_Party_Size,Party_Size,Trap,Blown,Alarm_Off);
+End;
+
+(******************************************************************************)
+
+Procedure Init_Chest (Current_PArty_Size: Party_Size_Type;  Var BlownItem,BlownMoney: Treasure_Record;  Var Trap: Trap_Type;
+                      Var Chest_Status: Chest_Status_Type;  Chest: Treasure_Table);
+
+Begin
+  Looked:=Zero;
+  Disarmed:=Zero;
+  Chest_Status:=Closed;
+  With BlownItem do
+     Begin
+        Kind:=Item_Given;
+        Item_Number:=Zero;
+     End;
+  With BlownMoney do
+     Begin
+        Kind:=Cash_Given;
+        Initial_Random:=Zero;
+        Initial_Base:=0;
+        Multiplier:=Zero;
+     End;
+  Trap:=Choose_Trap (Chest.Possible_Traps);
+End;
+
+(******************************************************************************)
+
+Procedure Handle_Chest (Var Chest: Treasure_Table;  Var Member: Party_Type; Var Current_Party_Size: Party_Size_Type;
+                            Party_Size: Integer;  Var Leave: Boolean;  Var Alarm_Off: Boolean);
+
+Var
+   Chest_Status: Chest_Status_Type;
+   Trap: Trap_Type;
+   BlownItem,BlownMoney: Treasure_Record;
+   Options: Char_Set;
+   Answer: Char;
+   Opener: Integer;
+
+Begin
+   Options:=['O','S','C','L','D'];  Opener:=0;
+   Init_Chest (Current_Party_Size,BlownItem,BlownMoney,Trap,Chest_Status,Chest);
+   Repeat
+     Begin
+        Init_Window;
+        Answer:=Make_Choice (Options);
+        Case Answer of
+            'D': Disarm_Trap (Trap,Member,Current_Party_Size,Party_Size,Leave,Alarm_Off);
+            'S': Search_Chest (Trap,Member,Current_Party_Size);
+            'O': Open_Chest (Opener,Member,Current_Party_Size,Chest_Status);
+            'C': Check_Traps_Spell (Trap,Member,Current_Party_Size);
+            'L': Leave:=True;
+        End;
+     End;
+   Until (Chest_Status=Opened) or Leave;
+
+   If (Chest_Status=Opened) and (Trap<>Trapless) then
+      Trap_Off (Member,Current_Party_Size,Party_Size,Trap,Opener,Leave,Alarm_Off);
+
+   SMG$Unpaste_Virtual_Display (OptionsDisplay,Pasteboard);
+End;
+
+(******************************************************************************)
+
+Procedure Give_Money (Amount: Integer; Var Member: Party_Type;  Current_Party_Size: Party_Size_Type);
+
+Var
+  Recipient: Integer;
+
+Begin
+  SMG$Erase_Display (MessageDisplay);
+  Recipient:=Roll_Die (Current_Party_Size);
+  SMG$Put_Line (MessageDisplay,Member[Recipient].Name+' found a sack of '+String(Amount)+' gold pieces!');
+  Member[Recipient].Gold:=Member[Recipient].Gold+Amount;
+  Delay(2);
+End;
+
+(******************************************************************************)
+
+Function Character_With_Room (Member: Party_Type; Current_Party_Size: Party_Size_Type): Integer;
+
+Var
+   Person,Num: Integer;
+
+Begin
+   Person:=0;  Num:=0;
+
+   For Person:=1 to Current_Party_Size do
+      Num:=Num+Member[Person].No_of_Items;
+
+   If Num<>(Current_Party_Size * 8) then
+      Repeat
+         Person:=Roll_Die (Current_Party_Size);
+      Until (Member[Person].No_of_Items<8)
+   Else
+      Person:=0;
+
+   Character_with_Room:=Person;
+End;
+
+(******************************************************************************)
+
+Procedure Give_Item (Item_No: Integer;  Var Member: Party_Type;  Current_Party_Size: Party_Size_Type);
+
+Var
+   Num,Person: Integer;
+
+Begin
+   Person:=Character_With_Room (Member,Current_Party_Size);
+   If Person<>0 then
+      Begin
+         Member[Person].No_of_Items:=Member[Person].No_of_Items+1;
+         Num:=Member[Person].No_of_Items;
+         With Member[Person].Item[Num] do
+            Begin
+                Ident:=false;
+                Equipted:=False;
+                Cursed:=False;
+                Usable:=(Member[Person].Class in Item_List[Item_No].Usable_By)
+                    or (Member[Person].PreviousClass in Item_List[Item_No].Usable_By);
+                Item_Num:=Item_no;
+            End;
+
+         SMG$Erase_Display (MessageDisplay);
+         SMG$Put_Line (MessageDisplay,Member[Person].Name+' found a '+Item_List[Item_No].Name, 0);
+         If (Num = 8) then
+            SMG$Put_Line (MessageDisplay,'Thou can not carry any more items until thou drops something...');
+
+        Delay(2);
+        SMG$Erase_Display(MessageDisplay);
+      End;
+End;
+
+(******************************************************************************)
+
+Procedure Deliver_Gold_And_Money (Treasure: Treasure_Record; Var Member: Party_Type;  Current_Party_Size: Party_Size_Type);
+
+Var
+   Money,Item_No,Temp: Integer;
+
+Begin
+   If Treasure.Kind=Cash_Given then
+      Begin
+         Money:=Treasure.Initial_Base+Random_Number(Treasure.Initial_Random);
+         Temp:=Random_Number(Treasure.Multiplier);
+         If Temp<>0 then
+            Money:=Money * Temp;
+         Give_Money (Money,Member,Current_Party_Size);
+      End
+   Else
+      Begin
+         Item_No:=Random_Number(Treasure.Item_Number);
+         If Made_Roll (Treasure.Appear_Probability) then
+            Give_Item (Item_No,Member,Current_Party_Size);
+      End;
+End;
+
+(******************************************************************************)
+
+Procedure Deliver_Treasure (Number: Integer;  Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type;
+                            Party_Size: Integer;  Var Alarm_Off: Boolean);
+
+Const
+  Chest_Picture_Number = 18;
+  Gold_Picture_Number = 19;
+
+Var
+   Group: Integer;
+   CantHave: Boolean;
+
+[External]Procedure Show_Monster_Image (Number: Pic_Type;  Var Display: Unsigned);External;
+
+Begin { Deliver Treasure }
+  CantHave:=False;
+  If Treasure[Number].In_Chest then
+     Begin
+        Show_Monster_Image (Chest_Picture_Number,FightDisplay);
+        SMG$Erase_Display (MessageDisplay);
+        Handle_Chest (Treasure[Number],Member,Current_Party_Size,Party_Size,CantHave,Alarm_Off);
+     End;
+
+  { Opened the chest if there was one }
+
+  If (Not CantHave) and (Treasure[Number].Max_No_of_Treasures > 0) then
+     Begin
+        Show_Monster_Image (Gold_Picture_Number,FightDisplay);
+        For Group:=1 to Treasure[Number].Max_no_of_Treasures do
+          Deliver_Gold_And_Money (Treasure[Number].Treasure[Group],Member,Current_Party_Size);
+     End;
+End;
+
+(******************************************************************************)
+
 
 [Global]Procedure Give_Treasure (Encounter: Encounter_Group;  Area: Area_Type;  Var Member: Party_Type;
                                  Var Current_Party_Size: Party_Size_Type;  Party_Size: Integer;  Var Alarm_Off: Boolean);
+
+Var
+  Group, Treasure_Type: Integer;
+  Monster: Monster_Record;
+  TreasureSet: Set of T_Type;
+
 Begin { Give Treasure }
+   For Group:=1 to 4 do
+      If Encounter[Group].Orig_Group_Size > 0 then
+         Begin
+            Monster:=Encounter[Group].Monster;
+            If Area=Room then TreasureSet:=Monster.Treasure.In_Lair
+            Else              TreasureSet:=Monster.Treasure.Wandering;
 
-{ TODO: Enter this code }
-
+            For Treasure_Type:=1 to 150 do
+               If Treasure_Type in TreasureSet then
+                  Deliver_Treasure (Treasure_Type,Member,Current_Party_Size,Party_Size,Alarm_Off);
+         End;
 End;  { Give Treasure }
 End.  { Treasure }
