@@ -143,6 +143,298 @@ End;
 
 (******************************************************************************)
 
+Procedure Edit_Psionics (Var Character: Character_Type);
+
+Var
+   Num: Integer;
+   Answer: Char;
+   Options: Char_Set;
+
+Begin
+   Repeat
+      Begin
+         SMG$Begin_Display_Update (ScreenDisplay);
+         SMG$Erase_Display (ScreenDisplay);
+         SMG$Put_Line (ScreenDisplay,'Edit which field?');
+         SMG$Put_Line (ScreenDisplay,'-----------------');
+         SMG$Put_Line (ScreenDisplay,'R)egeneration = '+String (Character.Regenerate));
+         SMG$Put_Line (ScreenDisplay,'S)ecret detection = '+String (Character.DetectSecret));
+         SMG$Put_Line (ScreenDisplay,'T)Trap and Special detection = '+String (Character.DetectTrap));
+         SMG$End_Display_Update (ScreenDisplay);
+
+         Options:=['R','S','T',CHR(32)];
+         Answer:=Make_Choice(Options);
+
+         If Answer<>CHR(32) then
+            Begin
+               SMG$Put_Chars (ScreenDisplay,'--->');
+               Num:=Get_Num (ScreenDisplay);
+
+               Case Answer of
+                  'R':  Character.Regenerates:=Num;
+                  'S':  Character.DetectSecret:=Num;
+                  'T':  Character.DetectTrap:=Num;
+                 End;
+            End;
+      End;
+   Until Answer=CHR(32);
+   Character.Psionics:=(Character.DetectTrap<>0) or (Character.DetectSecret<>0) or (Character.Regenerate<>0);
+End;
+
+(******************************************************************************)
+
+Procedure Print_Item_Line (Character: Character_Type; Pos: Integer);
+
+Var
+   Item: Item_Record;
+
+Begin
+   Item:=Item_List[Character.Item[Pos].Item_Num];
+   SMG$Put_Line (ScreenDisplay,String(Pos)+')  '+Item.True_Name);
+End;
+
+(******************************************************************************)
+
+Procedure Change_Character_Items (Var Character: Character_Type);
+
+Var
+  i: Integer;
+  Options: Char_Set;
+  Answer: Char;
+
+Begin
+  Repeat
+    Begin
+       SMG$Begin_Display_Update (ScreenDisplay);
+       SMG$Erase_Display (ScreenDisplay);
+
+       SMG$Put_Line (ScreenDisplay,'Edit which item?');
+       SMG$Put_Line (ScreenDisplay,'----------------');
+
+       For i:=1 to Character.No_of_Items do
+          Print_Item_Line (Character, i);
+
+       SMG$End_Display_Update(ScreenDisplay);
+
+       Options:=['1'..CHR(Character.No_of_Items+ZeroOrd),CHR(13)];
+       Answer:=Make_Choice (Options);
+
+       If Answer<>CHR(32) then
+          Begin
+             i:=ORD(answer)-ZeroOrd;
+             Edit_Character_Item (Character.Item[i]);
+          End;
+    End;
+  Until Answer=CHR(32);
+End;
+
+(******************************************************************************)
+
+Procedure Change_Screen1 (Number: Integer; Var Character: Character_Type);
+
+Var
+   Options: Char_Set;
+   Num,Loop: Integer;
+   Answer: Char;
+   T,Strng: Line;
+
+Begin
+   Loop:=0;
+   Repeat
+      Begin
+         SMG$Begin_Display_Update (ScreenDisplay);
+         SMG$Erase_Display (ScreenDisplay);
+         SMG$Home_Cursor (ScreenDisplay);
+         SMG$Put_Line (ScreenDisplay,'Character #'+String(Number,3));
+         SMG$Put_Line (ScreenDisplay,'--------------');
+         For Loop:=1 to 15 do
+            Begin
+               T:=CHR(Loop+64)+'  '+Cat[Loop]+': ';
+
+               Case Loop of
+                    1:  T:=T+String(Number);
+                    2:  T:=T+Character.Name;
+                    3:  T:=T+SexName[Character.Sex];
+                    4:  T:=T+RaceName[Character.Race];
+                    5:  T:=T+AlignName[Character.Alignment];
+                    6:  T:=T+ClassName[Character.Class];
+                    7:  T:=T+ClassName[Character.PreviousClass];
+                    8:  T:=T+String((Character.Age div 365));
+                    9:  T:=T+String(Character.Abilities[1],2);
+                    10:  T:=T+String(Character.Abilities[2],2);
+                    11:  T:=T+String(Character.Abilities[3],2);
+                    12:  T:=T+String(Character.Abilities[4],2);
+                    13:  T:=T+String(Character.Abilities[5],2);
+                    14:  T:=T+String(Character.Abilities[6],2);
+                    15:  T:=T+String(Character.Abilities[7],2);
+               End;
+               SMG$Put_Line (ScreenDisplay, T);
+            End;
+         SMG$End_Display_Update(ScreenDisplay);
+
+         Options:=['A'..'O',' '];
+         Answer:=Make_Choice(Options);
+
+         Case Ord(Answer)-64 of
+            2: Begin
+                SMG$Set_Cursor_ABS (ScreenDisplay,18,1);
+                SMG$Put_Line (ScreenDisplay,'Enter a string of up to 20 characters');
+                Cursor;
+                SMG$Read_String (Keyboard,Strng,'--->',Display_Id:=ScreenDisplay);
+                No_Cursor;
+                If Strng.Length > 20 then
+                   Strng:=Substr (Strng,1,20);
+                Character.Name:=Strng;
+              End;
+            3: If Character.Sex=Androgynous then
+                  Character.Sex:=Male
+               Else
+                  Character.Sex:=Succ(Character.Sex);
+            4: If Character.Race=Numenorean then
+                  Character.Race:=Human
+               Else
+                  Character.Race:=Succ(Character.Race);
+            5: If Character.Alignment=Evil then
+                  Character.Alignment:=Good
+               Else
+                  Character.Alignment:=Succ(Character.Alignment);
+            6: If Character.Class=Barbarian then
+                  Character.Class:=NoClass
+               Else
+                  Character.Class:=Succ(Character.Class);
+            7: If Character.PreviousClass=Barbarian then
+                  Character.PreviousClass:=NoClass
+               Else
+                  Character.PreviousClass:=Succ(Character.PreviousClass);
+            8..15: Begin
+                     SMG$Set_Cursor_ABS (ScreenDisplay,18,1);
+                     SMG$Put_Line (ScreenDisplay,'Enter an integer.');
+                     SMG$Put_Chars (ScreenDisplay,'--->',19,1);
+
+                     Num:=Get_Num(ScreenDisplay);
+
+                     Case Ord(Answer)-64 of
+                       8: Character.Age:=Num*365;
+                       9..15: If (Num>2) and (Num<26) then
+                          Character.Abilities[Ord(answer)-72]:=Num;
+                     End;
+                   End;
+         End;
+      End;
+   Until Answer=' ';
+End;
+
+(******************************************************************************)
+
+Procedure Print_Spell (Book: Spell_Set; Column,Cursor: Spell_Name; X,Y: Integer);
+
+Var
+  R: Unsigned;
+
+Begin
+  R:=0;
+  If Column in Book then R:=R+1;
+  If Column=Cursor then R:=R+2;
+  SMG$Put_Chars (ScreenDisplay,Spell[Column],Y,X,,R);
+End;
+
+(******************************************************************************)
+
+Procedure Print_Book (Book: Spell_Set;  Cursor: Spell_Name);
+
+Var
+  Column: Spell_Name;
+  X,Y: Integer;
+
+Begin
+   SMG$Begin_Display_Update (ScreenDisplay);
+   SMG$Erase_Display (ScreenDisplay);
+
+   X:=1;  Y:=1;
+   For Column:=CrLt to Heal do
+      Begin
+         Print_Spell (Book,Column,Cursor,X,Y);
+         Y:=Y+1;
+      End;
+
+   X:=20;  Y:=1;
+   For Column:=Harm to Dubl do
+      Begin
+         Print_Spell (Book,Column,Cursor,X,Y);
+         Y:=Y+1;
+      End;
+
+   X:=40;  Y:=1;
+   For Column:=Succ(DuBl) to DetS do
+      Begin
+         Print_Spell (Book,Column,Cursor,X,Y);
+         Y:=Y+1;
+      End;
+
+   SMG$End_Display_Update (ScreenDisplay);
+End;
+
+(******************************************************************************)
+
+Procedure Edit_Book (Var Book: Spell_Set);
+
+Var
+   Cursor: Spell_Name;
+   Key: Char;
+
+Begin
+   Cursor:=CrLt;
+   Repeat
+      Begin
+         Print_Book (Book,Cursor);
+
+         Key:=Make_Choice ([Up_arrow,Down_Arrow,' ',CHR(13)]);
+
+         Case Key of
+            Up_Arrow:  If Cursor=CrLt then
+                          Cursor:=DetS
+                       Else
+                          Cursor:=Pred(Cursor);
+            Down_Arrow: If Cursor=DetS then
+                           Cursor:=CrLt
+                        Else
+                           Cursor:=Succ(Cursor);
+            ' ': If Cursor in Book then
+                    Book:=Book-[Cursor]
+                 Else
+                    Book:=Book+[Cursor];
+            CHR(13): ;
+         End;
+      End;
+   Until Key=CHR(13);
+End;
+
+(******************************************************************************)
+
+Procedure Edit_Spell_Book (Var Character: Character_Type);
+
+Var
+   Leave: Boolean;
+
+Begin
+   Leave:=False;
+   Repeat
+      Begin
+         SMG$Erase_Display (ScreenDisplay);
+         SMG$Put_Line (ScreenDisplay,'Edit: W)izard spells, C)leric spells, or L)eave');
+         Case Make_Choice(['W','C','L']) of
+           'L': Leave:=True;
+           'W': Edit_Book (Character.Wizard_Spells);
+           'C': Edit_Book (Character.Cleric_Spells);
+         End;
+      End;
+   Until Leave;
+End;
+
+{ TODO: Enter code }
+
+(******************************************************************************)
+
 { TODO: Enter this code }
 
 [Global]Procedure Edit_Character (Var Roster: Roster_Type);
