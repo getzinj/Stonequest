@@ -431,6 +431,192 @@ Begin
    Until Leave;
 End;
 
+(******************************************************************************)
+
+Procedure Print_Spell_Points (Character: Character_Type; PosX,PosY: Integer);
+
+Var
+  Y,Y1,X: Integer;
+  T: Line;
+  R: Unsigned;
+
+Begin
+   For Y:=1 to 2 do
+      Begin
+         If Y=1 then T:='Cleric  /'
+         Else        T:='Wizard  /';
+
+         SMG$Put_Chars (ScreenDisplay,T);
+
+         For X:=1 to 9 do
+            Begin
+               If (X=PosX) and (Y=PosY) then
+                  R:=2 { TODO: Calculate using SMG constants for clarity }
+               Else
+                  R:=0;
+               Y1:=Y;
+
+               SMG$Put_Chars (ScreenDisplay,String(Character.SpellPoints[Y,X]),Y1,7+(X*2),,R);
+               SMG$Put_Chars (ScreenDisplay,'/');
+            End;
+         SMG$Put_Line (ScreenDisplay,'');
+      End;
+End;
+
+(******************************************************************************)
+
+Procedure Edit_Spell_Points (Var Character: Character_Type);
+
+Var
+  PosX,PosY: Integer;
+  Answer: Char;
+
+Begin
+  PosX:=1; PosY:=1;
+  Repeat
+     Begin
+        SMG$Begin_Display_Update (ScreenDisplay);
+        SMG$Erase_Display (ScreenDisplay);
+
+        Print_Spell_Point (Character,PosX,PosY);
+        SMG$End_Display_Update (ScreenDisplay);
+
+        Answer:=Make_Choice(['+','-',Up_Arrow,Down_Arrow,Left_Arrow,Right_Arrow,' ']);
+
+        Case Answer of
+             Left_Arrow: Begin
+                           PosX:=PosX-1;
+                           If PosX<1 then PosX:=9;
+                         End;
+             Right_Arrow: Begin
+                           PosX:=PosX+1;
+                           If PosX>9 then PosX:=1;
+                         End;
+             Up_Arrow,Down_Arrow: If PosY=1 then
+                                     PosY:=2
+                                  Else
+                                     PosY:=1;
+             '+': Character.SpellPoints[PosY,PosX]:=Min(Character.SpellPoints[PosY,PosX] + 1, 9);
+             '-': Character.SpellPoints[PosY,PosX]:=Max(Character.SpellPoints[PosY,PosX] - 1, 0);
+
+             ' ': ;
+        End;
+     End;
+  Until Answer=' ';
+End;
+
+(******************************************************************************)
+
+Procedure Edit_Spells (Var Character: Character_Type);
+
+Var
+   Leave: Boolean;
+
+Begin
+   Leave:=False;
+   Repeat
+      Begin
+         SMG$Erase_Display (ScreenDisplay);
+         SMG$Put_Line (ScreenDisplay,'Edit: 1=Spell Book, 2=Spell Points, 0=Exit');
+         Case Make_Choice(['0','1','2']) of
+            '0': Leave:=True;
+            '1': Edit_Spell_Book (Character);
+            '2': Edit_Spell_Points (Character);
+         End;
+      End;
+   Until Leave;
+End;
+
+(******************************************************************************)
+
+Procedure Change_Screen2 (Number: Integer; Var Character: Character_Type);
+
+Var
+   T: Line;
+   Options: Char_Set;
+   Num,Loop: Integer;
+   Answer: Char;
+
+Begin
+   Loop:=0;
+   Repeat
+      Begin
+         SMG$Begin_Display_Update (ScreenDisplay);
+         SMG$Erase_Display (ScreenDisplay);
+         SMG$Put_Line (ScreenDisplay,'Character #'+String(Number,3));
+         SMG$Put_Line (ScreenDisplay,'--------------');
+         For Loop:=16 to 29 do
+            Begin
+               T:=CHR(Loop+64)+'  '+Cat[Loop]+': ';
+
+               Case Loop of
+                    16:  T:=T+String(Character.Gold);
+                    17:  T:=T+String(Trunc(Character.Experience));
+                    18:  T:=T+String(Character.Level);
+                    19:  T:=T+String(Character.Previous_Lvl);
+                    20:  If Character.Lock then
+                           T:=T+'Out'
+                         Else
+                           T:=T+'In';
+                    21:  T:=T+String(Character.Curr_HP);
+                    22:  T:=T+String(Character.Max_HP);
+                    23:  T:=T+String(CharacterArmor_Class);
+                    24:  T:=T+StatusName[Character.Status];
+                    25:  T:=T+String(Character.No_of_Items);
+                    26:  If Character.No_of_items=0 then
+                            T:=T+'None'
+                         Else
+                            T:=T+'Type ''K'' to edit list';
+                    27:  T:=T+'Type ''L'' to edit list';
+                    28:  T:=T+Age_Class[Character.Age_Status];
+                    29:  If Character.Psionics then
+                            T:=T+'Type ''N'' to edit'
+                         Else
+                            T:=T+'None';
+               End;
+               SMG$Put_Line (ScreenDisplay, T);
+            End;
+         SMG$End_Display_Update(ScreenDisplay);
+
+         Options:=['A'..'O',' '];
+         Answer:=Make_Choice(Options);
+
+         Case Ord(Answer)-49 of
+            26: Change_Character_Items (Character);
+            27: EDIT_SPELLS (Character);
+            29: If Not Character.Psionics then Character.Psionics:=True
+                Else EDIT_PSIONICS (Character);
+            16..19,21..23,25: Begin
+                     SMG$Set_Cursor_ABS (ScreenDisplay,17,1);
+                     SMG$Put_Line (ScreenDisplay,'Enter an integer.');
+                     SMG$Put_Chars (ScreenDisplay,'--->',18,1);
+                     Num:=Get_Num (ScreenDisplay);
+                     Case Ord(Answer)-49 of
+                        16: Character.Gold:=Num;
+                        17: Character.Experience:=Num;
+                        18: If ABS(Num)<32768 then Character.Level:=Num;
+                        19: If ABS(Num)<32768 then Character.Previous_Lvl:=Num;
+                        21: Character.Curr_HP:=Num;
+                        22: Character.Max_HP:=Num;
+                        23: If ABS(Num)<128 then Character.Armor_Class:=Num;
+                        25: If (Num>-1) and (Num<9) then Character.No_of_items:=Num;
+                     End;
+            20: Character.Lock:=Not (Character.Lock);
+            24: If Character.Status=Poisoned then
+                   Character.Status:=Healthy
+                Else
+                   Character.Status=Succ(Character.Status);
+            28: If Character.Age_Status=Croak then
+                   Character.Age_Status:=YoungAdult
+                Else
+                   Character.Age_Status=Succ(Character.Age_Status);
+         End;
+      End;
+   Until Answer=' ';
+End;
+
+(******************************************************************************)
+
 { TODO: Enter code }
 
 (******************************************************************************)
