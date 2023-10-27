@@ -32,4 +32,11 @@ TYPE
 
 [ASYNCHRONOUS, UNBOUND]FUNCTION lib$spawn : UNSIGNED;
         EXTERNAL;
+
+
+[ASYNCHRONOUS, UNBOUND]FUNCTION lib$find_file
+  (%descr filename: VARYING [$len5] OF CHAR;
+  %descr resultantFilespec: VARYING [$len6] OF CHAR;
+  %Ref   attributes: UNSIGNED := %immed 0) : UNSIGNED;
+        EXTERNAL;
 END.

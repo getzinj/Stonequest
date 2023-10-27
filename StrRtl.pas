@@ -32,4 +32,9 @@ TYPE
   (%descr string: VARYING [$len7] OF CHAR;
    %descr compare_string: VARYING [$len8] OF CHAR) : UNSIGNED;
         EXTERNAL;
+
+[ASYNCHRONOUS, UNBOUND]FUNCTION STR$Upcase
+  (%descr string: VARYING [$len7] OF CHAR;
+   %descr compare_string: VARYING [$len8] OF CHAR) : UNSIGNED;
+        EXTERNAL;
 END.

@@ -55,6 +55,7 @@ Value
 [External]Function Get_Num (Display: Unsigned): Integer;External;
 [External]Procedure No_Controly;External;
 [External]Procedure Controly;External;
+
 (******************************************************************************)
 
 Procedure Home;
@@ -618,24 +619,165 @@ End;
 
 (******************************************************************************)
 
-{ TODO: Enter code }
+Procedure Change_Character (Number: Integer; Var Character: Character_Type);
+
+Var
+   Answer: Char;
+
+Begin
+  Repeat
+     Begin
+        SMG$Begin_Display_Update (ScreenDisplay);
+        Home;
+        SMG$Put_Line (ScreenDisplay, 'Character #'+String(Number)+'  '+Character.Name);
+        SMG$Put_Line (ScreenDisplay, 'Which screen? (1 or 2, <SPACE> exits)');
+        SMG$End_Display_Update (ScreenDisplay);
+
+        Answer:=Make_Choice (['1','2',' ']);
+
+        If Answer='1' then
+           Change_Screen1 (Number,Character)
+        Else If Answer='2' then
+           Change_Screen2 (Number,Character);
+     End;
+  Until Answer=' ';
+End;
 
 (******************************************************************************)
 
-{ TODO: Enter this code }
-
 [Global]Procedure Edit_Character (Var Roster: Roster_Type);
+
+Var
+  Number: Integer;
+
 Begin
+  Repeat
+    Begin
+      SMG$Begin_Display_Update (ScreenDisplay);
+      Home;
+      SMG$Put_Line (ScreenDisplay,'                   Edit Character',1,1);
+      Print_Edit_Roster (Roster);
+      SMG$End_Display_Update (ScreenDisplay);
+      SMG$Put_Chars (ScreenDisplay,'Edit which character? (0 exits) ',23,1);
 
-   { TODO: Enter this code }
+      Number:=Get_Num (ScreenDisplay);
 
+      If (Number > 0) and (Number<21) then
+         Change_Character(Number,Roster[Number]);
+    End;
+  Until Number=0;
 End;
 
+(******************************************************************************)
 
-[Global]Procedure Edit_Players_Characters;
+Procedure Select_File (Var Done: Boolean; Var FileName: Line);  { TODO: Move to Files.pas }
+
+Var
+  Established: Boolean;
+  Dummy: Line;
+
+Begin
+  Done:=False;  Established:=False;  Dummy:='';  FileName:='';
+  Repeat
+    Begin
+       SMG$Erase_Display (ScreenDisplay);
+       SMG$Put_Line (ScreenDisplay,'Enter the directory to be read. [RETURN] exits.  Do NOT add the Character.dat');
+       SMG$Put_Line (ScreenDisplay,'NOTE: User can not be playing when characters are edited.');
+       Cursor;
+       SMG$Read_String (Keyboard, FileName, '--->',Display_Id:=ScreenDisplay);
+       No_Cursor;
+
+       STR$UPCASE(FileName,FileName);
+       If FileName.Length=0 then
+          Done:=True
+       Else
+          Begin
+             FileName:=FileName+'Character.Dat';
+             LIB$Find_File (FileName,Dummy,0);
+             Established:=(Dummy<>'');
+             If not Established then
+                Begin
+                   SMG$Put_Line (ScreenDisplay,'Not found.');
+                   Delay (2);
+                End;
+          End;
+    End;
+  Until Done or Established;
+End;
+
+(******************************************************************************)
+
+Procedure Read_Players_Roster (Var Done: Boolean; Var Roster: Roster_Type; FileName: Line);  { TODO: Move to Files.pas }
+
+Var
+  Loop: Integer;
+
+Begin
+  Repeat
+    Open (Char_File,FileName,History:=OLD,Error:=CONTINUE,Sharing:=NONE)
+  Until (Status(Char_File)<>PAS$K_FILALROPE);
+
+  If Status(Char_File)=PAS$K_FILNOTFOU then
+     Begin
+       Done:=True;
+       SMG$Put_Line (ScreenDisplay,FileName+' not found...');
+       Delay(2);
+      End
+  Else If Status(Char_File)=PAS$K_ERRDUROPE then
+     Begin
+        Done:=True;
+        SMG$Put_Line (ScreenDisplay,'Insufficient privileges...');
+        Delay(2);
+     End
+  Else
+     Begin
+        Reset (Char_File,Error:=Continue);
+        For Loop:=1 to 20 do
+           Read (Char_File,Roster[Loop],Error:=Continue);
+     End;
+End;
+
+(******************************************************************************)
+
+Procedure Write_Players_Roster (Roster: Roster_Type);   { TODO: Move to Files.pas }
+
+Var
+   Loop: Integer;
+
+Begin
+   No_ControlY;
+   ReWrite (Char_File);
+
+   For Loop:=1 to 20 do
+      Write (Char_File,Roster[Loop]);
+
+   Close (Char_File);
+   ControlY;
+End;
+
+(*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*)
+
+[Global]Procedure Edit_Players_Character;
+
+Var
+  Done,Error: Boolean;
+  Roster: Roster_Type;
+  FileName: Line;
+
 Begin { Edit Players Character }
-
-   { TODO: Enter this code }
-
+  Done:=False;  Error:=False;
+  Repeat
+    Begin
+       Select_File (Done,FileName);
+       If Not Done then
+          Read_Players_Roster (Error,Roster,FileName);
+       If Not (Error or Done) then
+          Begin
+             Edit_Character (Roster);
+             Write_Players_Roster (Roster);
+          End;
+       Close (Char_File,Error:=Continue);
+    End;
+  Until Done;
 End;  { Edit Players Character }
 End.  { Character Editor }
