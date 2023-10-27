@@ -478,7 +478,7 @@ Begin
         SMG$Begin_Display_Update (ScreenDisplay);
         SMG$Erase_Display (ScreenDisplay);
 
-        Print_Spell_Point (Character,PosX,PosY);
+        Print_Spell_Points (Character,PosX,PosY);
         SMG$End_Display_Update (ScreenDisplay);
 
         Answer:=Make_Choice(['+','-',Up_Arrow,Down_Arrow,Left_Arrow,Right_Arrow,' ']);
@@ -560,7 +560,7 @@ Begin
                            T:=T+'In';
                     21:  T:=T+String(Character.Curr_HP);
                     22:  T:=T+String(Character.Max_HP);
-                    23:  T:=T+String(CharacterArmor_Class);
+                    23:  T:=T+String(Character.Armor_Class);
                     24:  T:=T+StatusName[Character.Status];
                     25:  T:=T+String(Character.No_of_Items);
                     26:  If Character.No_of_items=0 then
@@ -601,15 +601,16 @@ Begin
                         23: If ABS(Num)<128 then Character.Armor_Class:=Num;
                         25: If (Num>-1) and (Num<9) then Character.No_of_items:=Num;
                      End;
+                 End;
             20: Character.Lock:=Not (Character.Lock);
             24: If Character.Status=Poisoned then
                    Character.Status:=Healthy
                 Else
-                   Character.Status=Succ(Character.Status);
+                   Character.Status:=Succ(Character.Status);
             28: If Character.Age_Status=Croak then
                    Character.Age_Status:=YoungAdult
                 Else
-                   Character.Age_Status=Succ(Character.Age_Status);
+                   Character.Age_Status:=Succ(Character.Age_Status);
          End;
       End;
    Until Answer=' ';
