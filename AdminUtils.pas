@@ -124,7 +124,7 @@ Var
 
 [External]Procedure Pic_Edit (Var Pics: Pic_List);external;
 [External]Procedure Edit_Maze (Var MazeFile: LevelFile);external;
-[External]Procedure Edit_Players_Characters;external;
+[External]Procedure Edit_Players_Character;external;
 [External]Procedure Edit_Treasures(Var Treasure: List_of_Treasures);external;
 [External]Procedure Edit_Monster;external;
 [External]Procedure Edit_Item;external;
@@ -165,7 +165,7 @@ Begin { Handle Key }
                  Edit_Monster;
               End;
          'I': Edit_Item;
-         'A': Edit_Players_Characters;
+         'A': Edit_Players_Character;
          'E': Exit:=True;
          Otherwise ;
     End;

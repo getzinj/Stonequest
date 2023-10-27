@@ -548,7 +548,7 @@ Begin
          SMG$Put_Line (ScreenDisplay,'--------------');
          For Loop:=16 to 29 do
             Begin
-               T:=CHR(Loop+64)+'  '+Cat[Loop]+': ';
+               T:=CHR(Loop+49)+'  '+Cat[Loop]+': ';
 
                Case Loop of
                     16:  T:=T+String(Character.Gold);
@@ -707,7 +707,7 @@ End;
 
 (******************************************************************************)
 
-Procedure Read_Players_Roster (Var Done: Boolean; Var Roster: Roster_Type; FileName: Line);  { TODO: Move to Files.pas }
+[global]Procedure Read_Players_Roster (Var Done: Boolean; Var Roster: Roster_Type; FileName: Line);  { TODO: Move to Files.pas }
 
 Var
   Loop: Integer;
@@ -721,13 +721,13 @@ Begin
      Begin
        Done:=True;
        SMG$Put_Line (ScreenDisplay,FileName+' not found...');
-       Delay(2);
+       Delay(5);
       End
   Else If Status(Char_File)=PAS$K_ERRDUROPE then
      Begin
         Done:=True;
         SMG$Put_Line (ScreenDisplay,'Insufficient privileges...');
-        Delay(2);
+        Delay(5);
      End
   Else
      Begin
