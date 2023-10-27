@@ -146,34 +146,135 @@ Begin
                  Done:=False;
               End;
      End;
-  Until Done;End;
+  Until Done;
 End;
 
 (******************************************************************************)
 
-{ TODO: Enter this code }
+Function Top_Twenty (Combined_Score_List: Combined_List): High_Score_List;
+
+Var
+   Temp: High_Score_List;
+   X: Integer;
+
+Begin
+   For X:=1 to 20 do
+      Temp[X]:=Combined_Score_List[X];
+   Top_Twenty:=Temp;
+End;
+
+(******************************************************************************)
+
+Procedure Write_Score_List (Var ScoresFile: Score_File;  Score_List: High_Score_List); { TODO: Move to Files.pas }
+
+Begin
+   Rewrite (ScoresFile);
+   Write (ScoresFile,Score_List);
+End;
+
+(******************************************************************************)
 
 [Global]Procedure Update_High_Scores (UserName: Line);
 
+Var
+   Combined_Score_List: Combined_List;
+   Score_List: High_Score_List;
+
 Begin
-   { TODO: Enter this code }
+   Read_Score_List (ScoresFile,Score_List);
+   Combined_Score_List:=Make_Combined_Score_List (Score_List, Username);
+   Sort_Combined_List (Combined_Score_List);
+   { TODO: Is code missing? }
 End;
 
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+Procedure Initialize;
+
+Const
+   High_Score_Title = 'Character Name       Username        Level   Class          Experience';
+
+Begin
+   SMG$Create_Virtual_Display (22,78,ScoreDisplay,1);
+   SMG$Label_Border (ScoreDisplay,'-=*> High Scores <*=-',SMG$K_TOP);
+   SMG$Erase_Display (ScoreDisplay);
+   SMG$Put_Line (ScoreDisplay, High_Score_Title);
+End;
+
+(******************************************************************************)
+
+Procedure Print_List (Score_List: High_Score_List);
+
+Var
+   Rendition: Unsigned;
+   X: Integer;
+   T: Line;
+   C1,C2: Line;
+
+Begin
+   For X:=1 to 19 do
+      If (Score_List[X].Lvl1>0) and (Score_List[X].Experience>0) then
+         Begin
+            T:=Pad(Score_List[X].Name,' ',21)+Pad(Score_List[X].USer_Name,' ',16);
+
+            C1:=String(Score_List[X].Lvl1);
+            If Score_List[X].Lvl2>0 then C1:=C1+'/'+String(Score_List[X].Lvl2);
+            If C1.Length<8 then T:=T+Pad(C1,' ',8)
+            Else                T:=T+C1;
+
+            C1:=ClassName[Score_List[X].Class1];
+            C2:=ClassName[Score_List[X].Class2];
+            if Score_List[X].Class2<>NoClass then C1:=C1+'/'+C2;
+            If C1.Length<18 then T:=T+Pad(C1,' ',18)
+            Else                 T:=T+SubStr(C1,1,18);
+
+            T:=T+String(Trunc(Score_List[X].Experience),12);
+
+            Rendition:=0;
+            If Score_List[X].Defeated_Barrat then Rendition:=SMG$M_Bold;  { T:=T+'*' }
+            SMG$Put_Line (ScoreDisplay,T,,Rendition);
+         End;
+
+   SMG$Put_Chars (ScoreDisplay,'Characters in ',21,7);
+   SMG$Put_Chars (ScoreDisplay,'Boldface',,,,SMG$M_Bold);
+   SMG$Put_Chars (ScoreDisplay,' have completed ');
+   SMG$Put_Chars (ScoreDisplay,'the Quest of the Stone',,,,SMG$M_Underline+SMG$M_Reverse);
+
+   SMG$Put_Chars (ScoreDisplay,'Press any key',22,32);
+
+   SMG$Paste_Virtual_Display (ScoreDisplay,Pasteboard,2,2);
+
+   Get_Response;
+
+   SMG$Unpaste_Virtual_Display (ScoreDisplay,Pasteboard);
+   SMG$Delete_Virtual_Display (ScoreDisplay);
+End;
+
+(******************************************************************************)
 
 [Global]Procedure Print_Scores;
 
+Var
+   Score_List: High_Score_List;
+
 Begin { Print Scores }
-
-{ TODO: Enter this code }
-
+  Initialize;
+  Read_Score_List (ScoresFile,Score_List);
+  Close (ScoresFile);
+  Print_List (Score_List);
 End;  { Print Scores }
 
+(******************************************************************************)
 
 [Global]Procedure Clear_High_Scores;
 
+Var
+   Score_List: High_Score_List;
+
 Begin { Clear High Scores }
-
-{ TODO: Enter this code }
-
+  Score_List:=Zero;
+  Open (ScoresFile,'SCORES.DAT',History:=UNKNOWN,Sharing:=READONLY,Error:=Continue);
+  Write_Score_List (ScoresFile,Score_List);
+  Close (ScoresFile);
 End;  { Clear High Scores }
 End.  { High Score }
