@@ -39,4 +39,20 @@ go write to the linking by running @Link.com by typing ```@Link```.
 
 Execute the command ```run stonequest```.
 
+## Debugging
+
+### Building
+To build a debug build and run it, execute the BUILDDEBUG.COM DCL script by
+typing ```@BuildDebug```.
+
+### Executing
+To execute a build created for debugging, simply execute the command `run stonequest`
+as normal. You will automatically enter the debugger.
+
+To execute a debug build without debugging, you can execute the command
+`run/nodebug stonequest`.
+
+For more information on debugging on the VAX, please check out
+the [OpenVMS Debugger Manual](https://docs.vmssoftware.com/docs/HP_OpenVMS_Debugger.pdf).
+
 
