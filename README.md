@@ -9,7 +9,7 @@ But then I was inspired by other games that were becoming legends, such as
 "The Bard's Tale" by Electronic Arts, and Moria, a public domain game.  I
 attempted to capture the best of these games within the framework of
 "Wizardry".  The result is a game that I feel is the best fantasy/simulation
-around, and the biggest source of plagerized material in the world!  I feel
+around, and the biggest source of plagerized *(sic)* material in the world!  I feel
 that this game contains the best of all three of the above games, plus all
 the other little odds and ends I threw in on a warped whim.
 

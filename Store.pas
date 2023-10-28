@@ -181,6 +181,142 @@ End;
 
 (******************************************************************************)
 
+Procedure Page_Backwards (Var First: Integer; Amount: Integer:=10);
+
+Var
+   Temp: Integer;
+
+Begin
+   Temp:=0;
+   Repeat
+      Begin
+         First:=First-1;
+         If First<1 then
+            First:=249;
+         If Item_Count(First)<>0
+            then Temp:=Temp+1;
+      End;
+   Until Temp=Amount;  { TODO: If there aren't ten items in the store, this will loop forever. }
+End;
+
+(******************************************************************************)
+
+Procedure Purchase_Item (Choices: Choice_List; Var Buyer: Character_Type);
+
+Var
+   Answer: Char;
+   INum: Integer;
+
+Begin
+   SMG$Put_Line (BottomDisplay,'Purchase which item?',0);
+   Answer:=Make_Choice (['A'..'J',' ',CHR(13)]);
+   If Buyer.Status=Insane then
+      Answer:=CHR(Roll_Die(10)+64);
+   If Not (Answer in [' ',CHR(13)]) then
+      Begin
+         INum:=Ord(Answer)-64;
+
+         Access_Record (Choices[INum].Item_Number);
+
+         If Not ((Buyer.Class in Choices[INum].Usable_By) or (Buyer.PreviousClass in Choices[INum].Usable_By)) then
+            Begin
+               SMG$Put_Line (BottomDisplay,'Unusable item. Confirm purchase? (Y/N)',0);
+               If Yes_or_No='Y' then
+                  Add_Item(Choices[INum],Buyer);
+            End
+         Else
+            Add_Item (Choices[INum],Buyer);
+
+         Update (AmountFile);
+      End;
+End;
+
+(******************************************************************************)
+
+Procedure Print_List (Choices: Choice_List; Buyer: Character_Type);
+
+Var
+   Loop: Integer;
+
+Begin
+   For Loop:=1 to 10 do { TODO: Use a constant }
+      Begin
+         SMG$Put_Chars (BottomDisplay,'['+CHR(Loop+64)+']    '+Pad(Choices[Loop].True_Name,' ',20)+'  ');
+         SMG$Put_Chars (BottomDisplay,String(Choices[Loop].Current_Value,12)+' GP');
+         If Not ((Buyer.Class in Choices[Loop].Usable_By) or (Buyer.PreviousClass in Choices[Loop].Usable_By)) then
+            SMG$Put_Chars (BottomDisplay,' (Unusable)');
+         SMG$Put_Line (BottomDisplay,'');
+      End;
+   SMG$Put_Line (BottomDisplay,'Thou hast '+String(Buyer.Gold)+' GP');
+   SMG$Put_Line (BottomDisplay,'F)orward, B)ack, P)urchase, E)xit',0);
+End;
+
+(******************************************************************************)
+
+Function Compute_Items_on_Page (First: Integer; Var Choices: Choice_List): Integer;
+
+Var
+   Last,Loop: Integer;
+
+Begin
+   Last:=First;
+   For Loop:=1 to 10 do
+      Begin
+         While (Item_Count(Last)=0) or Not(Item_Has_Value(Item_List[Last])) do
+            Begin
+               Last:=Last+1;
+               If Last=450 then Last:=1; { TODO: This may be a bug. I think 450 is a valid index }
+            End;
+         Choices[Loop]:=Item_List[Last];
+         Last:=Last+1;
+         If Last>249 then  { TODO: These two constants---450 and 249---seem confusing to me. Is 450 the maximum item in the item list and 249 is the maximum number of items *in the store*? }
+            Last:=1;
+      End;
+   Compute_Items_On_Page:=Last;
+End;
+
+(******************************************************************************)
+
+Procedure Buy_Item (Var Buyer: Character_Type);
+
+Var
+   First,Last: Integer;
+   Answer: Char;
+   Choices: Choice_List;
+
+Begin
+   First:=1;  Choices:=Zero;
+
+   { TODO: This will crash if store file does not exist. }
+   Open(AmountFile,'STORE.DAT;1',History:=OLD,Access_Method:=DIRECT,Sharing:=READWRITE,Error:=Continue);
+
+   Repeat
+      Begin
+         { For a list of 10 items in the store for sale }
+
+         Last:=Compute_Items_on_Page (First,Choices);
+
+         SMG$Begin_Display_Update (BottomDisplay);
+         SMG$Erase_Display (BottomDisplay);
+         Print_List (Choices,Buyer);
+         SMG$End_Display_Update (BottomDisplay);
+
+         Answer:=Make_Choice (['B','F','P','E']);
+
+         Case Answer of
+            'B': Page_Backwards (First);
+            'F': First:=Item_List[Last].Item_Number;  { TODO: Is this correct? Shouldn't first = last? }
+            'P': Purchase_Item (Choices,Buyer);
+            'E': ;
+         End;
+      End;
+   Until (Answer='E');
+
+   Close (AmountFile);
+End;
+
+(******************************************************************************)
+
 { TODO: Enter this code }
 
 [Global]Procedure Run_Trading_Post (Var Party: Party_Type;  Party_Size: Integer);
