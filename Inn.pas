@@ -181,6 +181,153 @@ End;
 
 (******************************************************************************)
 
+Procedure More_Spells (Var Character: Character_Type);
+
+{ This procedure tacks on the spells known at this level. If these spells were already known, this procedure is redundant. }
+
+Begin
+   New_Spells (Character,Character.Class,Character.Level);
+   New_Spells (Character,Character.PreviousClass,Character.Previous_Lvl);
+End;
+
+(******************************************************************************)
+
+Procedure Check_for_More_Psionics (Var Character: Character_Type);
+
+Var
+   Improved: Boolean;
+
+Begin
+   If Character.Psionics then
+      Begin
+        Improved:=False;
+        If Made_Roll (5) then
+           Begin Character.DetectTrap:=Character.DetectTrap+Roll_Die(5); Improved:=True; End;
+        If Made_Roll (5) then
+           Begin Character.Regenerates:=Character.Regenerates+1; Improved:=True; End;
+        If Made_Roll (5) then
+           Begin Character.DetectSecret:=Character.DetectSecret+Roll_Die(5); Improved:=True; End;
+
+        If Improved then
+           SMG$Put_Line (BottomDisplay,Character.Name+' gained in psionic ability!',0,1);
+      End;
+End;
+
+(******************************************************************************)
+
+Procedure Promote (Var Character: Character_Type);
+
+Begin
+  Character.Level:=Character.Level+1;
+  Character.Max_HP:=Character.Max_HP+Compute_Hit_Die(Character);
+
+  SMG$Erase_Display (BottomDisplay);
+  SMG$Put_Line (BottomDisplay,Character.Name+' gained a level!!!!!!',1,1);
+  Ring_Bell (BottomDisplay,3);
+
+  Age_Character (Character);
+
+  If Max_Spell_Level (Character.Class,Character.Level) > Max_Spell_Level (Character.Class,Character.Level - 1) then
+     SMG$Put_Line (BottomDisplay,Character.Name+' gained new spells!',1,1);
+  Check_for_More_Psionics (Character);
+End;
+
+(******************************************************************************)
+
+Procedure Rest_Effects (Var Character: Character_Type;  Room_Number: Integer);
+
+Begin
+   More_Spells (Character);
+   Restore_Spells (Character);
+
+   If Alive (Character) then
+      Character.Curr_HP:=Min(Character.Curr_HP+Healing[Room_Number]+(Character.Regenerates*7),Character.MAX_HP);
+
+      If (Character.Curr_HP<1) and Alive(Character) then
+         Begin
+            Character.Status:=Dead;
+            Character.Curr_HP:=0;
+         End;
+End;
+
+(******************************************************************************)
+
+Procedure Stay_in_Room (Room_Number: Integer; Person,Party_Size: Integer; Var Party: Party_Type;  Var Answer: Char);
+
+Var
+  XP,Next: Real;
+  T: Line;
+  Lvl,Gold: Integer;
+  Character: Character_Type;
+  Class: Class_Type;
+  Name: Line;
+
+[External]Function XP_Needed (Class: Class_Type; Level: Integer): Real;External;
+
+Begin
+   Character:=Party[Person];  { NOTE: value copy! }
+   Name:=Character.Name;  Gold:=Character.Gold;
+
+   SMG$Erase_Display (BottomDisplay);
+
+   SMG$Put_Chars (BottomDisplay,Name,2,1);
+   SMG$Put_Line (BottomDisplay,', thou have '+String(Gold)+' gold pieces');
+   SMG$Put_Line (BottomDisplay,Room_Name[Room_Number]+'',3);
+
+   If Gains_Level (Character) then
+      Begin
+        Delay(1);
+        SMG$Erase_Display (BottomDisplay);
+        Promote (Character);
+      End
+   Else
+      Begin
+         XP:=Character.Experience;  Lvl:=Character.Level+1;
+
+         Class:=Character.Class;
+         Next:=XP_Needed (Class,Lvl);
+
+         T:='Thou need '+String(Round(Next-XP))+' XP to make a level.';
+         SMG$Put_Line (BottomDisplay,T);
+      End;
+
+   Rest_Effects (Character,Room_Number);
+
+   Party[Person]:=Character;
+
+   Print_Character_Line (Person,Party,Party_Size);
+
+   SMG$Set_Cursor_ABS (BottomDisplay,12,1);
+   SMG$Put_Line (BottomDisplay,'Stay another week?',0);
+
+   Answer:=Yes_or_No;
+End;
+
+(******************************************************************************)
+
+Procedure Pool_Gold (Pooler: Integer; Var Party: Party_Type; Party_Size: Integer);
+
+Var
+   Person,Temp: Integer;
+
+Begin
+   Temp:=0;
+
+   For Person:=1 to Party_Size do
+      Begin
+         Temp:=Temp+Party[Person].Gold;
+         Party[Person].Gold:=0;
+      End;
+
+   { If Temp has overflowed, bring back to maximum possible value }
+
+   If Temp<0 then Temp:=MaxInt;
+
+   Party[Pooler].Gold:=Temp;
+End;
+
+(******************************************************************************)
+
 { TODO: Enter this code }
 
 [Global]Procedure Run_Inn (Var Party: Party_Type; Party_Size: Integer);
