@@ -328,13 +328,116 @@ End;
 
 (******************************************************************************)
 
-{ TODO: Enter this code }
+Procedure Cant_Pay (Var Character: Character_Type; Var Answer: Char);
+
+Begin
+   SMG$Put_Line (BottomDisplay,'* * * Thou canst not pay!! * * *',0);
+   Ring_Bell (BottomDisplay,2);
+
+   Character.Gold:=0;
+
+   Answer:='N';
+
+   Delay(2);
+End;
+
+(******************************************************************************)
+
+Procedure Enter_Inn (Person: Integer; Var Party: Party_Type;  Party_Size: Integer);
+
+Var
+  Room_Number,Room_Selected: Integer;
+  Name: Line;
+  Answer: Char;
+
+Begin
+   Name:=Party[Person].Name;
+   Repeat
+      Begin
+         SMG$Begin_Display_Update (BottomDisplay);
+         SMG$Erase_Display (BottomDisplay);
+         SMG$Put_Chars (BottomDisplay,'Welcome ',2,1,1);
+         SMG$Put_Chars (BottomDisplay,Name,2,9,0,1);
+         SMG$Set_Cursor_ABS (BottomDisplay,3,1);
+
+         For Room_Number:=1 to 6 do
+            SMG$Put_Line(BottomDisplay,'['+CHR(Room_Number+64)+']   '+Room_Name[Room_Number]);
+
+         SMG$Put_Line (BottomDisplay,'Thou have '+String(Party[Person].Gold)+' Gold Pieces.');
+         SMG$Put_Line (BottomDisplay,'Which room?  (P)ool, [RET] exits)',0);
+         SMG$End_Display_Update(BottomDisplay);
+
+         Answer:=Make_Choice(['A'..'F',CHR(13),'P']);
+
+         If Not (Answer in [CHR(13),'P']) then
+            Begin
+               Room_Selected:=Ord(Answer)-64;
+               Repeat
+                  Begin
+                     Party[Person].Age:=Party[Person].Age+7;
+                     Party[Person].Gold:=Party[Person].Gold-Cost[Room_Selected];
+
+                     If Party[Person].Gold>=0 then
+                        Stay_In_Room (Room_Selected,Person,Party_Size,Party,Answer)
+                     Else
+                        Cant_Pay (Party[Person],Answer);
+                  End;
+               Until Answer='N';
+            End
+         Else
+            If Answer='P' then
+               Pool_Gold (Person,Party,Party_Size);
+      End;
+   Until Answer=CHR(13);
+End;
+
+(******************************************************************************)
+
+Procedure Print_Heading (Party_Size: Integer);
+
+Begin
+   SMG$Begin_Display_Update (BottomDisplay);
+   SMG$Erase_Display (BottomDisplay);
+
+   SMG$Set_Cursor_ABS (BottomDisplay,2,1);
+   SMG$Put_Line (BottomDisplay,'Welcome to the Adventurer''s Inn!');
+   SMG$Put_Line (BottomDisplay,'Who will stay here?');
+   SMG$Put_Line (BottomDisplay,'(1-'+String(Party_Size,1)+', [RETURN] exits)',0);
+   SMG$End_Display_Update (BottomDisplay);
+End;
+
+(******************************************************************************)
+
+Function Get_Boarder (Party_Size: Integer): [Volatile]Integer;
+
+Var
+   Person: Integer;
+
+Begin
+  Person:=0;
+  Repeat
+    If Can_Play then
+       Zero_Through_Six (Person)
+  Until (Person<=Party_Size);
+
+  Get_Boarder:=Person;
+End;
+
+(******************************************************************************)
 
 [Global]Procedure Run_Inn (Var Party: Party_Type; Party_Size: Integer);
 
 Begin { Run Inn }
+   Repeat
+      Begin
+         Print_Heading (Party_Size);
 
-{ TODO: Enter this code }
-
+         Person:=Get_Boarder (Party_Size);
+         If Person<>0 then
+            If Party[Person].Status in [Healthy,Asleep,Poisoned,Afraid,Insane] then
+               Enter_Inn (Person,Party,Party_Size)
+      End;
+   Until Person=0;
+   Location:=InKyrn;
 End;  { Run Inn }
 End.  { Inn }
