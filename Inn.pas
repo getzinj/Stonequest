@@ -75,6 +75,112 @@ Value
 [External]Function Can_play: [Volatile]Boolean;External;
 (******************************************************************************)
 
+Function Age_Class (CharRace: Race_Type;  CharAge: Integer): Age_Type;
+
+Begin
+   If CharAge>Age_Matrix[CharRace,Croak] then
+      Age_Class:=Croak
+   Else If CharAge>Age_Matrix[CharRace,Venerable] then
+      Age_Class:=Venerable
+   Else If CharAge>Age_Matrix[CharRace,Old] then
+      Age_Class:=Old
+   Else If CharAge>Age_Matrix[CharRace,MiddleAged] then
+      Age_Class:=MiddleAged
+   Else If CharAge>Age_Matrix[CharRace,Mature] then
+      Age_Class:=Mature
+   Else
+      Age_Class:=YoungAdult;
+End;
+
+(******************************************************************************)
+
+Function Gains_Level (Character: Character_Type): Boolean;
+
+{ This function will return TRUE if CHARACTER has enough experience to go up a level, and FALSE otherwise. }
+
+Var
+   Class: Class_Type;
+   Level,Next_Level: Integer;
+   XP: Real;
+
+[External]Function XP_Needed (Class: Class_Type; Level: Integer): Real;external;
+
+Begin
+  Class:=Character.Class;  Level:=Character.Level;  XP:=Character.Experience;
+
+  Next_Level:=Level+1;
+
+  Gains_Level:=(XP>=XP_Needed(Class,Next_Level));
+End;
+
+(******************************************************************************)
+
+Procedure Age_Effects (Var Character: Character_Type;  Age_Status: Age_Type);
+
+Var
+   T: Line;
+   Name: Name_Type;
+   i: Integer;
+   AbilName: [External]Array [1..7] of Packed Array [1..12] of char;
+
+Begin
+   Name:=Character.Name;
+   For I:=1 to 7 do
+      Change_Score (Character, i, Age_Additions[Age_Status, i]);
+
+   If (Age_Status=Croak) and Not (Roll_Die(20)<=Character.Abilities[5]) then
+     Begin
+       Character.Status:=Deleted;
+       SMG$Put_Line (BottomDisplay,Name+' has died of old age.');
+       Delay (5);
+     End
+   Else
+     For I:=1 to 7 do
+        If Age_Additions[Age_Status,i]<>0 then
+           Begin
+              If Age_Additions[Age_Status, i]>0 then T:='gained'
+              Else                                   T:='lost';
+              T:=Name+' '+T+' '+AbilName[i]+'!';
+              SMG$Put_Line (BottomDisplay,T);
+           End;
+End;
+
+(******************************************************************************)
+
+Procedure Age_Character (Var Character: Character_Type);
+
+Var
+   Age_Status: Age_Type;
+
+Begin
+   Age_Status:=Age_Class (Character.Race,Trunc(Character.Age/365));
+   If Character.Age_Status<>Age_Status then
+      Begin
+        Age_Effects (Character,Age_Status);
+        Character.Age_Status:=Age_Status;
+      End;
+End;
+
+(******************************************************************************)
+
+Procedure New_Spells (Var Character: Character_Type;  Class: Class_Type;  Level: Integer);
+
+Var
+   Temp: Set of Spell_Name;
+
+Begin
+   Temp:=Spells_Known (Class,Level);
+   Case Class of
+     AntiPaladin,Paladin: Character.Cleric_Spells:=Character.Cleric_Spells+Temp;
+     Bard,Ranger: Character.Wizard_Spells:=Character.Wizard_Spells+Temp;
+     Wizard: Character.Wizard_Spells:=Character.Wizard_Spells+Temp;
+     Cleric: Character.Cleric_Spells:=Character.Cleric_Spells+Temp;
+     Otherwise ;
+   End;
+End;
+
+(******************************************************************************)
+
 { TODO: Enter this code }
 
 [Global]Procedure Run_Inn (Var Party: Party_Type; Party_Size: Integer);
