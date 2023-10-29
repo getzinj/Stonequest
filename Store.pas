@@ -317,13 +317,463 @@ End;
 
 (******************************************************************************)
 
-{ TODO: Enter this code }
+Procedure Print_Sale_Items (Seller: Character_Type; NumItems: Integer;  Var Options,Dont_Want: Char_Set);
+
+Var
+   TempItem1: Item_Record;
+   Current_Value,Loop: Integer;
+   T: Line;
+
+Begin
+   For Loop:=1 to NumItems do
+      Begin
+         Options:=Options+[CHR(Loop+64)];
+         T:=T+'['+CHR(Loop+64)+']  ';
+         If Seller.Item[Loop].Cursed then
+            T:=T+'-'
+         Else if Seller.Item[Loop].Equipted then
+            T:=T+'*'
+         Else if Not Seller.Item[Loop].Ident then
+            T:=T+'?'
+         Else
+            T:=T+' ';
+
+         TempItem1:=Item_List[Seller.Item[Loop].Item_Num];
+         Current_Value:=TempItem1.Current_Value;
+
+         If (Seller.Item[Loop].Ident) and not (TempItem1.Cursed) and Item_Has_Value(TempItem1) then
+            Begin
+               T:=T+Pad(TempItem1.True_Name,' ',20)+'   '+String (Current_Value div 2,12)+' GP';
+               SMG$Put_Line (BottomDisplay, T);
+            End
+         Else
+            Begin
+               Dont_Want:=Dont_Want+[CHR(Loop+64)];
+               If (Not(Seller.Item[Loop].Ident)) then
+                  T:=T+Pad(TempItem1.Name,' ',20)
+               Else
+                  T:=T+Pad(TempItem1.True_Name,' ',20);
+               T:=T+'         '+String(0,7)+' GP';
+               SMG$Put_Line (BottomDisplay,T);
+            End;
+      End;
+
+   SMG$Set_Cursor_ABS (BottomDisplay,11,1);
+   SMG$Put_Line (BottomDisplay,'Thou has '+String(Seller.Gold)+' GP');
+   SMG$Put_Line (BottomDisplay,'Sell which item?');
+   SMG$End_Display_Update (BottomDisplay);
+End;
+
+(******************************************************************************)
+
+Procedure Sell_Items (Var Seller: Character_Type;  Var NumItems: Integer; Var Answer: Char);
+
+Var
+   Current_Value,Num,Loop: Integer;
+   Options,Dont_Want: Char_Set;
+   TempItem: Item_Record;
+
+Begin
+   Options:=[CHR(13),CHR(32)];  Dont_Want:=[];
+
+   Print_Sale_Items (Seller,NumItems,Options,Dont_Want);
+
+   Answer:=Make_Choice (Options);
+   If Not (Answer in [CHR(13),CHR(32)]) then { TODO: This code seems suspect. Double-check source in printout. }
+      Begin
+         Num:=ORD(Answer)-64;
+         TempItem:=Item_List[Seller.Item[Num].Item_Num];
+         Current_Value:=TempItem.Current_Value;
+
+         If Num=NumItems then
+            NumItems:=NumItems-1
+         Else
+            Begin
+               For Loop:=Num to NumItems-1 do
+                  Seller.Item[Loop]:=Seller.Item[Loop+1];
+               NumItems:=NumItems-1;
+            End;
+
+         Access_Record (TempItem.Item_Number); { TODO: Move to Files.pas }
+         If AmountFile^<>-1 then
+            Begin
+               AmountFile^:=AmountFile^+1;
+               Update (AmountFile);
+            End;
+
+            Seller.Gold:=Min(Seller.Gold+(Current_Value div 2),MaxInt);
+            Its_Been_A_Pleasure;
+      End
+   Else
+      Begin
+         Print_Message ('* * * We''re not interested in that! * * *');
+         Delay (2);
+      End;
+End;
+
+(******************************************************************************)
+
+Procedure Sell_Item (Var Seller: Character_Type);
+
+Var
+  NumItems: Integer;
+  Answer: Char;
+
+Begin
+   Open (AmountFile,'STORE.DAT;1',History:=OLD,Access_Method:=DIRECT,Sharing:=READWRITE,Error:=CONTINUE);
+
+   Repeat
+      Begin
+         SMG$Begin_Display_Update (BottomDisplay);
+         SMG$Erase_Display (BottomDisplay);
+         SMG$Set_Cursor_ABS (BottomDisplay,2,1);
+         NumItems:=Seller.No_of_Items;
+         If NumItems<>0 then
+            Begin
+               Sell_Items (Seller,NumItems,Answer);
+               Seller.No_of_Items:=NumItems;
+            End
+         Else
+            Begin
+               Answer:=CHR(13);
+               SMG$End_Display_Update (BottomDisplay);
+            End;
+      End;
+   Until Answer in [CHR(13),CHR(32)];
+
+   Close (AmountFile);
+End;
+
+(******************************************************************************)
+
+Procedure Print_Uncurse_Items (Customer: Character_Type; NumItems: Integer; Var Options: Char_Set);
+
+Var
+  Current_Value,Loop: Integer;
+  T: Line;
+
+Begin
+   For Loop:=1 to NumItems do
+      Begin
+         Options:=Options+[CHR(Loop+64)];
+         T:='['+CHR(Loop+64)+']  ';
+         If Customer.Item[Loop].Cursed then
+            T:=T+'-'
+         Else
+            T:=T+' ';
+
+         If (Customer.Item[Loop].Ident) then
+            T:=T+Pad(Item_List[Customer.Item[Loop].Item_Num].True_Name,' ',20)+'   '
+         Else
+            T:=T+Pad(Item_List[Customer.Item[Loop].Item_Num].Name,' ',20)+'   ';
+
+         Current_Value:=Item_List[Customer.Item[Loop].Item_Num].Current_Value;
+
+         If Not Customer.Item[Loop].Cursed then
+            Current_Value:=0;
+
+         T:=T+String(Current_Value)+' GP';
+         SMG$Put_Line (BottomDisplay,T);
+      End;
+
+   SMG$Set_Cursor_ABS (BottomDisplay,11,1);
+   SMG$Put_Line (BottomDisplay,'Thou hast '+String(Customer.Gold)+' GP');
+   SMG$Put_Line (BottomDisplay,'Uncurse which item?',0);
+   SMG$End_Display_Update (BottomDisplay);
+End;
+
+(******************************************************************************)
+
+Procedure Uncurse_Items (Var Customer: Character_Type;  Var NumItems: Integer;  Var Answer: Char);
+
+Var
+   Options: Char_Set;
+   Current_Value,Loop,Num: Integer;
+   TempItem: Item_Record;
+
+Begin
+   Options:=[CHR(13),CHR(33)];
+
+   Print_Uncurse_Items (Customer,NumItems,Options);
+
+   Answer:=Make_Choice (Options);
+
+   If Not(Answer in [CHR(13),CHR(32)]) then
+      Begin
+         Num:=ORD(Answer)-64;
+         TempItem:=Item_List[Customer.Item[Num].Item_Num];
+         Current_Value:=TempItem.Current_Value;
+
+         If Customer.Gold>=Current_Value then
+            Begin
+               If Num<>NumItems then
+                  For Loop:=Num to NumItems-1 do
+                      Customer.Item[Loop]:=Customer.Item[Loop+1];
+
+               NumItems:=NumItems-1;
+
+               Customer.Gold:=Max(Customer.Gold-Current_Value,0);
+
+               Its_Been_a_Pleasure;
+            End
+         Else
+            Too_Expensive;
+      End;
+End;
+
+(******************************************************************************)
+
+Procedure Uncurse_Item (Var Customer: Character_Type);
+
+Var
+  NumItems: Integer;
+  Answer: Char;
+
+Begin
+   Repeat
+      Begin
+         SMG$Begin_Display_Update (BottomDisplay);
+         SMG$Erase_Display (BottomDisplay,1,1,12,80);
+         SMG$Set_Cursor_ABS (BottomDisplay,2,1);
+
+         NumItems:=Customer.No_of_Items;
+
+         If NumItems<>0 then
+            Begin
+               Uncurse_Items (Customer,NumItems,Answer);
+               Customer.No_of_Items:=NumItems;
+            End
+         Else
+            Begin
+               Answer:=CHR(13);
+               SMG$End_Display_Update (BottomDisplay);
+            End;
+      End;
+   Until Answer in [CHR(13),CHR(32)];
+End;
+
+(******************************************************************************)
+
+Procedure Print_ID_Items (Customer: Character_Type);
+
+Var
+   Current_Value,NumItems,Loop: Integer;
+   T: Line;
+
+Begin
+   NumItems:=Customer.No_of_Items;
+   For Loop:=1 to NumItems do
+      Begin
+         T:='['+CHR(Loop+64)+']  ';
+         If Customer.Item[Loop].Cursed then
+            T:=T+'-'
+         Else if Customer.Item[Loop].Ident then
+            T:=T+' '
+         Else
+            T:=T+'?';
+
+         If (Customer.Item[Loop].Ident) then
+            T:=T+Pad(Item_List[Customer.Item[Loop].Item_Num].True_Name,' ',21)
+         Else
+            T:=T+Pad(Item_List[Customer.Item[Loop].Item_Num].Name,' ',21);
+
+         Current_Value:=Item_List[Customer.Item[Loop].Item_Num].Current_Value;
+
+         If Customer.Item[Loop].Ident then
+            Current_Value:=0;
+
+         T:=T+'   '+String(Current_Value)+' GP';
+         SMG$Put_Line (BottomDisplay,T);
+      End;
+   SMG$Set_Cursor_ABS (BottomDisplay,11,1);
+   SMG$Put_Line (BottomDisplay,'Thou hast '+String(Customer.Gold)+' GP');
+   SMG$Put_Line (BottomDisplay,'Identify which item?',0);
+   SMG$End_Display_Update (BottomDisplay);
+End;
+
+(******************************************************************************)
+
+Procedure Identify_Items (Var Customer: Character_Type;  Var Answer: Char);
+
+Var
+   Num,Current_Value,NumItems: Integer;
+   Options: Char_Set;
+   TempItem: Item_Record;
+
+Begin
+   NumItems:=Customer.No_of_Items;
+
+   Print_ID_Items (Customer);
+
+   Options:=['A'..CHR(NumItems+64),CHR(13),CHR(32)];
+   Answer:=Make_Choice (Options);
+
+   If Not(Answer in [CHR(13),CHR(32)]) then
+      Begin
+         Num:=ORD(Answer)-64;
+         TempItem:=Item_List[Customer.Item[Num].Item_Num];
+
+         Current_Value:=TempItem.Current_Value;
+         If Customer.Item[Num].Ident then
+            Current_Value:=0;
+         If Customer.Gold>=Current_Value then
+            Begin
+               Num:=Ord(Answer)-64;
+               Customer.Item[Num].Ident:=True;
+               Customer.Gold:=Max(Customer.Gold-Current_Value,0);
+               If TempItem.Item_Number<251 then
+                  Customer.Items_Seen[TempItem.Item_Number]:=True;
+               Its_Been_a_Pleasure;
+            End
+         Else
+            Too_Expensive;
+      End;
+End;
+
+(******************************************************************************)
+
+Procedure Identify_Item (Var Customer: Character_Type);
+
+Var
+   NumItems: Integer;
+   Answer: Char;
+
+Begin
+   Repeat
+      Begin
+         SMG$Begin_Display_Update (BottomDisplay);
+         SMG$Erase_Display (BottomDisplay, 1,1,12,80);
+         SMG$Set_Cursor_ABS (BottomDisplay,2,1);
+         NumItems:=Customer.No_of_Items;
+         If NumItems<>0 then
+            Identify_Items (Customer,Answer)
+         Else
+           Begin
+             Answer:=CHR(13);
+             SMG$End_Display_Update (BottomDisplay);
+           End
+      End
+   Until Answer in [CHR(13),CHR(32)];
+End;
+
+(******************************************************************************)
+
+Function Pool_Gold (Var Party: Party_Type;  Party_Size: Integer): Integer;
+
+{ The function returns the total amount of gold the party has, and then clears each member's purse.  For this reason, it is only
+  to be used in an assignment statement and never like the following:
+
+           If Pool_Gold(Party,Party_Size)>0 then ...
+
+  because this will clear the party's wealth, and not store it anywhere ... }
+
+Var
+   N,Sum: Integer;
+
+Begin
+  Sum:=0;
+  For N:=1 to Party_Size do
+     Begin
+        Sum:=Sum+Party[N].Gold;
+        Party[N].Gold:=0;
+     End;
+  If Sum<0 then Sum:=MaxInt;  { If overflow }
+  Pool_Gold:=Sum;
+End;
+
+(******************************************************************************)
+
+Procedure Print_Menu (Character: Character_Type);
+
+Begin
+   SMG$Begin_Display_Update (BottomDisplay);
+   SMG$Erase_Display (BottomDisplay);
+   SMG$Set_Cursor_ABS (BottomDisplay,2,1);
+   SMG$Put_Line (BottomDisplay,'Welcome ',2);
+   SMG$Put_Chars (BottomDisplay,Character.Name+'',2,9,0,1);
+   SMG$Put_Line (BottomDisplay,', thou hast '+ String(Character.Gold)+' Gold Pieces.');
+   SMG$Put_Line (BottomDisplay,'What wouldst thou like to do?',2);
+   SMG$Put_Line (BottomDisplay,'[B]  Buy an item');
+   SMG$Put_Line (BottomDisplay,'[S]  Sell an item');
+   SMG$Put_Line (BottomDisplay,'[U]  Have an item uncursed');
+   SMG$Put_Line (BottomDisplay,'[I]  Have an item identified');
+   SMG$Put_Line (BottomDisplay,'[P]  Pool thine party''s gold');
+   SMG$Put_Line (BottomDisplay,'[E]  Exit my shop',2);
+   SMG$Put_Line (BottomDisplay,'Which?',0);
+   SMG$End_Display_Update (BottomDisplay);
+End;
+
+(******************************************************************************)
+
+Procedure Enter_Store (Var Character: Character_Type; Var Party: Party_Type;  Party_Size: Integer);
+
+Var
+   Answer: Char;
+
+Begin
+   Repeat
+      Begin
+
+          { Print a menu of available options }
+
+          Print_Menu (Character);
+
+          { Get Sophie's choice }
+
+          Answer:=Make_Choice(['B','S','U','I','P','E']);
+
+          { Handle it }
+
+          Case Answer of
+             'B': Buy_Item (Character);
+             'S': Sell_Item (Character);
+             'U': Uncurse_Item (Character);
+             'I': Identify_Item (Character);
+             'P': Character.Gold:=Pool_Gold (Party,Party_Size);
+             'E': ;
+          End;
+      End;
+   Until Answer='E';
+End;
+
+(******************************************************************************)
+
+Procedure Print_Store_Heading (Party_Size: Integer);
+
+Begin
+   SMG$Begin_Display_Update (BottomDisplay);
+   SMG$Erase_Display (BottomDisplay);
+   SMG$Set_Cursor_ABS (BottomDisplay,2,1);
+   SMG$Put_Line (BottomDisplay,'Welcome to Gisele''s Trading Post!  Who will enter and try my wares?');
+   SMG$Put_Line (BottomDisplay,'(1-'+String(Party_Size,1)+', [RETURN] exists)',0);
+   SMG$End_Display_Update (BottomDisplay);
+End;
+
+(******************************************************************************)
 
 [Global]Procedure Run_Trading_Post (Var Party: Party_Type;  Party_Size: Integer);
 
+Var
+   Person: Integer;
+   Location: [External]Place_Type;
+
+[External]Function Pick_Character_Number (Party_Size: Integer; Current_Party_Size: Integer:=0;
+                                          Time_Out: Integer:=-1; Time_Out_Char: Char:='0'): [Volatile]Integer;External;
+
 Begin { Run Trading Post }
+   Person:=0;
+   Repeat
+      Begin
+         Print_Store_Heading (Party_Size);
 
-{ TODO: Enter this code }
+         If Not Can_Play then Person:=0
+         Else                 Person:=Pick_Character_Number (Party_Size);
 
+         If Person<>0 then
+            If (Party[Person].Status in [Healthy,Poisoned,Insane]) then
+               Enter_Store (Party[Person],Party,Party_Size);
+      End;
+   Until Person=0;
+   Location:=InKyrn;
 End;  { Run Trading Post }
 End.  { Trading Post }
