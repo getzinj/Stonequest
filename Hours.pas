@@ -22,21 +22,148 @@ Value
 
 (******************************************************************************)
 
+Procedure Create_Hours_File;
 
-{ TODO: Enter this code }
+Var
+   i1: Integer;
+
+[External]Procedure exit (xstatus: Integer:=1);External;
+
+Begin
+   Open(HoursFile,file_name:='HOURS.DAT',organization:=SEQUENTIAL,history:=NEW,sharing:=READWRITE,error:=CONTINUE);
+   If Status(HoursFile) = PAS$K_SUCCESS then
+      Begin
+         ReWrite(HoursFile,error:=continue);
+         Writeln(HoursFile,'   Stonequest operating hours are:');
+         Writeln(HoursFile,'   |    AM     |    PM     |');
+         Writeln(HoursFile,'   1         111         111');
+         Writeln(HoursFile,'   2123456789012123456789012');
+         For i1:=1 to 7 do
+            Writeln(HoursFile,Days[i1]);
+         Writeln (HoursFile,'     (X=Open;  .=Closed)');
+         Close(HoursFile,error:=CONTINUE);
+      End
+   Else
+      Exit;
+End;
+
+(******************************************************************************)
+
+Procedure Read_Hours_From_File;
+
+Var
+   Day_Test,In_Line: Line;
+
+Begin
+   Reset (HoursFile);
+   Repeat
+      Begin
+         ReadLn (HoursFile,in_line,error:=CONTINUE);
+         If in_Line.length>3 then
+            Begin
+               day_test:=substr(in_line,1,4);
+               If       (day_test='SUN:') then days[1]:=in_line
+               Else if  (day_test='MON:') then days[2]:=in_line
+               Else if  (day_test='TUE:') then days[3]:=in_line
+               Else if  (day_test='WED:') then days[4]:=in_line
+               Else if  (day_test='THU:') then days[5]:=in_line
+               Else if  (day_test='FRI:') then days[6]:=in_line
+               Else if  (day_test='SAT:') then days[7]:=in_line;
+            End;
+      End;
+   Until EOF(HoursFile);
+   Close (HoursFile,error:=CONTINUE);
+End;
+
+(******************************************************************************)
+
+Procedure Read_In_Hours;
+
+Begin
+   Open(HoursFile,'HOURS.DAT',history:=READONLY,sharing:=READWRITE,error:=CONTINUE);
+   If Status(HoursFile)=PAS$K_SUCCESS then Read_Hours_From_File
+   Else                                    Create_Hours_File;
+End;
+
+(******************************************************************************)
+[External]Function SYS$GETTIM (%Ref Time:$UQuad): Integer;External;
+[External]Function LIB$DAY_OF_WEEK (%Ref Time:$UQuad; Var Day1: Unsigned):unsigned;External;
+(******************************************************************************)
+
+Procedure Get_Time (Var Day,Hour,Minutes: [Unsafe]Integer);
+
+Var
+  Day1: Unsigned;
+  TimeQ: $UQuad;
+  TimeX: Packed Array [1..11] of Char;
+
+Begin
+   Time(TimeX);
+   ReadV (SubStr(TimeX,1,2),Hour);
+   ReadV (SubStr(TimeX,4,2),Minutes);
+   SYS$GETTIM (TimeQ);
+   LIB$DAY_OF_WEEK (TimeQ,Day1);
+   Day1:=Day1+1;
+   If Day=8 then Day:=1;
+End;
+
+(******************************************************************************)
+
+Function Valid_Time (Day,Hour: Integer;  Minute: Integer:=0):Boolean;
+
+Var
+  Temp: Line;
+
+Begin
+  Temp:=Days[Day];
+  Valid_Time:=Temp[Hour+5]='x';
+End;
+
+(******************************************************************************)
 
 [Global]Function Legal_Time: [Volatile]Boolean;
 
+Var
+  Day,Hour,Minutes: Integer;
+
 Begin
-  { TODO: Enter this code }
-  Legal_Time:=True;
+  Read_in_Hours;
+  Get_Time (Day,Hour,Minutes);
+  Legal_Time:=Valid_Time (Day,Hour,Minutes);
 End;
 
+(******************************************************************************)
+
+Procedure Next_Hour (Var Day,Hour: Integer);
+
+Begin
+   If Hour=23 then
+      Begin
+         If Day=7 then Day:=1
+         Else          Day:=Day+1;
+         Hour:=0;
+      End
+   Else
+      Hour:=Hour+1;
+End;
+
+(******************************************************************************)
 
 [Global]Function Minutes_Until_Closing: [Volatile]Integer;
 
+Var
+  Legal_Time: Boolean;
+  Day,Hour,Minutes: Integer;
+
 Begin
-  { TODO: Enter this code }
-   Minutes_Until_Closing:=0;
+   Read_in_Hours;
+   Get_Time (Day,Hour,Minutes);
+
+   Next_Hour (Day,Hour);
+
+   Legal_Time:=Valid_Time(Day,Hour);
+
+   If Legal_Time then Minutes_Until_Closing:=0
+   Else               Minutes_Until_Closing:=60-Minutes;
 End;
 End.  { Hours }
