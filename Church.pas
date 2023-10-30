@@ -218,13 +218,263 @@ End;
 
 (******************************************************************************)
 
-{ TODO: Enter this code }
+Procedure Dispel_Character (Var Character: Character_Type);
+
+Var
+  T: Line;
+
+Begin
+   Character.Status:=Ashes;
+   Character.Curr_HP:=0;
+   T:=Character.Name + ' is dispelled!!';
+   SMG$Put_Chars (BottomDisplay,T,11,40-(T.length div 2));
+   Delay (2);
+End;
+
+(******************************************************************************)
+
+Procedure Heal_Character (Var Character: Character_Type);
+
+Var
+  T: Line;
+
+Begin
+   Character.Status:=Healthy;
+   T:=Character.Name + ' is healed!!';
+   SMG$Put_Chars (BottomDisplay,T,11,40-(T.length div 2));
+   Delay (2);
+End;
+
+(******************************************************************************)
+
+Procedure Help_Character (Var Character: Character_Type; Payer,Price: Integer; Var Party: Party_Type);
+
+Begin
+   Mumbo_Jumbo;
+   SMG$Erase_Line (BottomDisplay,11);
+   If Character.Status=Zombie then
+     Dispel_Character (Character)
+   Else if Alive (Character) then
+      Heal_Character (Character)
+   Else
+      Raise_Character (Character);
+
+   Character.Regenerates:=Regenerates(Character);
+
+   Party[Payer].Gold:=Max(Party[Payer].Gold - Price, 0);
+End;
+
+(******************************************************************************)
+
+Procedure Cant_Afford_It;
+
+Begin
+   SMG$Put_Line (BottomDisplay,'* * * Thou canst not pay! * * *',0);
+   Delay (2);
+End;
+
+(******************************************************************************)
+
+Procedure Character_In_Need (Var Character: Character_Type; Cost: Integer; Var Party: Party_Type; Party_Size: Integer);
+
+Var
+   T: Line;
+   Helper: Integer;
+   Done: Boolean;
+
+Begin
+  Done:=False;
+  Repeat
+     Begin
+        SMG$Begin_Display_Update (BottomDisplay);
+        SMG$Erase_Display (BottomDisplay, 5);
+        SMG$Put_Line (BottomDisplay,'It will cost '+String(Cost));
+        T:='Who will pay? (1-'+String(Party_Size)+', [RETURN] exits)';
+        SMG$Put_Line (BottomDisplay,T);
+        SMG$End_Display_Update (BottomDisplay);
+
+        Cursor;
+        Helper:=Pick_Character_Number (Party_Size,Time_Out:=60);
+        No_Cursor;
+
+        If Helper>0 then
+          If Party[Helper].Gold>=Cost then
+             Begin
+                Done:=True;
+                Help_Character (Character,Helper,Cost,Party);
+             End
+          Else
+             Cant_Afford_It
+        Else
+           Done:=True;
+     End;
+  Until Done;
+End;
+
+(******************************************************************************)
+
+Procedure Cant_Be_Helped;
+
+Begin
+   SMG$Put_Chars (BottomDisplay,'* * * There is nothing we can do for thy friend * * *');
+   Delay (2);
+End;
+
+(******************************************************************************)
+
+Procedure Character_Still_in_Party;
+
+
+Begin
+   SMG$Put_Chars (BottomDisplay,'* * * We can not help this character while the body is still in thy party * * *');
+   Delay (2);
+End;
+
+
+(******************************************************************************)
+
+Procedure Never_Heard_of_Him;
+
+
+Begin
+   SMG$Put_Chars (BottomDisplay,'* * * We know not that name! * * *');
+   Delay (2);
+End;
+
+(******************************************************************************)
+
+Procedure Check_Out (Name: Line; Var Party: Party_Type;  Party_Size: Integer);
+
+Var
+   Price,Index: Integer;
+
+Begin
+   Index:=0;
+   If Character_Exists (Name,Index) then
+      If Roster[Index].Lock then
+         Character_Still_in_Party { TODO: Not necessarily true. Character may need to be recovered }
+      Else
+         Begin
+            Price:=Cost(Roster[Index]);
+            If Price=0 then
+               Cant_be_Helped
+            Else
+               Character_In_Need (Roster[Index],Price,Party,Party_Size);
+         End
+   Else
+      If Name<>'' then
+         Never_heard_of_him;
+End;
+
+(******************************************************************************)
+
+Procedure Print_Characters;
+
+Var
+   Slot: Integer;
+
+Begin
+  SMG$Erase_Display (RosterDisplay);
+  SMG$Put_Line (RosterDisplay,'   Name           Class         Level        Status');
+  For Slot:=1 to 20 do
+     If (Not (Roster[Slot].Status in [Deleted,Healthy])) and (Roster[Slot].Lock<>True) then
+        Begin
+           SMG$Put_Chars (RosterDisplay,'   '+Pad(Roster[Slot].Name,' ',20)+' '+AlignName[Roster[Slot].Alignment][1]+'-');
+           SMG$Put_Chars (RosterDisplay,Pad(ClassName[Roster[Slot].Class],' ',13)+'   '+String(Roster[Slot].Level,3));
+           SMG$Put_Line  (RosterDisplay,'       '+StatusName[Roster[Slot].Status]);
+        End;
+End;
+
+(******************************************************************************)
+
+Procedure Print_Valid_Characters;
+
+Begin
+   Print_Characters;
+   SMG$Put_Chars (RosterDisplay,'Press any key to continue',21,28,,1);
+   SMG$Paste_Virtual_Display (RosterDisplay,Pasteboard,2,2);
+
+   { Erase the '?' that was entered at the prompt }
+   SMG$Put_Chars (BottomDisplay,' ',4,5);
+
+   Wait_Key;
+
+   SMG$Unpaste_Virtual_Display (RosterDisplay,Pasteboard);
+End;
+
+(******************************************************************************)
+
+Procedure Initialize;
+
+Begin
+  SMG$Create_Virtual_Display (22,78,RosterDisplay,1);
+  SMG$Label_Border (RosterDisplay,' Unfortunate Characters ',SMG$K_TOP);
+End;
+
+(******************************************************************************)
+
+Procedure Quit;
+
+Begin
+   SMG$Delete_Virtual_Display (RosterDisplay);
+   Update_High_Scores (User_Name);
+End;
+
+(******************************************************************************)
+
+Procedure Print_Heading (Chosen_Cleric: Integer);
+
+Begin
+  SMG$Begin_Display_Update (BottomDisplay);
+  SMG$Erase_Display (BottomDisplay);
+  SMG$Set_Cursor_ABS (BottomDisplay,2,1);
+  SMG$Put_Line (BottomDisplay,'Welcome to the Church of Devoted Healers! I''m '+Cleric_Name[Chosen_Cleric]+'.');
+  SMG$Put_Line (BottomDisplay,'Whom shall I help?');
+  SMG$End_Display_Update (BottomDisplay);
+End;
+
+(******************************************************************************)
+
+Function Enter_Name: [Volatile]Line;
+
+Var
+   Name: Line;
+
+Begin
+  If Can_Play then
+     Begin
+        Cursor;
+        SMG$Read_String (Keyboard,Name,Display_Id:=BottomDisplay,Prompt_String:='--->');
+        No_Cursor;
+     End
+  Else
+     Name:='';
+  Enter_Name:=Name;
+End;
+
+(******************************************************************************)
 
 [Global]Procedure Run_Church (Var Party: Party_Type; Party_Size: Integer);
 
+Var
+  Name: Line;
+  Cleric_Chosen: Integer;
+
 Begin { Church }
-
-{ TODO: Enter this code }
-
+  Cleric_Chosen:=Roll_Die(8);
+  Initialize;
+  Repeat
+    Begin
+       Print_Heading (Cleric_Chosen);
+       Name:=Enter_Name;
+       SMG$Set_Cursor_ABS (BottomDisplay, 5, 1); { TODO: Check coordinates. Photo of printout was fuzzy. }
+       If Name<>'?' then
+         Check_out (Name,Party,Party_Size)
+       Else
+         Print_Valid_Characters;
+    End;
+  Until Name='';
+  Quit;
+  Location:=InKyrn;
 End;  { Church }
 End.  { Church }
