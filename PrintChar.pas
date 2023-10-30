@@ -353,13 +353,6 @@ Begin
 End;
 
 
-Procedure Drop_Item (Var Character: Character_Type);
-
-Begin
-  { TODO: Enter this code }
-End;
-
-
 Procedure Item_Breaks (Character: Character_Type; Var Equipment: Equipment_Type);
 
 Begin
