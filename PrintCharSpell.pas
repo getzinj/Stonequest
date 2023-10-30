@@ -7,22 +7,34 @@ Const
     Done_It = '* * * Done! * * *';
 
 Var
+   No_Magic:                    [External]Boolean;
+   Maze:                        [External]Level;
    Spell:                       [External]Array [Spell_Name] of Varying [4] of Char;
    PosX,PosY,PosZ:              [Byte,External]0..20;
-   ScreenDisplay,keyboard:      [External]Unsigned;
+   Rounds_Left:                 [External]Array [Spell_Name] of Unsigned;
+   SpellDisplay: Unsigned;
+   ScreenDisplay,keyboard,pasteboard,campdisplay,optionsdisplay,characterdisplay: [External]Unsigned;
+   CommandsDisplay,spellsdisplay,messagedisplay,monsterdisplay,viewdisplay,GraveDisplay: [External]Unsigned;
 
 (******************************************************************************)
+[External]Function Spell_Duration (Spell: Spell_Name; Caster_Level: Integer):Integer;External;
+[External]Function Get_Level (Level_Number: Integer; Maze: Level; PosZ: Vertical_Type:=0): [Volatile]Level;External;
 [External]Function Choose_Item (Character: Character_Type; Action: Line): [Volatile]Integer;External;
 [External]Function Random_Number (Die: Die_Type): [Volatile]Integer;External;
 [External]Function  Made_Roll (Needed: Integer): [Volatile]Boolean;external;
 [External]Function Roll_Die (Die_Type: Integer): [Volatile]Integer;External;
+[External]Procedure Race_Adjustments (Var Character: Character_Type; Race: Race_Type);External;
 [External]Function Alive (Character: Character_Type): Boolean;External;
 [External]Procedure No_Cursor;External;
 [External]Procedure Cursor;External;
+[External]Function Make_Choice (Choices: Char_Set;  Time_Out:  Integer:=-1;
+    Time_Out_Char: Char:=' '): Char;External;
+[External]Function  String(Num: Integer;  Len: Integer:=0):Line;External;
 [External]Function Center_Text (Txt: Line;  Line_Length: Integer:=80): Integer;External;
 [External]Function Choose_Character (Txt: Line; Party: Party_Type;  Party_Size: Integer; HP: Boolean:=False;
                                    Items: Boolean:=False): [Volatile]Integer;External;
 [External]Function  Regenerates (Character: Character_Type; PosZ: Integer:=0):Integer;external;
+[External]Procedure Get_Rid_of_Item (Var Character: Character_Type; Which_Item: Integer);External;
 (******************************************************************************)
 
 Procedure Select_Camp_Spell (Var SpellChosen: Spell_Name);
@@ -262,7 +274,368 @@ Var
    Character: Character_Type;
 
 Begin
-   { TODO: Enter this code }
+   Casted:=False;
+   Char_Num:=Choose_Character ('Cast spell on whose item?',Party,Party_Size);
+   If Char_num>0 then
+      Begin
+         Character:=Party[Char_Num];
+         Item:=Choose_Item (Character,'Uncurse');
+         If (Item>0) and (Character.Item[Item].Cursed) then
+            Begin
+                 Casted:=True;
+                 Chance:=85; { TODO: Make constant }
+                 If Made_Roll (Chance) then
+                    Begin
+                        SMG$Put_Chars (ScreenDisplay,Success,23,Center_Text(Success));
+                        Get_Rid_of_Item (Character,Item);
+
+                        Party[Char_Num]:=Character;
+                    End
+                 Else
+                    SMG$Put_Chars (ScreenDisplay,Failure,23,Center_Text(Failure));
+            End
+         Else
+            SMG$Put_Chars (ScreenDisplay,'* * * That item is not cursed * * *',23,40-(35 div 2));
+      End;
+End;
+
+(******************************************************************************)
+
+Procedure Change_Race (Var Race: Race_Type);
+
+Var
+  Advance: Integer;
+
+Begin
+  For advance:=1 to Roll_Die(20) do
+    If Ord(Race)=1 then
+       Race:=Numenorean
+    Else
+       Race:=Pred(Race);
+End;
+
+(******************************************************************************)
+
+Procedure Handle_Raise_Spell (Spell: Spell_Name; Var Casted: Boolean; Var Party: Party_Type; Party_Size: Integer);
+
+Var
+  Temp: Race_Type;
+  Recipient,Chance: Integer;
+  Target: Character_Type;
+  MadeIt,LostIt: Array [1..5] of Line;
+  T: Line;
+
+Begin
+   Casted:=False;
+   MadeIt[1]:='* * * Excelsior! * * *';   LostIt[1]:='* * * Oops! * * *';
+   MadeIt[2]:='* * * Mazel tov! * * *';   LostIt[2]:='* * * Yikes! * * *';
+   MadeIt[3]:='* * * Hallelujah! * * *';  LostIt[3]:='* * * Uh oh! * * *';
+   MadeIt[4]:='* * * Yippee! * * *';      LostIt[4]:='* * * Whoops! * * *';
+   MadeIt[5]:='* * * Hooray! * * *';      LostIt[5]:='* * * Gads! * * *';
+
+   Recipient:=Choose_Character ('Cast spell on whom?',Party,Party_Size,TRUE);
+
+   If Recipient>0 then
+      Begin
+         Target:=Party[Recipient];
+
+         Case Spell of
+              Rein: Case Target.Status of
+                        Healthy: Chance:=0;
+                        Ashes: Chance:=5;
+                        Dead: Chance:=85;
+                        Otherwise Chance:=0;
+                    End;
+              Raze: Case Target.Status of
+                       Healthy: Chance:=0;
+                       Ashes: Chance:=0;
+                       Dead: Chance:=90;
+                       Otherwise Chance:=0;
+                   End;
+              Ress: Case Target.Status of
+                     Healthy: Chance:=0;
+                     Ashes,Dead: Chance:=90;
+                     Otherwise Chance:=0;
+                 End;
+         End;
+
+         If (Target.Age_Status=Croak) or (Target.Max_HP<1) then
+            Chance:=0;
+
+         If Chance>0 then
+            Begin
+               If Made_Roll (Chance) then
+                  Begin
+                     If Spell=Rein then
+                        Begin
+                           Temp:=Target.Race;
+                           Change_Race (Temp);
+                           Race_Adjustments (Target,Temp);
+                           Target.Race:=Temp;
+                        End;
+
+                     Target.Status:=Healthy;
+                     Target.Experience:=Target.Experience+100;
+
+                     Case Spell of
+                        Rein,Ress: Target.Curr_HP:=Target.Max_HP;
+                        Raze:      Target.Curr_HP:=1;
+                     End;
+
+                     T:=MadeIt[Roll_Die(5)];
+                  End
+               Else
+                  Begin
+                     Case Target.Status of
+                       Dead: Target.Status:=Ashes;
+                       Ashes: Target.Status:=Deleted;
+                     End;
+                     T:=LostIt[Roll_Die(5)];
+                  End
+            End
+         Else
+            T:='* * * Unaffected! * * *';
+
+         SMG$Put_Chars (ScreenDisplay,T,23,Center_Text(T));
+
+         Party[Recipient]:=Target;
+
+         Casted:=True;
+      End;
+End;
+
+(******************************************************************************)
+
+Procedure Handle_Party_Heal (Var Party: Party_Type;  Party_Size: Integer);
+
+Var
+  Temp,Loop: Integer;
+
+Begin
+   For Loop:=1 to Party_Size do
+      Begin
+         Temp:=(Party[Loop].Max_HP)-(Party[Loop].Curr_HP); { Number of points needed to bring to character to full health }
+         Temp:=Temp div 2;
+         If Not(Alive(Party[Loop])) or (Party[Loop].Status=Zombie) then
+            Temp:=0
+         Else
+            Party[Loop].Status:=Healthy;
+
+         Party[Loop].Curr_HP:=Min(Party[Loop].Curr_HP + Temp,Party[Loop].Max_HP);
+      End;
+   SMG$Put_Chars (ScreenDisplay,Done_It,23,32);
+End;
+
+(******************************************************************************)
+
+Procedure Compass (Caster_Level: Integer; Var Casted: Boolean);
+
+Begin
+   Rounds_Left[Comp]:=Rounds_Left[Comp]+Spell_Duration(Comp,Caster_Level);
+   Casted:=True;
+   SMG$Put_Chars (ScreenDisplay,Done_It,23,32);
+End;
+
+(******************************************************************************)
+
+Procedure Handle_Light_Spell (Caster_Level: Integer; Spell: Spell_Name);
+
+Begin
+   Rounds_Left[Spell]:=Rounds_Left[Spell]+Spell_Duration(Spell,Caster_Level);
+   SMG$Put_Chars (ScreenDisplay,Done_It,23,32);
+End;
+
+(******************************************************************************)
+
+Procedure Handle_Levitate_Spell (Caster_Level: Integer);
+
+Begin
+   Rounds_Left[Levi]:=Rounds_Left[Levi]+Spell_Duration(Levi,Caster_Level);
+   SMG$Put_Chars (ScreenDisplay,Done_It,23,32);
+End;
+
+(******************************************************************************)
+
+Procedure Handle_Detect_Special (Caster_Level: Integer; Var Casted: Boolean);
+
+Begin
+   Rounds_Left[DetS]:=Rounds_Left[DetS]+Spell_Duration(DetS,Caster_Level);
+   Casted:=True;
+   SMG$Put_Chars (ScreenDisplay,Done_It,23,32);
+End;
+
+(******************************************************************************)
+
+Procedure Fizzled_out;
+
+Begin
+   SMG$Put_Chars (ScreenDisplay,'* * * It Fizzeled Out! * * *',23,26);
+End;
+
+(******************************************************************************)
+
+Procedure Handle_Location_Spell (Direction: Direction_Type);
+
+Var
+   T: Line;
+
+Begin
+   SMG$Create_Virtual_Display (7,78,SpellDisplay,1);
+   SMG$Label_Border (SpellDisplay,'Location',SMG$K_TOP);
+
+   If PosZ<>10 then
+      Begin
+         SMG$Put_Chars (SpellDisplay,'The party is facing ');
+         Case Direction of
+            North: SMG$Put_Chars (SpellDisplay,'north');
+            South: SMG$Put_Chars (SpellDisplay,'south');
+            East: SMG$Put_Chars (SpellDisplay,'east');
+            West: SMG$Put_Chars (SpellDisplay,'west');
+         End;
+         SMG$Put_Line (SpellDisplay,'.  Thou art '+String(PosX-1)+' squares East, '+String(20-PosY)+' squares North, and '+String(PosZ)+' levels down.');
+      End
+   Else
+      Begin
+        T:='Powerful magiks prevent this spell from working here.';
+        SMG$Put_Chars (SpellDisplay,T,2,Center_Text(T,78));
+      End;
+
+   SMG$Put_Chars (SpellsDisplay,'Press [RETURN] to exit',7,1);
+
+   SMG$Paste_Virtual_Display (SpellDisplay,Pasteboard,2,2);
+
+   Make_Choice([CHR(13)]);
+
+   SMG$Unpaste_Virtual_Display (SpellDisplay,Pasteboard);
+   SMG$Delete_Virtual_Display (SpellDisplay);
+End;
+
+(******************************************************************************)
+
+Procedure Word_of_Recall (Var Leave_Maze: Boolean);
+
+Begin
+   Leave_Maze:=True;
+   Rounds_Left[WoRe]:=1;
+
+   SMG$Unpaste_Virtual_Display(CampDisplay,Pasteboard);
+   SMG$Unpaste_Virtual_Display(OptionsDisplay,Pasteboard);
+   SMG$Unpaste_Virtual_Display(CharacterDisplay,Pasteboard);
+   SMG$Unpaste_Virtual_Display(CommandsDisplay,Pasteboard);
+   SMG$Unpaste_Virtual_Display(SpellsDisplay,Pasteboard);
+   SMG$Unpaste_Virtual_Display(MessageDisplay,Pasteboard);
+   SMG$Unpaste_Virtual_Display(MonsterDisplay,Pasteboard);
+   SMG$Unpaste_Virtual_Display(ViewDisplay,Pasteboard);
+End;
+
+(******************************************************************************)
+
+Procedure Bounced (Var Squished: Boolean; Var T: Line);
+
+Begin
+  Squished:=False;
+  T:='* * * Thou bounced back to where thou were! * * *';
+End;
+
+
+(******************************************************************************)
+
+Procedure In_Rock (Var Squished: Boolean; Var T: Line);
+
+Begin
+  Squished:=True;
+  T:='* * * Thou materialized in rock! * * *';
+End;
+
+(******************************************************************************)
+
+Procedure Too_High (Var Squished: Boolean; Var T: Line);
+
+Begin
+  Squished:=True;
+  T:='* * * Thou materialized above Kyrn and fell to thy death! * * *';
+End;
+
+(******************************************************************************)
+
+Function Teleport_To (X,Y,Z: Integer; Var Squished: Boolean; Var Leave_Maze: Boolean): Line;
+
+Var
+   T: Line;
+   Temp: Level;
+   Spec: Special_Type;
+
+Begin
+  T:='';
+  Squished:=False;
+  If (X<1) or (X>20) or (Y<1) or (Y>20) or (Z>19) then
+      In_Rock (Squished, T)
+  Else If Z<0 then
+      Too_High (Squished, T)
+  Else If (Z=0) and (((X=1) and (Y=20)) or ((X=0) and (Y=0))) then
+     Word_of_Recall (Leave_Maze) { Teleported to Kyrn }
+  Else
+     Begin
+        Temp:=Get_Level (Z,Maze,PosZ);
+        Spec:=Temp.Special_Table[Temp.Room[X,Y].Contents];
+        If Spec.Special=Rock then
+           In_Rock (Squished,T)
+        Else if (Spec.Special=AntiMagic) or ((Z>9) and (PosZ<>Z)) then
+           Bounced (Squished,T)
+        Else
+           Begin
+              T:=Done_It;
+              PosX:=X;  PosY:=Y;  PosZ:=Z;
+              Maze:=Temp;
+              No_Magic:=False;
+           End;
+     End;
+  Teleport_To:=T;
+End;
+
+(******************************************************************************)
+
+Procedure Print_Place (Delta_X, Delta_Y, Delta_Z: Integer);
+
+Begin
+  SMG$Begin_Display_Update (SpellsDisplay);
+  SMG$Erase_Display (SpellsDisplay);
+
+  If DeltaY>0 then
+     Begin
+        SMG$Put_Chars (SpellDisplay,'South: ');
+        SMG$Put_Line  (SpellDisplay,String(Delta_Y,2) + '  (  Up arrow / Down arrow )');
+     End
+  Else
+     Begin
+        SMG$Put_Chars (SpellDisplay,'North: ');
+        SMG$Put_Line  (SpellDisplay,String(Delta_Y * -1,2) + '  (  Up arrow / Down arrow )');
+     End;
+
+  If DeltaX>-1 then
+     Begin
+        SMG$Put_Chars (SpellDisplay,'East: ');
+        SMG$Put_Line  (SpellDisplay,String(Delta_X,2) + '  (  Left arrow / Right arrow )');
+     End
+  Else
+     Begin
+        SMG$Put_Chars (SpellDisplay,'West: ');
+        SMG$Put_Line  (SpellDisplay,String(Delta_X * -1,2) + '  (  Left arrow / Right arrow )');
+     End;
+
+  If DeltaZ>-1 then
+     Begin
+        SMG$Put_Chars (SpellDisplay,'Down: ');
+        SMG$Put_Line  (SpellDisplay,String(Delta_Z,2) + '  (  U / D )');
+     End
+  Else
+     Begin
+        SMG$Put_Chars (SpellDisplay,'Up:   ');
+        SMG$Put_Line  (SpellDisplay,String(Delta_Z * -1,2) + '  (  U / D )');
+     End;
+
+  SMG$Put_Chars (SpellDisplay,'Arrows + U,D to select relative position. [RETURN] accepts, <SPACE> aborts!');
+  SMG$End_Display_Update (SpellDisplay);
 End;
 
 (******************************************************************************)

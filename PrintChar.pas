@@ -25,7 +25,7 @@ Type
    Choice_Array    = Array [Item_Type] of ItemSet;
 
 Var
-   No_Magic:     Boolean;
+   No_Magic:     [Global]Boolean;
    Camp_Spells:  Set of Spell_Name;
    SpellDisplay: Unsigned;
    ScreenDisplay,keyboard,pasteboard,campdisplay,optionsdisplay,characterdisplay: [External]Unsigned;
@@ -288,7 +288,7 @@ End;  { Choose Character }
 
 (******************************************************************************)
 
-Procedure Get_Rid_of_Item (Var Character: Character_Type; Which_Item: Integer);
+[Global]Procedure Get_Rid_of_Item (Var Character: Character_Type; Which_Item: Integer);
 
 Var
    Loop: Integer;
