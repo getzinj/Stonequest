@@ -131,26 +131,6 @@ Begin { Center Text }
    Center_Text:=Half-Indent;
 End;  { Center Text }
 
-
-(******************************************************************************)
-
-Procedure Handle_Party_Spell (Caster_Level: Integer; Spell: Spell_Name; Var Party: Party_Type; Party_Size: Integer);
-
-Var
-  Add: Integer;
-  Position: Integer;
-
-Begin
-   Case Spell of
-        DiPr: Add:=2;
-        HgSh: Add:=4;
-   End;
-   Rounds_Left[Spell]:=Rounds_Left[Spell]+Spell_Duration (Spell,Caster_Level);
-   For Position:=1 to Party_Size do
-      Party[Position].Armor_Class:=Party[Position].Armor_Class-Add;
-   SMG$Put_Chars (ScreenDisplay,Done_It,23,32);
-End;
-
 (******************************************************************************)
 
 Procedure Print_Item (Character: Character_Type; Position: Integer);
@@ -318,6 +298,36 @@ Begin
      For Loop:=Which_Item to Character.No_of_Items-1 do
          Character.Item[Loop]:=Character.Item[Loop+1];
   Character.No_of_Items:=Max(Character.No_of_Items - 1, 0);
+End;
+
+(******************************************************************************)
+
+Procedure Drop_Item (Var Character: Character_Type);
+
+
+Var
+  Num: Integer;
+
+Begin
+   Num:=Choose_Item (Character, 'Drop');
+   If Num<>0 then
+     If Character.Item[Num].Cursed then
+        Begin
+           SMG$Put_Line (ScreenDisplay,'That item is cursed.',0);
+           Delay(1);
+        End
+     Else If Character.Item[Num].Equipted then
+        Begin
+           SMG$Put_Line (ScreenDisplay,'That item is equipped.',0);
+           Delay(1);
+        End
+     Else
+        Begin
+           Get_Rid_of_Item (Character,Num);
+           Print_Equipment (Character);
+           SMG$Put_Line (ScreenDisplay,'Dropped.',0);
+           Delay(1);
+        End;
 End;
 
 (******************************************************************************)

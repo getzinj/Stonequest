@@ -50,6 +50,25 @@ End;  { Select Camp Spell }
 
 (******************************************************************************)
 
+Procedure Handle_Party_Spell (Caster_Level: Integer; Spell: Spell_Name; Var Party: Party_Type; Party_Size: Integer);
+
+Var
+  Add: Integer;
+  Position: Integer;
+
+Begin
+   Case Spell of
+        DiPr: Add:=2;
+        HgSh: Add:=4;
+   End;
+   Rounds_Left[Spell]:=Rounds_Left[Spell]+Spell_Duration (Spell,Caster_Level);
+   For Position:=1 to Party_Size do
+      Party[Position].Armor_Class:=Party[Position].Armor_Class-Add;
+   SMG$Put_Chars (ScreenDisplay,Done_It,23,32);
+End;
+
+(******************************************************************************)
+
 Procedure Handle_ID_Spell (Spell: Spell_Name;  Var Character: Character_Type; Var Casted: Boolean);
 
 Var
@@ -232,6 +251,18 @@ Begin
          SMG$Put_Chars (ScreenDisplay,T,23,Center_Text(T));
          Party[Recipient]:=Target;
       End;
+End;
+
+(******************************************************************************)
+
+Procedure Handle_Uncurse_Spell (Spell: Spell_Name; Var Casted: Boolean; Var Party: Party_Type;  Var Party_Size: Integer);
+
+Var
+   Char_Num,Item,Chance: Integer;
+   Character: Character_Type;
+
+Begin
+   { TODO: Enter this code }
 End;
 
 (******************************************************************************)
