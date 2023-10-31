@@ -398,6 +398,72 @@ End;  { Print Wins }
 
 (******************************************************************************)
 
+Function Usable_Item (Character: Character_Type; Item: Item_Record): Boolean;
+
+Var
+   Temp: Boolean;
+
+Begin
+   Temp:=(Character.Class in Item.Usable_By) or (Character.PreviousClass in Item.Usable_By);
+   Temp:=Temp and ((Character.Alignment=Item.Alignment) or (Item.Alignment=NoAlign));
+   Usable_Item:=Temp;
+End;
+
+(******************************************************************************)
+
+Procedure Item_Breaks (Character: Character_Type;  Var Equipment: Equipment_Type);
+
+Var
+   Old_Item: Item_Record;
+
+Begin
+   Old_Item:=Item_List[Equipment.Item_Num];
+
+   Equipment.Item_num:=Old_Item.Turns_Into;
+   Equipment.Cursed:=False;
+   Equipment.Ident:=False;
+   Equipment.Equipted:=False;
+   Equipment.Usable:=Usable_Item (Character.Item_List[Equiptment.Item_Num]);
+End;
+
+(******************************************************************************)
+
+Procedure Collect_Items (Var Character: Character_Type;  Var Choices: Choice_Array);
+
+Var
+   Item: Item_Record;
+   Item_Kind: Item_Type;
+   Item_No,Num: Integer;
+   Temp: ItemSet;
+
+Begin
+   Choices:=Zero;
+   Num:=Character.No_of_Items;
+   For Item_No:=1 to Num do
+      Begin
+         Item:=Item_List[Character.Item[Item_No].Item_Num];
+         If Not (Character.item[Item_no].Cursed) and Usable_Item (Character.Item) then
+            Begin
+               Item_Kind:=Item.Kind;
+               New (Temp);
+               Temp^.Identified:=Character.Item[Item_No].Ident;
+               Temp^.Next_Item:=Choices[Item_Kind];
+               Temp^.Item_Num:=Item.Item_Number;
+               Temp^.Position:=Item_No;
+
+               Choices[Item_Kind]:=Temp;
+            End;
+      End;
+
+   For Item_No:=1 to Num do
+      If Character.Item[Item_No].Cursed then
+         Choices[Item.Kind]:=Nil
+      Else
+        Character.Item[Item_No].Equipted:=False;
+End;
+
+(******************************************************************************)
+
 { TODO: Enter this code }
 
 Procedure Print_Spell_Points (Character: Character_Type);
