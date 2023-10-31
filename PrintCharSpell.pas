@@ -9,6 +9,8 @@ Const
     Up_Arrow         = CHR(18);            Down_Arrow         = CHR(19);
     Left_Arrow       = CHR(20);            Right_Arrow        = CHR(21);
 
+    Cler_Spell = 1;                        Wiz_Spell  = 2;
+
 Var
    No_Magic:                    [External]Boolean;
    Maze:                        [External]Level;
@@ -18,6 +20,7 @@ Var
    SpellDisplay: Unsigned;
    ScreenDisplay,keyboard,pasteboard,campdisplay,optionsdisplay,characterdisplay: [External]Unsigned;
    CommandsDisplay,spellsdisplay,messagedisplay,monsterdisplay,viewdisplay,GraveDisplay: [External]Unsigned;
+   Camp_Spells:                 [External]Set of Spell_Name;
 
 (******************************************************************************)
 [External]Function Spell_Duration (Spell: Spell_Name; Caster_Level: Integer):Integer;External;
@@ -39,6 +42,8 @@ Var
                                    Items: Boolean:=False): [Volatile]Integer;External;
 [External]Function  Regenerates (Character: Character_Type; PosZ: Integer:=0):Integer;external;
 [External]Procedure Get_Rid_of_Item (Var Character: Character_Type; Which_Item: Integer);External;
+[External]Procedure Find_Spell_Group (Spell: Spell_Name;  Character: Character_Type;  Var Class,Level: Integer);External;
+[External]Function Caster_Level (Cls: Integer; Character: Character_Type): Integer;External;
 (******************************************************************************)
 
 Procedure Select_Camp_Spell (Var SpellChosen: Spell_Name);
@@ -743,21 +748,127 @@ End;
 
 (******************************************************************************)
 
-{ TODO: Enter this code }
+[Global]Procedure Handle_Spell (Var Character: Character_Type; Spell: Spell_Name;  Class,Spell_Level: Integer;  Var Leave_Maze: Boolean;
+                                  Direction: Direction_Type;  Var Party: Party_Type;  Var Party_Size: Integer;  Item_Spell: Boolean:=False);
+
+Var
+  Casted: Boolean;
+  Level: Integer;
+
+Begin
+   Level:=Caster_Level (Class,Character);
+   If Item_Spell then
+      Level:=8;
+
+    Casted:=True;
+
+   If Not No_Magic then
+       Case Spell of
+            PaHe:                                     Handle_Party_Heal (Party,Party_Size);
+            DiPr,HgSh:                                Handle_Party_Spell (Level,Spell,Party,Party_Size);
+            BgId,LtId:                                Handle_ID_Spell (Spell,Character,Casted);
+            UnCu:                                     Handle_Uncurse_Spell (Spell,Casted,Party,Party_Size);
+            Levi:                                     Handle_Levitate_Spell (Level);
+            Lght,CoLi:                                Handle_Light_Spell (Level,Spell);
+            WoRe:                                     Word_of_Recall (Leave_Maze);
+            Tele:                                     Handle_Teleport_Spell(Leave_Maze,Party,Party_Size);
+            Loct:                                     Handle_Location_Spell (Direction);
+            Comp:                                     Compass (Level,Casted);
+            ReFe,CrPa,CrPs,CrLt,CrSe,CrVs,CrCr,Heal:  Handle_Heal_Spell (Spell,Casted,Party,Party_Size);
+            Rein,Ress,Raze:                           Handle_Raise_Spell (Spell,Casted,Party,Party_Size);
+            AnDe:                                     Handle_Animate_Dead_Spell (Casted,Party,Party_Size);
+            DuBl:                                     Handle_Dungeon_Blink;
+            DetS:                                     Handle_Detect_Special (Level,Casted);
+            Otherwise                                 ;
+       End
+   Else
+       Fizzled_Out;
+
+   If Casted and Not Item_Spell then
+      Character.SpellPoints[Class,Spell_Level]:=Max(Character.SpellPoints[Class,Spell_Level]-1,0);
+
+   If Casted and not (Spell in [WoRe,Tele,Loct]) then Delay (2);
+End;
+
+(******************************************************************************)
+
+Procedure Doesnt_Know_Spell;
+
+Var
+  T: Line;
+
+Begin
+  T:='* * * Thou don''t know that spell * * *';
+  SMG$Put_Chars (ScreenDisplay,T,19,Center_Text(T));
+  Delay (2.5);
+End;
+
+(******************************************************************************)
+
+Procedure No_More_SpellPoints;
+
+Var
+  T: Line;
+
+Begin
+   T:='* * * Spell Points exhausted * * *';
+   SMG$Put_Chars (ScreenDisplay,T,19,Center_Text(T));
+   Delay(2.5);
+End;
+
+(******************************************************************************)
+
+Procedure Not_Camp_Spell;
+
+Var
+  T: Line;
+
+Begin
+   T:='* * * Thou canst not cast that spell while in camp * * *';
+   SMG$Put_Chars (ScreenDisplay,T,19,Center_Text(T));
+   Delay(2.5);
+End;
+
+(******************************************************************************)
 
 [Global]Procedure Cast_Camp_Spell (Var Character: Character_Type; Var Leave_Maze: Boolean;  Direction: Direction_Type;
                           Var Party: Party_Type;  Var Party_Size: Integer);
 
-Begin
-   { TODO: Enter this code }
-End;
-
-
-[Global]Procedure Handle_Spell (Var Character: Character_Type; Spell: Spell_Name;  Class,Spell_Level: Integer;  Var Leave_Maze: Boolean;
-                                  Direction: Direction_Type;  Var Party: Party_Type;  Var Party_Size: Integer;  Item_Spell: Boolean:=False);
+Var
+  What_Spell: Spell_Name;
+  Class,Spell_Level: Integer;
+  Spell_Error: Boolean;
 
 Begin
-   { TODO: Enter this code }
-End;
+  Spell_Error:=False;
+  SMG$Erase_Display (ScreenDisplay,19,1);
+  SMG$Put_Line (ScreenDisplay,'Cast what spell?');
 
+  Select_Camp_Spell (What_Spell);
+  SMG$Erase_Display (ScreenDisplay,19,1);
+
+  If What_Spell=NoSp then
+     Begin
+        SMG$Put_Chars (ScreenDisplay,'* * *  What?  * * *',19,20);
+        Delay(1);
+        Spell_Error:=True;
+     End
+  Else If What_Spell<>ReDo then
+     Begin
+        Find_Spell_Group (What_Spell,Character,Class,Spell_Level);
+
+        Spell_Error:=(Spell_Level=10) or (Spell_Level=0);
+        Spell_Error:=Spell_Error or (Class=Cler_Spell) and Not (What_Spell in Character.Cleric_Spells);
+        Spell_Error:=Spell_Error or (Class=Wiz_Spell)  and Not (What_Spell in Character.Wizard_Spells);
+
+        If Spell_Error then
+           Doesnt_Know_Spell
+        Else If Character.SpellPoints[Class,Spell_Level]<1 then
+           No_More_SpellPoints
+        Else If Not (What_Spell in Camp_Spells) then
+           Not_Camp_Spell
+        Else
+           Handle_Spell (Character,What_Spell,Class,Spell_Level,Leave_Maze,Direction,Party,Party_Size);
+     End;
+End;
 End.

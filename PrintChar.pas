@@ -26,7 +26,7 @@ Type
 
 Var
    No_Magic:     [Global]Boolean;
-   Camp_Spells:  Set of Spell_Name;
+   Camp_Spells:  [Global]Set of Spell_Name;
    SpellDisplay: Unsigned;
    ScreenDisplay,keyboard,pasteboard,campdisplay,optionsdisplay,characterdisplay: [External]Unsigned;
    CommandsDisplay,spellsdisplay,messagedisplay,monsterdisplay,viewdisplay,GraveDisplay: [External]Unsigned;
