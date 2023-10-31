@@ -1128,7 +1128,7 @@ Begin { Draw Menu }
        'Graphics designed by David Corn and Jeffrey Getzin',9,15);
    T:='Hit the HELP key at any time for on-line help';
    SMG$Put_Chars (ScreenDisplay,T,10,(40-(T.length div 2)));
-   T:='S)tart Game, L)look at high scores';
+   T:='S)tart Game, L)ook at high scores';
    If Authorized then
       T:=T+', run U)tilities'
    Else
