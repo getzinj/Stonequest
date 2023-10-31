@@ -353,12 +353,6 @@ Begin
 End;
 
 
-Procedure Item_Breaks (Character: Character_Type; Var Equipment: Equipment_Type);
-
-Begin
-  { TODO: Enter this code }
-End;
-
 (******************************************************************************)
 
 Function Scenarios_Won (P: Int_Set): Integer;
@@ -423,7 +417,7 @@ Begin
    Equipment.Cursed:=False;
    Equipment.Ident:=False;
    Equipment.Equipted:=False;
-   Equipment.Usable:=Usable_Item (Character.Item_List[Equiptment.Item_Num]);
+   Equipment.Usable:=Usable_Item (Character,Item_List[Equipment.Item_Num]);
 End;
 
 (******************************************************************************)
@@ -442,7 +436,7 @@ Begin
    For Item_No:=1 to Num do
       Begin
          Item:=Item_List[Character.Item[Item_No].Item_Num];
-         If Not (Character.item[Item_no].Cursed) and Usable_Item (Character.Item) then
+         If Not (Character.item[Item_no].Cursed) and Usable_Item (Character,Item) then
             Begin
                Item_Kind:=Item.Kind;
                New (Temp);
@@ -460,6 +454,37 @@ Begin
          Choices[Item.Kind]:=Nil
       Else
         Character.Item[Item_No].Equipted:=False;
+End;
+
+(******************************************************************************)
+
+Procedure Delete (Node: ItemSet; Var List: ItemSet);
+
+Var
+  Temp: ItemSet;
+
+Begin
+  If List<>Nil then
+     If List=Node then
+        Begin
+           Temp:=List;
+           List:=List^.Next_Item;
+        End
+     Else
+        Begin
+           Temp:=List^.Next_Item;
+           Delete (Node,Temp);
+           List^.Next_Item:=Temp;
+        End;
+End;
+
+(******************************************************************************)
+
+Procedure Print_Centered_Text (L: Line; W: Integer:=80);
+
+Begin
+  SMG$Put_Chars (ScreenDisplay,L,,Center_Text(L));
+  SMG$Put_Line (ScreenDisplay,'');
 End;
 
 (******************************************************************************)
