@@ -304,7 +304,6 @@ End;
 
 Procedure Drop_Item (Var Character: Character_Type);
 
-
 Var
   Num: Integer;
 
@@ -329,66 +328,6 @@ Begin
            Delay(1);
         End;
 End;
-
-(******************************************************************************)
-
-{ TODO: Enter this code }
-
-(******************************************************************************)
-
-{ TODO: Enter this code }
-
-
-Procedure Equip_Character (Var Character: Character_Type);
-
-Begin
-   { TODO: Enter this code }
-End;
-
-
-Procedure Identify_Object (Var Character: Character_Type);
-
-Begin
-   { TODO: Enter this code }
-End;
-
-
-(******************************************************************************)
-
-Function Scenarios_Won (P: Int_Set): Integer;
-
-Var
-   Temp,Loop: Integer;
-
-Begin { Scenarios Won }
-   Temp:=0;
-   For Loop:=0 to 999 do
-      If P[Loop] then Temp:=Temp+1;
-   Scenarios_Won:=Temp;
-End;  { Scenarios Won }
-
-(******************************************************************************)
-
-Function Print_Wins (Character: Character_Type): Line;
-
-{ Indicates how many scenarios this character has beaten }
-
-Var
-   Num,Loop: Integer;
-   T: Line;
-
-Begin { Print Wins }
-   T:='';
-   Num:=Scenarios_Won (Character.Scenarios_Won);
-   If Num>8 then
-      Begin
-         T:='';
-         For Loop:=1 to Num-8 do
-             T:=T+'*';
-      End;
-   Print_Wins:=T;
-End;  { Print Wins }
-
 
 (******************************************************************************)
 
@@ -489,24 +428,418 @@ End;
 
 (******************************************************************************)
 
-{ TODO: Enter this code }
+Function Choose_From_List (Class,Class1: Class_Type;  Var Choices: ItemSet; kind: Item_Type; name: Name_Type): [Volatile]ItemSet;
+
+Var
+   loop,chosen:  Integer;
+   temp,tempPtr: ItemSet;
+   options:      Set of Char;
+   answer:       Char;
+   item:         Item_Record;
+
+Begin
+   SMG$Begin_Display_Update (ScreenDisplay);
+   SMG$Erase_Display (ScreenDisplay);
+
+   Print_Centered_Text ('Please select a '+item_name[kind]+' for '+name);
+
+   Options:=[CHR(13)];
+
+   Loop:=0;
+   tempPtr:=choices;
+
+   While tempPtr<>Nil do
+      Begin
+         loop:=loop+1;
+         item:=Item_List[TempPtr^.Item_Num];
+         If (Class in Item.Usable_By) or (Class1 in Item.Usable_By) then
+            Begin
+               SMG$Put_Chars (ScreenDisplay, '['+CHR(Loop+64)+']   ');
+               If TempPtr^.Identified then
+                  SMG$Put_Line (ScreenDisplay,Item.True_Name)
+               Else
+                  SMG$Put_Line (ScreenDisplay,Item.Name);
+
+              Options:=Options+[CHR(Loop+64)];
+            End;
+         TempPtr:=TempPtr^.Next_Item;
+      End;
+
+   SMG$Put_Line (ScreenDisplay,'Which?',0);
+   SMG$End_Display_Update (ScreenDisplay);
+
+   Answer:=Make_Choice (Options);
+
+   If Answer<>CHR(13) then
+      Begin
+         Chosen:=Ord(Answer)-64;
+
+         TempPtr:=Choices;
+         If Chosen>1 then
+            For Loop:=2 to Chosen do
+               TempPtr:=TempPtr^.Next_Item;
+         Temp:=TempPtr;
+         Delete (TempPtr,Choices);
+      End
+   Else
+      Temp:=Nil;
+
+   Choose_From_List:=Temp;
+End;
+
+(******************************************************************************)
+
+Procedure Select_Item (Var Character: Character_Type;  Kind: Item_Type;  Var Choices: ItemSet);
+
+Var
+   ItemPtr: ItemSet;
+   Item: Item_Record;
+
+Begin
+  If Choices<>Nil then
+     Begin
+        ItemPtr:=Choose_From_List (Character.Class,Character.PreviousClass,Choices,Kind,Character.Name);
+        If ItemPtr<>Nil then
+           Begin
+              Item:=Item_List[ItemPtr^.Item_Num];
+              Character.Item[ItemPtr^.Position].Ident:=ItemPtr^.Identified;
+              Character.Item[ItemPtr^.Position].Cursed:=Item.cursed;
+              Character.Item[ItemPtr^.Position].Equipted:=True;
+              If Character.Item[ItemPtr^.Position].Cursed then
+                 Begin
+                    SMG$Put_Line (ScreenDisplay,'Cursed!!!',1,1);
+                    Ring_Bell (ScreenDisplay,3);
+                    Delay(2)
+                 End
+           End
+     End
+End;
+
+(******************************************************************************)
+
+Function Not_Stuck (Character: Character_Type;  Kind: Item_Type): Boolean;
+
+Var
+   Loop: Integer;
+   Temp: Boolean;
+   Item: Item_Record;
+
+Begin
+  If Character.No_of_Items=0 then
+     Not_Stuck:=True
+  Else
+     Begin
+        Temp:=True;
+        For Loop:=1 to Character.No_of_Items do
+           Begin
+              Item:=Item_List[Character.Item[Loop].Item_Num];
+              If (Character.Item[Loop].Cursed) and (Item.Kind=kind) then
+                 Temp:=False;
+           End;
+       Not_Stuck:=Temp;
+     End;
+End;
+
+(******************************************************************************)
+
+Procedure Redistribute_Remainders (Var Choices: Choice_Array);
+
+Var
+  Kind: Item_Type;
+  Traveller: ItemSet;
+  Temp: ItemSet;
+
+Begin
+   For Kind:=Weapon to Cloak do
+      Begin
+         Traveller:=Choices[Kind];
+         While Traveller<>Nil do
+            Begin
+               Temp:=Traveller;
+               Traveller:=Traveller^.Next_Item;
+               Dispose (Temp);
+            End;
+         Choices[Kind]:=Nil;
+      End;
+End;
+
+(******************************************************************************)
+
+Procedure Special_Occurances (Var Character: Character_Type);
+
+Var
+   Item: Integer;
+   T: Line;
+   Character_Item: Item_Record;
+
+Begin
+  For Item:=1 to Character.No_of_Items do
+     Begin
+        Character_Item:=Item_List[Character.Item[Item].Item_Num];
+        If (Character_Item.Special_Occurance_No>0) and (Character.Item[Item].Equipted) then
+           Begin
+              T:='Dost thou wish to invoke the special power of thine ';
+              If Character.Item[Item].Ident then
+                 T:=T+Character_Item.True_Name
+              Else
+                 T:=T+Character_Item.Name;
+              T:=T+'?';
+
+              SMG$Begin_Display_Update (ScreenDisplay);
+              SMG$Erase_Display (ScreenDisplay);
+              SMG$Put_Chars (ScreenDisplay,T,1,Center_Text(T));
+              SMG$End_Display_Update (ScreenDisplay);
+
+              If Yes_or_No='Y' then
+                 Begin
+                    Special_Occurance (Character,Character_Item.Special_Occurance_No);
+                    If Made_Roll (Character_Item.Percentage_Breaks) then
+                       Item_Breaks (Character,Character.Item[Item]);
+                 End;
+           End;
+     End;
+End;
+
+(******************************************************************************)
+
+Procedure Equip_Character (Var Character: Character_Type);
+
+Var
+   Choices: Choice_Array;
+   Kind: Item_Type;
+
+Begin
+   Choices:=Zero;
+   Collect_Items (Character,Choices);
+   For Kind:=Weapon to Cloak do
+      If Not_Stuck (Character,Kind) and (Choices[Kind]<>Nil) and (Kind<>Scroll) then
+         Select_Item (Character,Kind,Choices[Kind]);
+   Redistribute_Remainders (Choices);
+
+   Special_Occurances (Character);
+
+   Character.Armor_Class:=Compute_AC (Character,PosZ);
+   Character.Regenerates:=Regenerates (Character,PosZ);
+End;
+
+(******************************************************************************)
+
+Procedure Identify_Object (Var Character: Character_Type);
+
+Var
+  Item,Chance: Integer;
+  T: Line;
+  Hold_Item: Item_Record;
+
+Begin
+   If Character.No_of_Items>0 then
+      Item:=Choose_Item (Character,'Identify')
+   Else
+      Item:=0;
+
+   If (Item>0) then
+     Begin
+        Hold_Item:=Item_List[Character.Item[Item].Item_Num];
+        T:='';
+
+        Case Character.Class of
+               Bard:  Case Character.PreviousClass of
+                        Bard: Chance:=4 * Max(Character.Level,Character.Previous_Lvl);
+                        Otherwise Chance:=4 * Character.Level;
+                      End;
+               Otherwise Chance:=4 * Character.Previous_Lvl;
+        End;
+
+        Chance:=Chance-Round(Hold_Item.Item_Number * (1/8));
+
+        If Character.Items_Seen[Hold_Item.Item_Number] then
+           Chance:=Chance+Trunc(Chance*15/100);
+
+        If Made_Roll (Chance) then
+           Begin
+              T:=Success;
+              Character.Item[Item].Ident:=True;
+              Character.Items_Seen[Hold_Item.Item_Number]:=True;
+           End
+        Else
+           Begin
+              T:=Failure;
+              If Made_Roll (Chance) then
+                 Begin
+                    If Hold_Item.Cursed and Made_Roll (27) then
+                       Begin
+                          Character.Item[Item].Equipted:=true;
+                          Character.Item[Item].Cursed:=True;
+                          Equip_Character (Character);
+                          T:='';
+                       End
+                 End;
+           End;
+        SMG$Put_Chars (ScreenDisplay,T,23,Center_Text(T));
+
+        Delay(1)
+     End
+End;
+
+(******************************************************************************)
 
 Procedure Print_Spell_Points (Character: Character_Type);
 
+Var
+   Caster_Name: Array [Cler_Spell..Wiz_Spell] of Line;
+   Spell_Level,Spell_Type: Integer;
+   T: Line;
+
 Begin
-  { TODO: Enter this code }
+   SMG$Begin_Display_Update (ScreenDisplay);
+   Caster_Name[Cler_Spell]:='Cleric spell points';
+   Caster_Name[Wiz_Spell] :='Wizard spell points';
+
+   For Spell_Type:=Cler_Spell to Wiz_Spell do
+      Begin
+         T:='     '+Caster_Name[Spell_Type]+'  /';
+         For Spell_Level:=1 to 9 do
+            T:=T+String(Character.SpellPoints[Spell_Type,Spell_Level],1)+'/';
+         SMG$Put_Line (ScreenDisplay, T);
+      End;
+   SMG$End_Display_Update (ScreenDisplay);
 End;
 
-{ TODO: Enter this code }
+(******************************************************************************)
+
+Procedure Print_Spells_of_a_Class (Class: Class_Type; SpellList: Spell_List_Type;  List: Spell_List);
+
+Var
+  Level,X,Y:  Integer;
+  Loop:       Spell_Name;
+  Printed:    Set of Spell_Name;
+  Long_Spell: [External]Array [Spell_Name] of Varying [25] of Char;
+
+Begin
+   Printed:=[];
+   X:=1;  Y:=2;
+
+   For Level:=1 to 9 do
+      For Loop:=CrLt to DetS do
+         If (Loop in (SpellList * List[Level])) and Not (Loop in Printed) then
+            Begin
+               Printed:=Printed+[Loop];
+
+               SMG$Put_Chars (ScreenDisplay,Long_Spell[Loop]+'('+Spell[Loop]+')['+String(Level)+']',Y,X);
+               If Y>22 then
+                  Begin
+                     Y:=2;
+                     X:=35;
+                  End
+               Else
+                  Y:=Y+1;
+            End;
+End;
+
+(******************************************************************************)
+
+Procedure List_Spells (Character: Character_Type;  Class: Class_Type);
+
+Var
+  SpellList: Spell_List_Type;
+  List: Spell_List;
+  ClassName: [External]Array [Class_Type] of Varying [13] of char;
+
+Begin
+  SMG$Begin_Display_Update (ScreenDisplay);
+  SMG$Erase_Display (ScreenDisplay);
+  SMG$Home_Cursor (ScreenDisplay);
+
+  SMG$Put_Line (ScreenDisplay,Pad('',' ',Center_Text(ClassName[Class]))+ClassName[Class],1,1);
+
+  If Class=Cleric then
+     Begin
+        SpellList:=Character.Cleric_Spells;
+        List:=ClerSpells;
+     End
+  Else
+     Begin
+        SpellList:=Character.Wizard_Spells;
+        List:=WizSpells;
+     End;
+
+  If SpellList=[] then
+     SMG$Put_Line (ScreenDisplay,'Thou have no '+ClassName[Class]+' spells.',0)
+  Else
+     Print_Spells_of_a_Class (Class,SpellList,List);
+
+  SMG$Put_Chars(ScreenDisplay,'Press any key to continue',23,27,1);
+  SMG$End_Display_Update (ScreenDisplay);
+  Wait_Key;
+End;
+
+(******************************************************************************)
 
 Procedure Print_Books (Character: Character_Type);
 
+Var
+   Answer: Char;
+
 Begin
-  { TODO: Enter this code }
+   Repeat
+      Begin
+         SMG$Begin_Display_Update (ScreenDisplay);
+         SMG$Erase_Display (ScreenDisplay);
+
+         SMG$Put_Line (ScreenDisplay,'');
+
+         Print_Spell_Points (Character);
+
+         SMG$Put_Line (ScreenDisplay,'');
+         SMG$Put_Line (ScreenDisplay,'Thou may read thine W)izard spell book, thine C)leric spell book, or L)eave',0);
+         SMG$End_Display_Update (ScreenDisplay);
+
+         Answer:=Make_Choice(['C','W','L']);
+
+         Case Answer of
+            'W': List_Spells (Character,Wizard);
+            'C': List_Spells (Character,Cleric);
+            'L': ;
+         End;
+      End;
+   Until Answer='L';
 End;
 
+(******************************************************************************)
 
-{ TODO: Enter this code }
+Function Scenarios_Won (P: Int_Set): Integer;
+
+Var
+   Temp,Loop: Integer;
+
+Begin { Scenarios Won }
+   Temp:=0;
+   For Loop:=0 to 999 do
+      If P[Loop] then Temp:=Temp+1;
+   Scenarios_Won:=Temp;
+End;  { Scenarios Won }
+
+(******************************************************************************)
+
+Function Print_Wins (Character: Character_Type): Line;
+
+{ Indicates how many scenarios this character has beaten }
+
+Var
+   Num,Loop: Integer;
+   T: Line;
+
+Begin { Print Wins }
+   T:='';
+   Num:=Scenarios_Won (Character.Scenarios_Won);
+   If Num>8 then
+      Begin
+         T:='';
+         For Loop:=1 to Num-8 do
+             T:=T+'*';
+      End;
+   Print_Wins:=T;
+End;  { Print Wins }
 
 (******************************************************************************)
 
