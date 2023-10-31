@@ -6,6 +6,9 @@ Const
     Failure = '* * * Failure * * *';
     Done_It = '* * * Done! * * *';
 
+    Up_Arrow         = CHR(18);            Down_Arrow         = CHR(19);
+    Left_Arrow       = CHR(20);            Right_Arrow        = CHR(21);
+
 Var
    No_Magic:                    [External]Boolean;
    Maze:                        [External]Level;
@@ -27,6 +30,7 @@ Var
 [External]Function Alive (Character: Character_Type): Boolean;External;
 [External]Procedure No_Cursor;External;
 [External]Procedure Cursor;External;
+[External]Procedure Delay (Seconds: Real);External;
 [External]Function Make_Choice (Choices: Char_Set;  Time_Out:  Integer:=-1;
     Time_Out_Char: Char:=' '): Char;External;
 [External]Function  String(Num: Integer;  Len: Integer:=0):Line;External;
@@ -601,7 +605,7 @@ Begin
   SMG$Begin_Display_Update (SpellsDisplay);
   SMG$Erase_Display (SpellsDisplay);
 
-  If DeltaY>0 then
+  If Delta_Y>0 then
      Begin
         SMG$Put_Chars (SpellDisplay,'South: ');
         SMG$Put_Line  (SpellDisplay,String(Delta_Y,2) + '  (  Up arrow / Down arrow )');
@@ -609,10 +613,10 @@ Begin
   Else
      Begin
         SMG$Put_Chars (SpellDisplay,'North: ');
-        SMG$Put_Line  (SpellDisplay,String(Delta_Y * -1,2) + '  (  Up arrow / Down arrow )');
+        SMG$Put_Line  (SpellDisplay,String((Delta_Y * (-1)),2) + '  (  Up arrow / Down arrow )');
      End;
 
-  If DeltaX>-1 then
+  If Delta_X>-1 then
      Begin
         SMG$Put_Chars (SpellDisplay,'East: ');
         SMG$Put_Line  (SpellDisplay,String(Delta_X,2) + '  (  Left arrow / Right arrow )');
@@ -620,10 +624,10 @@ Begin
   Else
      Begin
         SMG$Put_Chars (SpellDisplay,'West: ');
-        SMG$Put_Line  (SpellDisplay,String(Delta_X * -1,2) + '  (  Left arrow / Right arrow )');
+        SMG$Put_Line  (SpellDisplay,String((Delta_X * (-1)),2) + '  (  Left arrow / Right arrow )');
      End;
 
-  If DeltaZ>-1 then
+  If Delta_Z>-1 then
      Begin
         SMG$Put_Chars (SpellDisplay,'Down: ');
         SMG$Put_Line  (SpellDisplay,String(Delta_Z,2) + '  (  U / D )');
@@ -631,11 +635,110 @@ Begin
   Else
      Begin
         SMG$Put_Chars (SpellDisplay,'Up:   ');
-        SMG$Put_Line  (SpellDisplay,String(Delta_Z * -1,2) + '  (  U / D )');
+        SMG$Put_Line  (SpellDisplay,String((Delta_Z * (-1)),2) + '  (  U / D )');
      End;
 
   SMG$Put_Chars (SpellDisplay,'Arrows + U,D to select relative position. [RETURN] accepts, <SPACE> aborts!');
   SMG$End_Display_Update (SpellDisplay);
+End;
+
+(******************************************************************************)
+
+Procedure Handle_Teleport_Spell (Var Leave_Maze: Boolean;  Var Party: Party_Type; Var Party_Size: Integer);
+
+Var
+   Crapped: Boolean;
+   T: Line;
+   Answer: Char;
+   CharNo: Integer;
+   Delta_X,Delta_Y,Delta_Z: Integer;
+
+Begin
+  Delta_X:=0;  Delta_Y:=0;  Delta_Z:=0;  Crapped:=False;
+  SMG$Create_Virtual_Display (7,78,SpellDisplay,1);
+  SMG$Label_Border (SpellDisplay,'Party Teleport',SMG$K_TOP);
+
+  SMG$Paste_Virtual_Display (SpellDisplay,Pasteboard,2,2);
+  Repeat
+     Begin
+        Print_Place (Delta_X,Delta_Y,Delta_Z);
+
+        Answer:=Make_Choice (['U','D',Left_Arrow,Right_Arrow,Up_Arrow,Down_Arrow,CHR(32),CHR(13)]);
+
+        Case Answer of
+                  'U': Delta_Z:=Delta_Z-1;
+                  'D': Delta_Z:=Delta_Z+1;
+
+                  Left_Arrow: Delta_X:=Delta_X-1;
+                  Right_Arrow: Delta_X:=Delta_X+1;
+
+                  Up_Arrow: Delta_Y:=Delta_Y-1;
+                  Down_Arrow: Delta_Y:=Delta_Y+1;
+
+                  CHR(32),CHR(13): ;
+        End;
+     End;
+  Until (Answer=CHR(32)) or (Answer=CHR(13));
+
+  SMG$Pop_Virtual_Display (SpellDisplay,Pasteboard);
+  If Answer=CHR(13) then
+     Begin
+        T:=Teleport_To (PosX+Delta_X,PosY+Delta_Y,PosZ+Delta_Z,Crapped,Leave_Maze);
+        SMG$Put_Chars (ScreenDisplay,T,21,Center_Text (T,78));
+        Delay (1);
+     End;
+  If Crapped then
+     Begin
+        Delay (1);
+        For CharNo:=1 to Party_Size do
+           Party[CharNo].Status:=Deleted;
+        Rounds_Left[WoRe]:=1;  { Indicates an interrupt. TODO: Not exactly intuitive, is this? }
+
+        Leave_Maze:=True;
+
+        SMG$Paste_Virtual_Display (GraveDisplay,Pasteboard,2,2);
+
+        SMG$Unpaste_Virtual_Display (CampDisplay,Pasteboard);
+        SMG$Unpaste_Virtual_Display (OptionsDisplay,Pasteboard);
+        SMG$Unpaste_Virtual_Display (CharacterDisplay,Pasteboard);
+        SMG$Unpaste_Virtual_Display (CommandsDisplay,Pasteboard);
+        SMG$Unpaste_Virtual_Display (SpellsDisplay,Pasteboard);
+        SMG$Unpaste_Virtual_Display (MessageDisplay,Pasteboard);
+        SMG$Unpaste_Virtual_Display (ViewDisplay,Pasteboard);
+     End;
+End;
+
+(******************************************************************************)
+
+[Global]Procedure Random_Teleport;
+
+Var
+   Safe: Boolean;
+   NewX,NewY,NewZ: Integer;
+   Temp: Level;
+
+Begin
+   Repeat
+      Begin
+        NewX:=Roll_Die(20); NewY:=Roll_Die(20);  NewZ:=Roll_Die(9);
+        Temp:=Get_Level (NewZ,Maze,PosZ);
+        Safe:=(Temp.Special_Table[Temp.Room[NewX,NewY].Contents].Special=Nothing);
+      End;
+   Until Safe;
+
+   Maze:=Temp;
+
+   PosX:=NewX;  PosY:=NewY;  PosZ:=NewZ;
+End;
+
+(******************************************************************************)
+
+Procedure Handle_Dungeon_Blink;
+
+Begin
+   Random_Teleport;
+   SMG$Put_Chars (ScreenDisplay,Done_It,23,29);
+   Delay(3);
 End;
 
 (******************************************************************************)
