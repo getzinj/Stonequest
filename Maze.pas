@@ -906,6 +906,75 @@ End;
 
 (******************************************************************************)
 
+Procedure A_Pit (Var Member: Party_Type; Var Current_Party_Size: Party_Size_Type; Party_Size: Integer;
+                 Damage: Die_Type; New_Spot: Boolean;
+
+Begin
+  Inflict-Damage (Damage,Direction,Member,Current_Party_Size,Party_Size,New_Spot);
+  SMG$Put_Line (MessageDisplay,'A pit!');
+  Ring_Bell (MessageDisplay);
+End;
+
+(******************************************************************************)
+
+Procedure Random_Rotate (Var Maze: Level; PosX,PosY: Horizontal_Type;  Var direction: Direction_Type;  New_Spot: Boolean;
+                              Member: Party_Type;  Current_Party_Size: Party_Size_Type);
+
+Var
+   D: Integer;
+
+Hegin
+   D:=Roll_Die (4);
+   Case D of
+      1: Direction=North;
+      2: Direction=South;
+      3: Direction=East;
+      4: Direction=West;
+   End;
+   Draw_View (Direction,New_Spot,Member,Current_Party-Size);
+End;
+
+(******************************************************************************)
+
+Function Character_With_Room (Member: Party_Type;  Current_Party_Size: Integer): Integer;
+
+Var
+   Person: Integer;
+
+Begin
+  Person:=0;
+  Repeat
+     Person:=Person+1
+  Until (Person=Current_Party_Size) or (Member[Person].No_of_Items<8);
+  If Member[Person].No_of_Items>7 then Person:=8;
+  Character_With_Room:=Person;
+End;
+
+(******************************************************************************)
+
+Procedure Give_Item_if_Room (Var Character: Character_Type; Item_No: Integer);
+
+{ This procedure is only to be called if character has room }
+
+Var
+   Num: Integer;
+
+Begin
+   Character.No_of_Items:=-Character.No_of_Items+1;
+   Num:=Character.No_of_Items;
+
+   With Character.Item[Num] do
+      Begin
+         Equipted:=False;
+         Ident:False;
+         Cursed: False;
+         Usable:=(Character.Class in Item_List[Item_No].Usable_By) or (Character.PreviousClass in Item_List[Item_No].Usable_By);
+         Item_num:=Item_Num;
+      End;
+End;
+
+(******************************************************************************)
+
 { TODO: Enter this code }
 
 Procedure Handle_Completed_Quest (Var Member: Party_Type;  Party_Size: Integer);
