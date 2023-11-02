@@ -217,12 +217,39 @@ End;
 
 (******************************************************************************)
 
-{ TODO: Enter this code }
+Procedure One_Day (Position: Integer; Var Member: Party_Type;  Party_Size: Integer);
+
+Var
+   Character: Character_Type;
+
+Begin
+  Character:=Member[Position];
+  Character.Age:=Character.Age+1;
+  Character.Curr_HP:=Character.Curr_HP+Character.Regenerates;
+
+  If Character.Attack.Berserk then
+     Character.Curr_HP:=Min(Character.Curr_HP,(2 * Character.MAX_HP))
+  Else
+     Character.Curr_HP:=Min(Character.Curr_HP,Character.MAX_HP);
+
+  If Character.Curr_HP<1 then
+     Begin
+        Character.Status:=Dead;
+        Character.Curr_HP:=0;
+        Member[Position]:=Character;
+        Dead_Character (Position,Member,Party_Size); { Move dead character to rear }
+     End
+  Else
+     Member[Position]:=Character;
+End;
+
+(******************************************************************************)
 
 [Global]Procedure Time_Effects (Position: Integer; Var Member: Party_Type; Party_Size: Integer);
 
 Begin { Time Effects }
-   { TODO: Enter this code }
+  If Alive(Member[Position]) then
+     One_Day (Position,Member,Party_Size);
 End;  { Time Effects }
 
 (******************************************************************************)
@@ -285,8 +312,8 @@ Begin { Move Forward}
    Case Direction of
       North:      Cant_Move:=Not(Maze.Room[PosX,PosY].North in [Passage,Walk_Through]);
       South:      Cant_Move:=Not(Maze.Room[PosX,PosY].South in [Passage,Walk_Through]);
-      East:       Cant_Move:=Not(Maze.Room[PosX,PosY].East in [Passage,Walk_Through]);
-      West:       Cant_Move:=Not(Maze.Room[PosX,PosY].West in [Passage,Walk_Through]);
+      East:       Cant_Move:=Not(Maze.Room[PosX,PosY].East in  [Passage,Walk_Through]);
+      West:       Cant_Move:=Not(Maze.Room[PosX,PosY].West in  [Passage,Walk_Through]);
       Otherwise   Cant_Move:=True;
    End;
 
@@ -531,49 +558,6 @@ End;  { Party Box }
 
 (******************************************************************************)
 
-{ TODO: Enter this code }
-
-Function Party_Movable (Member: Party_Type; Current_Party_Size: Party_Size_Type): Boolean;
-
-Var
-   Temp: Boolean;
-   Charnum: Integer;
-
-Begin { Party Movable }
-  Temp:=False;
-  For CharNum:=1 to Current_Party_Size do
-     If Member[CharNum].Status in [Healthy,Poisoned,Insane] then
-        Temp:=True;
-  Party_Movable:=Temp;
-End;  { Party Movable }
-
-(******************************************************************************)
-
-Procedure Check_For_Encounter (Var Member: Party_Type; Var Current_Party_Size: Party_Size_Type; Party_Size: Integer;
-                               Var New_Spot: Boolean;  Just_Kicked: Boolean; Var Time_Delay: Integer);
-
-Begin
-   { TODO: Enter this code }
-End;
-
-
-Procedure Enter_Grave_Yard (Var Member: Party_Type; Party_Size: Integer);
-
-Begin
-   { TODO: Enter this code }
-End;
-
-Function Game_Won (Member: Party_Type; Party_Size: Integer): Boolean;
-
-Begin
-   { TODO: Enter this code }
-  Game_Won:=False;
-End;
-
-{ TODO: Enter this code }
-
-(******************************************************************************)
-
 Procedure Init_Windows (Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type;  Party_Size: Integer;
                                 Var Leave_Maze: Boolean;  NewSpot: Boolean);
 
@@ -599,13 +583,20 @@ Begin { Draw Screen }
 End;  { Draw Screen }
 
 (******************************************************************************)
-
 [External]Procedure Camp (Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type; Party_Size: Integer;
                                  Var Leave_Maze,Auto_Save: Boolean; Var Time_Delay: Integer);external;
-
+[External]Procedure Run_Encounter (Monster_Number: Integer; Var Member: Party_Type; Var Current_Party_Size: Party_Size_Type;
+                                   Party_Size: Integer; Var Alarm_Off: Boolean; Location: Area_Type:=Corridor;
+                                   NoMagic: Boolean:=False; Var Time_Delay: Integer);external;
 (******************************************************************************)
 
-{ TODO: Enter this code }
+Procedure Run_Encounter_Aux (Monster_Number: Integer;  Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type;
+                             Party_Size: Integer;  Var Alarm_Off: Boolean; Location: Area_Type:=Corridor;
+                                   NoMagic: Boolean:=False; Var Time_Delay: Integer);
+
+Begin
+   Run_Encounter (Monster_Number,Member,Current_Party_Size,Party_Size,Alarm_Off,Location,NoMagic,Time_Delay);
+End;
 
 (******************************************************************************)
 
@@ -696,6 +687,225 @@ End;  { Initialize }
 
 (******************************************************************************)
 
+Procedure Print_Message (Start: Integer);
+
+Begin
+   Lines_Printed:=0;
+   Curr:=Start;  LineP:=1;
+   If Start<>-1 then
+      Repeat
+         Begin
+            SMG$Begin_Display_Update (MessageDisplay);
+            SMG$Erase_Display (MessageDisplay);
+            Repeat
+               Begin
+                  If (Messages[Curr]<>'~') and (Lines_Printed<200) then
+                     Begin
+                        L:=Messages[Curr];
+                        R:=Rendition_Set (L);
+                        SMG$Put_Line (MessageDisplay,Messages[Curr],1,R,Wrap_Flag:=SMG$M_WRAP_WORD);
+                        Curr:=Curr+1;   LineP:=LineP+1;  Lines_Printed:=Lines_Printed+1;
+                     End;
+               End;
+            Until (LineP=5) or (Messages[Curr]='~');
+            If Messages[Curr]<>'~' then
+               Begin
+                  LineP:=1;
+                  SMG$Label_Border (MessageDisplay,'[More]',SMG$K_BOTTOM);
+                  Make_Choice ([CHR(13)]);
+               End
+         End;
+      Until Messages[Curr]='~';
+
+   SMG$Label_Border (MessageDisplay,'');
+End;
+
+(******************************************************************************)
+
+Procedure Wait_For_Return;
+
+Begin
+  SMG$Label_Border (MessageDisplay,' Press [RETURN] ',SMG$K_BOTTOM);
+
+  Make_Choice ([CHR(13)]);
+
+  SMG$Begin_Display_Update (MessageDisplay);
+  SMG$Label_Border (MessageDisplay,'');
+  SMG$Erase_Display (MessageDisplay);
+  SMG$End_Display_Update (MessageDisplay);
+End;
+
+(******************************************************************************)
+
+Procedure Print_Message_With_Return (Message_No: Integer);
+
+Begin
+   If Message_No<>-1 then
+      Begin
+         Print_Message (Message_No);
+         Wait_For_Return;
+      End;
+End;
+
+(******************************************************************************)
+
+Procedure Inflict_Damage (Damage: Die_Type;  Direction: Direction_Type;  Var Member: Party_Type;
+                          Var Current_Party_Size: Party_Size_Type;  Party_Size: Integer;  New_Spot: Boolean);
+
+Var
+   Person: Integer;
+
+Begin
+   Draw_View (Direction,New_Spot,Member,Current_Party_Size);
+
+   SMG$Begin_Display_Update (CharacterDisplay);
+   For Person:=1 to Current_Party_Size do
+      Begin
+         Member[Person].Curr_HP:=Member[Person].Curr_HP-Random_Number(Damage);
+         If Member[Person].Curr_HP<1 then
+            Begin
+               Member[Person].Status:=Dead;
+               Member[Person].Curr_HP:=0;
+            End;
+         If Member[Person].Status=Asleep then
+            Member[Person].Status:=Healthy;
+
+         Member[Person].Regenerates:=Regenerates (Member[Person],PosZ);
+         Member[Person].Armor_Class:=Compute_AC (Member[Person],PosZ);
+         Member[Person].Attack.Berserk:=False;
+      End;
+   Party_Box (Member,Current_Party_Size,Party_Size,Leave_Maze);
+   SMG$End_Display_Update (CharacterDisplay);
+End;
+
+(******************************************************************************)
+
+Procedure Avernus_Fireball (Direction: Direction_Type; Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type;
+                            Party_Size: Integer;  New_Spot: Boolean);
+
+Var
+   Temp: Die_Type;
+
+Begin
+   SMG$Put_Line (MessageDisplay,'There is a huge explosion close to the party!');
+   SMG$Ring_Bell (MessageDisplay);
+
+   Temp.X:=Roll_Die(6)+1;   Temp.Y:=6;   Temp.Z:=0;
+
+   Inflict_Damage (Temp,Direction,Member,Current_Party_Size,Party_Size,New_Spot);
+   Delay(2);
+End;
+
+(******************************************************************************)
+
+Procedure Stygia_Fireball (Direction: Direction_Type; Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type;
+                            Party_Size: Integer;  New_Spot: Boolean);
+
+Var
+   Temp: Die_Type;
+
+Begin
+   SMG$Put_Line (MessageDisplay,'There is an explosion of cold fire close to the party!');
+   SMG$Ring_Bell (MessageDisplay);
+
+   Temp.X:=2;   Temp.Y:=6;   Temp.Z:=0;
+
+   Inflict_Damage (Temp,Direction,Member,Current_Party_Size,Party_Size,New_Spot);
+   Delay(2);
+End;
+
+(******************************************************************************)
+
+Procedure Nessus_Effects (Direction: Direction_Type; Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type;
+                            Party_Size: Integer;  New_Spot: Boolean);
+
+Var
+   Temp: Die_Type;
+
+Begin
+   Case Roll_Die(3) of
+      1: SMG$Put_Line (MessageDisplay,'There is an explosion of cold fire close to the party!');
+      2: SMG$Put_Line (MessageDisplay,'There is an explosion of fire close to the party!');
+      3: SMG$Put_Line (MessageDisplay,'A wall of flames shoots close to the party!');
+   End;
+   SMG$Ring_Bell (MessageDisplay);
+
+   Temp.X:=9;   Temp.Y:=8;   Temp.Z:=0;
+
+   Inflict_Damage (Temp,Direction,Member,Current_Party_Size,Party_Size,New_Spot);
+   Delay(2);
+End;
+
+(******************************************************************************)
+
+Procedure Caina_Cold (Direction: Direction_Type; Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type;
+                            Party_Size: Integer;  New_Spot: Boolean);
+
+Var
+   Temp: Die_Type;
+
+Begin
+   Case Roll_Die(10) of
+      1: SMG$Put_Line (MessageDisplay,'Brrrrrrr!');
+      2: SMG$Put_Line (MessageDisplay,'It''s freezing here!');
+      3: SMG$Put_Line (MessageDisplay,'Thine teeth are chattering!');
+      4: SMG$Put_Line (MessageDisplay,'It''s very cold!');
+      5: SMG$Put_Line (MessageDisplay,'Thou''re losing feeling in thine extremities!');
+      6: SMG$Put_Line (MessageDisplay,'Snow drifts across thine face!');
+      7: SMG$Put_Line (MessageDisplay,'Thou are starting to feel sleepy!');
+      8: SMG$Put_Line (MessageDisplay,'The wind whistles by thine ears!');
+      9: SMG$Put_Line (MessageDisplay,'Thy fingers hurt!');
+     10: SMG$Put_Line (MessageDisplay,'Thine faces feel raw!');
+   End;
+   SMG$Ring_Bell (MessageDisplay);
+
+   Temp.X:=Roll_Die(2);   Temp.Y:=3;   Temp.Z:=0;
+
+   Inflict_Damage (Temp,Direction,Member,Current_Party_Size,Party_Size,New_Spot);
+   Delay(2);
+End;
+
+(******************************************************************************)
+
+Procedure Minauros_Poison (Var Member: Party_Type;  Current_Party_Size: Party_Size_Type);
+
+Var
+   Chara: Integer;
+   Dummy: Boolean;
+
+[External]Function Made_Save (Character: Character_Type;  Attack: Attack_Type): [Volatile]Boolean;External;
+
+Begin
+   Chara:=Roll_Die (Current_Party_Size);
+   If Not Made_Save (Member[Chara],Poison) then
+      Change_Status (Member[Chara],Poisoned,Dummy);
+End;
+
+(******************************************************************************)
+
+Procedure Hell_Effects (Direction: Direction_Type;  Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type;
+                        Party_Size: Integer;  New_Spot: Boolean;  Hell_Level: Integer);
+
+Begin
+   Case Hell_Level of
+        1: If ((Round(Minute_Counter) mod 6)=0) and Made_Roll(15) then
+               Avernus_Fireball(Direction,Member,Current_Party_Size,Party_Size,New_Spot);
+        2: ;
+        3: If ((Round(Minute_Counter) mod 10)=0) and then
+               Minauros_Poison(Member,Current_Party_Size);
+        4: ;
+        5: If ((Round(Minute_Counter) mod 6)=0) then
+               Stygia_Fireball(Direction,Member,Current_Party_Size,Party_Size,New_Spot);
+        6: ;
+        7: ;
+        8: Caina_Cold (Direction,Member,Current_Party_Size,Party_Size,New_Spot);
+        9: If ((Round(Minute_Counter) mod 10)=0) then
+               Nessus_Effects(Direction,Member,Current_Party_Size,Party_Size,New_Spot);
+   End;
+End;
+
+(******************************************************************************)
+
 { TODO: Enter this code }
 
 Procedure Handle_Completed_Quest (Var Member: Party_Type;  Party_Size: Integer);
@@ -703,7 +913,11 @@ Begin
    { TODO: Enter this code }
 End;
 
+(******************************************************************************)
+
 { TODO: Enter this code }
+
+(******************************************************************************)
 
 Procedure Fix_Compass (Direction: Direction_Type;  Rounds_Left: Spell_Duration_List);
 
@@ -711,6 +925,77 @@ Begin { Fix Compass }
   If Rounds_Left[Comp]>0 then SMG$Label_Border (ViewDisplay,DirectionName[Direction],SMG$K_TOP)
   Else                        SMG$Label_Border (ViewDisplay);
 End;  { Fix Compass }
+
+(******************************************************************************)
+
+{ TODO: Enter this code }
+
+{ TODO: Perchance_Salvation }
+
+{ TODO: Make_Grave_Stone }
+
+{ TODO: Make_Grave_Stones }
+
+Procedure Enter_Grave_Yard (Var Member: Party_Type; Party_Size: Integer);
+
+Begin
+   { TODO: Enter this code }
+End;
+
+(******************************************************************************)
+
+Function Game_Won (Member: Party_Type; Party_Size: Integer): Boolean;
+
+Begin
+   { TODO: Enter this code }
+  Game_Won:=False;
+End;
+
+(******************************************************************************)
+
+Function Party_Movable (Member: Party_Type; Current_Party_Size: Party_Size_Type): Boolean;
+
+Var
+   Temp: Boolean;
+   Charnum: Integer;
+
+Begin { Party Movable }
+  Temp:=False;
+  For CharNum:=1 to Current_Party_Size do
+     If Member[CharNum].Status in [Healthy,Poisoned,Insane] then
+        Temp:=True;
+  Party_Movable:=Temp;
+End;  { Party Movable }
+
+
+(******************************************************************************)
+
+Procedure Check_For_Encounter (Var Member: Party_Type; Var Current_Party_Size: Party_Size_Type; Party_Size: Integer;
+                               Var New_Spot: Boolean;  Just_Kicked: Boolean; Var Time_Delay: Integer);
+
+Begin
+   { TODO: Enter this code }
+End;
+
+(******************************************************************************)
+(********************************* Special Areas ******************************)
+(******************************************************************************)
+
+{ TODO: Magic_Darkness }
+
+{ TODO: Random_Score_Change }
+
+{ TODO: Print_Change }
+
+{ TODO: Enter this code }
+
+{ TODO: Enter_Pool }
+
+{ TODO: Check_Message_And_Pool }
+
+{ TODO: Special Feature }
+
+{ TODO: Check_Special }
 
 (******************************************************************************)
 
@@ -806,8 +1091,10 @@ Begin
    SMG$Erase_Display (MessageDisplay);
 End;
 
+(******************************************************************************)
 
 Function Print_Exit (exit: Exit_Type): Line;
+
 Begin
   case exit of
     Passage: return 'Passage';
@@ -840,6 +1127,8 @@ Begin
       +Print_Exit(Spot.West));
 End;
 
+(******************************************************************************)
+
 function print_direction(Direction: Direction_Type): Line;
 
 Begin
@@ -851,7 +1140,6 @@ Begin
       Otherwise return 'Unknown';
    End;
 End;
-
 
 (******************************************************************************)
 
@@ -869,6 +1157,8 @@ Begin
 
   Print_Debug_Room_Info(PosX,PosY);
 End;
+
+(******************************************************************************)
 
 Procedure Make_Move (Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type;  Party_Size: Integer;
                              Var Leave_Maze: Boolean; Var Time_Delay: Integer;  Var Auto_Save: Boolean;
@@ -910,7 +1200,7 @@ Procedure Handle_Room_Special (Var New_Spot: Boolean; Var Member: Party_Type;  V
                                        Var Time_Delay: Integer);
 
 Begin
-{ TODO: Enter this code }
+   { TODO: Enter this code }
 End;
 
 (******************************************************************************)
