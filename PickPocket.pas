@@ -225,8 +225,8 @@ Begin
       Gambler: T:=Subject+' is busy bragging about'+Possessive+' Zowie Slot winnings.';
       Clerk: Case Roll_Die (3) of
                 1: T:=Subject+' is buying some Ice Creame.';
-                2: T:=Subject+' watching two ruffians fight each other.';
-                3: T:=Subject+' is singing quietly to'+object+'self.';
+                2: T:=Subject+' is watching two ruffians fight each other.';
+                3: T:=Subject+' is singing quietly to '+object+'self.';
               End;
       Pimp: Case Roll_Die (3) of
                 1: T:=Subject+' is shooting craps with some guys.';
@@ -278,7 +278,7 @@ Begin
       End;
 
    T:=T+' with '+Hair__Color[Person[HairColor]]+' hair and '+Eye__Color[Person[EyeColor]]+' eyes.  ';
-   T:=T+Subject+' '+Weapon_and_Armor(Person)+' and '+Clothes_String(Person[Clothes])+'.  ';
+   T:=T+Subject+' has '+Weapon_and_Armor(Person)+' and '+Clothes_String(Person[Clothes])+'.  ';
 
    If Roll_Die(100)<=Person[DetectChance] then
       Begin
@@ -603,13 +603,367 @@ End;
 
 (******************************************************************************)
 
-{ TODO: Enter this code }
+Function Party_Member_Pays (Payer: Integer;  Var Party: Party_Type;  Var Paid: Boolean;  Cost: Real): [Volatile]Boolean;
+
+Begin
+   SMG$Put_Line (BottomDisplay,'',2);
+   If Party[Payer].Gold>=Cost then
+      Begin
+         Paid:=True;  Party_Member_Pays:=True;
+         Party[Payer].Gold:=Max(Party[Payer].Gold-Trunc(Cost),0);
+         SMG$Put_Line (BottomDisplay,'Thank thee.');
+         Delay (1);
+      End
+   Else
+      Begin
+         SMG$Put_Line (BottomDisplay,'Thou canst not afford it! ');
+         SMG$Ring_Bell (BottomDisplay,3);
+         Delay(2);
+         Paid:=False; Party_Member_Pays:=False;
+      End;
+End;
+
+(******************************************************************************)
+
+Function Party_Pools_and_Pays (Var Party: Party_Type;  Party_Size: Integer;  Var Paid: Boolean;
+                                 Cost: Real;  Char_Num: Integer): [Volatile]Boolean;
+
+Var
+  Sum: Real;
+  Person: Integer;
+
+Begin
+   SMG$Put_Line (BottomDisplay,'',2);
+   Sum:=0;
+   For Person:=1 to Party_Size do
+      Sum:=Sum+Party[Person].Gold;
+
+   If Sum>=Cost then
+      Begin
+         Sum:=Sum-Cost;
+         For Person:=1 to Party_Size do
+            Party[Person].Gold:=0;
+         Party[Char_Num].Gold:=Trunc(Sum);
+         SMG$Put_Line (BottomDisplay,'Thank thee, '+Party[Char_Num].Name+'.  Here is thy change...');
+         Delay(2);
+         Paid:=True;  Party_Pools_And_Pays:=True;
+      End
+   Else
+      Begin
+         SMG$Put_Line (BottomDisplay,'Oh no!!!   Thy party can''t pay!!!!');
+         SMG$Ring_Bell (BottomDisplay,10);
+         Delay(2);
+         Party_Pools_and_Pays:=True;
+      End;
+End;
+
+(******************************************************************************)
+
+Function Handle_Choice (Choice: Char;  Var Party: Party_Type;  Party_Size: Integer;  Var Paid: boolean;
+                        Cost: Real;  Char_Num: Integer): [Volatile]Boolean;
+
+Begin
+  Case Choice of
+     '1'..'6': Handle_Choice:=Party_Member_Pays (Ord(Choice)-Ord('0'),Party,Paid,Cost);
+     '+': Handle_Choice:=Party_Pools_and_Pays (Party,Party_Size,Paid,Cost,Char_Num);
+     CHR(13): Handle_Choice:=True;
+  End;
+End;
+
+(******************************************************************************)
+
+Function Job_Name (Job: Integer): Line;
+
+Begin
+   Case Job of
+       Beggar: Job_Name:='beggar';
+       Jester: Job_Name:='jester';
+       Prostitute: Job_Name:='prostitute';
+       Pimp: Job_Name:='pimp';
+       CommonThief: Job_Name:='thief';
+       Bully: Job_Name:='bully';
+       Gambler: Job_Name:='gambler';
+       Brawler: Job_Name:='brawler';
+       Clerk: Job_Name:='clerk';
+       Soldier: Job_Name:='soldier';
+       Cleric_C: Job_Name:='cleric';
+       Gentleman: Job_Name:='gentleman';
+       Lady: Job_Name:='lady';
+       Militia: Job_Name:='Militia officer';
+       Nobleman: Job_Name:='nobleman';
+       Magus: Job_Name:='mage';
+       Official: Job_Name:='city official';
+       Royalty: Job_Name:='royal victim';
+       Otherwise Job_Name:='victim';
+   End;
+End;
+
+(******************************************************************************)
+
+Function Execute_Character (Char_Num: Integer; Var Party: Party_Type; Party_Size: Integer; Job: Integer): Boolean;
+
+Begin
+   SMG$Begin_Display_Update (BottomDisplay);
+   SMG$Erase_Display (BottomDisplay);
+   SMG$Put_Line (BottomDisplay,'"Hear ye!  Hear ye!  The desperate criminal, '+Party[Char_Num].Name+', shall now be put to death!"');
+   SMG$Put_Line (BottomDisplay,'');
+   SMG$End_Display_Update (BottomDisplay);
+
+   SMG$Ring_Bell (BottomDisplay,2);
+
+   Delay (3);
+
+   SMG$Put_Line (BottomDisplay,'As the Executioner raises his axe, you see the '+Job_Name(Job)+' smiling...',2);
+
+   Delay (2);
+
+   SMG$Put_Line (BottomDisplay,'... and then you don''t see anything, anymore...');
+
+   Delay(2);
+
+   Party[Char_Num].Status:=Dead;
+   Party[Char_Num].Curr_HP:=0;
+
+   Backup_Party (Party,Party_Size);
+
+   SMG$Begin_Pasteboard_Update (Pasteboard);
+   Print_Character_Line (Char_Num,Party,Party_Size);
+   SMG$End_Pasteboard_Update (Pasteboard);
+
+   SMG$Ring_Bell (BottomDisplay,1);
+
+   SMG$Erase_Display (BottomDisplay);
+
+   Execute_Character:=True;
+End;
+
+(******************************************************************************)
+
+Function Sentenced_and_Executed (Char_Num: Integer; Var Party: Party_Type;  Party_Size,Job: Integer): [Volatile]Boolean;
+
+Var
+  Paid,Done: Boolean;
+  Cost: Real;
+  Character: Character_Type;
+  Choices: Char_Set;
+  Answer: Char;
+  CostS: Line;
+
+Begin
+   Party[Char_Num].Gold:=0;
+   Character:=Party[Char_Num];
+
+   Cost:=Roll_Die(5)+Job;
+   Cost:=Cost**Round(Job / 3);
+   Cost:=Cost+Job;
+
+   CostS:='';
+   WriteV (CostS,Cost:0:0);
+
+   Done:=False;  Paid:=False;
+
+   Repeat
+      Begin
+         SMG$Begin_Display_Update (BottomDisplay);
+         SMG$Erase_Display (BottomDisplay);
+
+         SMG$Put_Line (BottomDisplay,'Lower Criminal Court');
+         SMG$Put_Line (BottomDisplay,'--------------------');
+         SMG$Put_Line (BottomDisplay,Character.Name+', the court has found thee guilty of theft.');
+         SMG$Put_Line (BottomDisplay,'Thou art hereby sentence to death, unless they party can come up');
+         SMG$Put_Line (BottomDisplay,'with the '+CostS+' Gold Pieces bail.',2);
+         SMG$Put_Line (BottomDisplay,'Who will pay?');
+         SMG$Put_Chars (BottomDisplay,'(1-'+String(Party_Size)+', excluding '+String(Char_Num));
+         SMG$Put_Chars (BottomDisplay,'; "+" sums all the party''s gold and pays.  [RETURN] gives up)');
+
+         SMG$End_Display_Update (BottomDisplay);
+
+         Choices:=['1'..CHR(Party_Size+Ord('0')),'+',CHR(13)]-[CHR(Char_Num+Ord('0'))];
+
+         Answer:=Make_Choice (Choices);
+
+         Done:=Handle_Choice (Answer,Party,Party_Size,Paid,Cost,Char_Num);
+      End;
+   Until Done;
+
+   If Not Paid then
+      Sentenced_And_Executed:=Execute_Character (Char_Num,Party,Party_Size,Job)
+   Else
+      Sentenced_And_Executed:=False;
+End;
+
+(******************************************************************************)
+
+Function Discovered (Char_Num: Integer;  Var Party: Party_Type;  Party_Size: Integer;  TownsPerson: Description_Record)
+                        :[Volatile]Boolean;
+
+Var
+   n: Integer;
+
+Begin
+   SMG$Begin_Display_Update (BottomDisplay);
+   SMG$Put_Line_Highwide (bottomDisplay,'STOP, THIEF!',2);
+   SMG$End_Display_Update (BottomDisplay);
+   SMG$Ring_Bell (BottomDisplay,20);
+   Delay(3);
+
+   SMG$Put_Chars (BottomDisplay,'THE CHASE IS ON',,,,1);
+
+   For n:=1 to 10+Roll_Die(20) do
+      Begin
+         SMG$Put_Chars (BottomDisplay,'.',,,,1);
+         Delay (1/4);
+      End;
+
+   If Roll_Die(26)<=Party[Char_Num].Abilities[7] then
+      Begin
+        SMG$Put_Chars (BottomDisplay,'You got away!',,,,1);
+        Delay(4);
+        Discovered:=False;
+      End
+   Else
+      Begin
+         SMG$Ring_Bell (BottomDisplay,5);
+         SMG$Put_Chars (BottomDisplay,'They caught you!!!!',,,,1);
+         Delay(3);
+         Discovered:=Sentenced_and_Executed (Char_Num,Party,Party_Size,TownsPerson[Job]);
+      End;
+End;
+
+(******************************************************************************)
+
+Function Attempt_to_Pick_Pockets (Char_Num: Integer;  Var Party: Party_Type;  Party_Size: Integer;
+                                   TownsPerson: Description_Record;  Noticed: Boolean;
+                                   Var Reduction: Integer): [Volatile]Boolean;
+
+Var
+   Character: Character_Type;
+   n: Integer;
+
+Begin
+   Character:=Party[Char_Num];
+
+   SMG$Put_Chars (BottomDisplay,'Shhh...  '+Character.Name+' is trying to pick pockets.');
+
+   For n:=1 to 5+Roll_Die(3) do
+      Begin
+         Delay (1);
+         SMG$Put_Chars (BottomDisplay,'.');
+      End;
+
+   SMG$Put_Line (BottomDisplay,'',2);
+
+   If Roll_Die(100) <= (Pick_Pocket_Chance (Character,TownsPerson,Noticed)-Reduction) then
+      Begin
+         Reduction:=Reduction+5;
+         SMG$Put_Chars (BottomDisplay,'(SUCCESS!)  ');
+
+         Delay(2);
+
+         SMG$Put_Chars (BottomDisplay,String(TownsPerson[Money])+' gold pieces!');
+
+         If Townsperson[Money]=0 then
+            Begin
+               Delay (1);
+               SMG$Put_Chars (BottomDisplay,'  (RATS!)');
+            End
+         Else
+            Party[Char_Num].Gold:=Party[Char_num].Gold+TownsPerson[Money];
+
+         Party[Char_Num].Experience:=Party[Char_Num].Experience+(2**(TownsPerson[Job] div 2));
+         Delay(2);
+         Attempt_to_Pick_Pockets:=False
+      End
+   Else
+      Begin
+         Attempt_to_Pick_Pockets:=Discovered (Char_Num,Party,Party_Size,TownsPerson);
+         Reduction:=Reduction+15;
+      End;
+End;
+
+(******************************************************************************)
+
+Function Handle_Townsperson (Townsperson: Description_Record; Char_Num: Integer;  Var Party: Party_Type;
+                               Party_Size: Integer;  Noticed: Boolean;
+                               Var Reduction: Integer): [Volatile]Boolean;
+
+Var
+   Choice: Char;
+   Character: Character_Type;
+
+Begin
+   Character:=Party[Char_Num];
+
+   SMG$Put_Line (BottomDisplay,Character.Name +', wilst thou attempt to pick this person''s pockets?');
+   SMG$Put_Line (BottomDisplay,'(Y/N, [RETURN] to stop picking pockets)');
+
+   Choice:=Make_Choice(['Y','N',CHR(13)]);
+
+   If Choice=CHR(13) then
+      Handle_Townsperson:=True
+   Else If Choice='Y' then
+      Handle_Townsperson:=Attempt_to_Pick_Pockets (Char_Num,Party,Party_Size,TownsPerson,Noticed,Reduction)
+   Else
+      Handle_Townsperson:=False;
+End;
+
+(******************************************************************************)
+
+Procedure Roll_People (Character: Integer; Var Party: Party_Type;  Party_Size: Integer);
+
+Var
+  Townsperson: Description_Record;
+  Noticed,Stop: Boolean;
+  Reduction: Integer;
+
+Begin
+   Reduction:=0;
+   Stop:=False;
+   Repeat
+      Begin
+         TownsPerson:=Get_Townsperson;
+
+         Noticed:=Display_Person (TownsPerson);
+
+         Stop:=Handle_Townsperson (TownsPerson,Character,Party,Party_Size,Noticed,Reduction);
+      End
+   Until Stop;
+End;
+
+(******************************************************************************)
 
 [Global]Procedure Pick_Pockets (Var Party: Party_Type;  Var Party_Size: Integer);
 
+Var
+  Thief: Integer;
+  Done: Boolean;
+
 Begin
+   Thief:=0;
+   Repeat
+      Begin
+        SMG$Begin_Display_Update (BottomDisplay);
+        SMG$Erase_Display (BottomDisplay);
 
-{ TODO: Enter this code }
+        SMG$Set_Cursor_ABS (BottomDisplay,2,1);
 
+        SMG$Put_Line (BottomDisplay,'Who will pick pockets? (1-'+String(Party_Size)+', [RETURN] exits)');
+        SMG$End_Display_Update (BottomDisplay);
+
+        Done:=False;
+        Repeat
+          Begin
+             Thief:=Pick_Character_Number (Party_Size);
+             Done:=(Thief=0);
+             If Not Done then
+                Done:=(Party[Thief].Status in [Healthy,Poisoned]);
+          End;
+        Until Done;
+
+        If (Thief<>0) then
+           Roll_People (Thief,Party,Party_Size);
+      End;
+   Until Thief=0;
+   Location:=InKyrn;
 End;
 End.  { Pick Pockets }
