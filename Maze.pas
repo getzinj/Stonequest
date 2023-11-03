@@ -1291,7 +1291,90 @@ End;
 
 (******************************************************************************)
 
-{ TODO: Enter this code }
+Procedure Stair_Case (Var Maze: Level; Var PosX,PosY:  Horizontal_Type;  Var PosZ: Vertical_Type;  Special: Special_Type;
+                      Var New_Spot: Boolean; Var Previous_Spot: Area_Type;  Member: Party_Type;
+                      Current_Party_Size: Party_Size_Type);
+
+Const
+  Down_Staircase_Number = 38;
+  Up_Staircase_Number = 37;
+
+Var
+  E: Varying[4] of Char;
+  Answer: Char;
+
+[External]Function Yes_or_No (Time_Out: Integer:=-1; Time_out_Char: Char:=' '): [Volatile]Char;External;
+
+Begin
+  If Special.Pointer3>PosZ then
+     Begin
+        E:='down';
+        Show_Image (Down_Staircase_Number,ViewDisplay);
+     End
+  Else
+     Begin
+        E:='up';
+        Show_Image (Up_Staircase_Number,ViewDisplay);
+     End;
+
+  SMG$Begin_Display_Update (MessageDisplay);
+  SMG$Erase_Display (MessageDisplay);
+
+  SMG$Put_Line (MessageDisplay,'A staircase going '+E+'. Wilt thou go '+E+' them? (Y/N)',Wrap_Flag:=SMG$M_WRAP_WORD);
+  SMG$End_Display_Update (MessageDisplay);
+
+  Answer:=Yes_or_No;
+
+  SMG$Erase_Display (MessageDisplay);
+
+  If Answer='Y' then
+     Begin
+        Previous_Spot:=Maze.Room[PosX,PosY].Kind;
+        PosX:=Special.Pointer1;  PosY:=Special.Pointer2;
+        New_Spot:=True;
+        Maze:=Get_Level (Special.Pointer3,Maze,PosZ);
+        PosZ:=Special.Pointer3;
+
+        Remove_Nodes (Places);
+     End;
+
+  If PosZ>0 then
+     Draw_View (Direction,New_Spot,Member,Current_Party_Size);
+End;
+
+(******************************************************************************)
+
+{ TODO: Cliff_to_Hell }
+
+{ TODO: An_Elevator }
+
+(******************************************************************************)
+
+Function Choose_Monster (Table: Encounter_Table; Area: Area_Type; Var Encountered: Boolean): Integer;
+
+{ This function returns a monster that might be encountered from the given table, and also checks to see if it was
+  indeed encountered. }
+
+var
+   Correct: Encounter;
+   Base: Integer;
+
+Begin
+  Case Area of
+          Room: Correct:=Table[2];
+      Corridor: Correct:=Table[1];
+  End;
+
+  Base:=Correct.Base_Monster_Number;
+  Base:=Min(Base+Random_Number (Correct.Addition), 450);
+
+  Choose_Monster:=Base;
+
+  If Has_Light then
+    Correct.Probability:=Correct.Probability + 1;   { Light draws attention - TODO: Maybe it should be a bigger addition? }
+
+  Encountered:=Made_Roll (Correct.Probability);
+End;
 
 (******************************************************************************)
 
@@ -1304,9 +1387,178 @@ End;  { Fix Compass }
 
 (******************************************************************************)
 
-{ TODO: Enter this code }
+Procedure Update_Status (Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type;  Party_Size: Integer;
+                               Var Leave_Maze: Boolean; Rounds_Left: Spell_Duration_List);
 
-{ TODO: Perchance_Salvation }
+Begin
+   Spells_Box (Rounds_Left);
+   Party_Box (Member,Current_Party_Size,Party_Size,Leave_Maze);
+End;
+
+(******************************************************************************)
+
+{ TODO: Special Encounter }
+
+{ TODO: Message_and_Encounter }
+
+{ TODO: Encounter_SQ_Creator }
+
+{ TODO: Message_and_Picture }
+
+{ TODO: Character_Finds_Item }
+
+{ TODO: Encounter_UJB }
+
+{ TODO: Message_and_Hidden_Item }
+
+{ TODO: A_Chute }
+
+(******************************************************************************)
+
+Function Evil_Party (Member: Party_Type; Party_Size: Integer): Boolean;
+
+Var
+   Loop,Temp: Integer;
+
+Begin
+   Temp:=0;
+   For Loop:=1 to Party_Size do
+      Begin
+        Case Member[Loop].Alignment of
+           Evil: Temp:=-1;
+           Neutral: Temp:=Temp+1;
+           Good: Temp:=Temp+2;
+        End;
+      End;
+   Evil_Party:=(Temp < 0);
+End;
+
+(******************************************************************************)
+
+Function Salvation_Chance (Member: Party_Type; Party_Size: Integer): Integer;
+
+Var
+   Character,Temp,Base,Adjust: Integer;
+   Average_Luck: Real;
+
+Begin
+   Temp:=0;
+   For Character:=1 to Party_Size do
+      Temp:=Temp + Member[Character].Abilities[7];
+   Average_Luck:=Temp / Party_Size;
+
+   Base:=Round(Average_Luck * 2.5);
+
+   Adjust:=0;
+   For Character:=1 to Party_Size do
+      Case Member[Character].Alignment of
+         Good: Adjust:=Adjust+5;
+         Evil: Adjust:=Adjust-5;
+         Neutral,NoAlign: ;
+      End;
+
+   Salvation_Chance:=Min(Base+ABS(Adjust),85);
+End;
+
+(******************************************************************************)
+
+Procedure Print_Demon (Var DemonDisplay: Unsigned);
+
+Var
+  Line: Integer;
+
+Begin
+   SMG$ERASE_DISPLAY (DemonDisplay);
+   For Line:=1 to 20 do
+      SMG$Put_Line (DemonDisplay,DemonPic[Line]);
+End;
+
+(******************************************************************************)
+
+Procedure Print_Angel (Var AngelDisplay: Unsigned);
+
+Var
+  Line: Integer;
+
+Begin
+   SMG$ERASE_DISPLAY (AngelDisplay);
+   For Line:=1 to 20 do
+      SMG$Put_Line (AngelDisplay,AngelPic[Line]);
+End;
+
+(******************************************************************************)
+
+Procedure Ressurrect_Party(Var Member: Party_Type; Party_Size: Integer);
+
+Var
+   Character: Integer;
+
+Begin
+   For Character:=1 to Party_Size do
+      If Member[Character].Level>0 then
+         Begin
+            Member[Character].Status:=Healthy;
+            Member[Character].Curr_HP:=Member[Character].Max_HP;
+
+            If Made_Roll (15) then
+               Member[Character].No_of_Items:=0;
+
+            Member[Character].Armor_Class:=Compute_AC(Member[Character],PosZ);
+            Member[Character].Regenerates:=Regenerates(Member[Character],PosZ);
+            Member[Character].Experience:=Member[Character].Experience+100;
+         End;
+End;
+
+(******************************************************************************)
+
+Procedure Perchance_Salvation (Var Member: Party_Type;  Party_Size: Integer);
+
+Var
+  AngelDisplay: Unsigned;
+  T: Line;
+
+Begin
+   If Made_Roll (Salvation_Chance(Member,Party_Size)) then
+      Begin
+         SMG$Create_Virtual_Display (22,78,AngelDisplay,1);
+         If Not Evil_Party (Member,Party_Size) then
+            Begin
+               SMG$Label_Border (AngelDisplay,'=*> A Divine Reprieve <*=',SMG$K_TOP);
+               Print_Angel (AngelDisplay);
+            End
+         Else
+            Begin
+               SMG$Label_Border (AngelDisplay,'=*> An Infernal Bargain <*=',SMG$K_TOP);
+               Print_Demon (AngelDisplay);
+            End;
+
+         { Show the angel and make 'em sweat for 2 seconds }
+
+         SMG$Paste_Virtual_Display (AngelDisplay,Pasteboard,2,2);
+         SMG$Erase_Display (GraveDisplay,21,1);
+
+         Delay(2);
+
+         { Print the angel's speech }
+
+         If Evil_Party (Member,Party_Size) then T:='We are not through with thee yet'
+         Else                                   T:='Thine efforts have not gone unnoticed';
+         SMG$Put_Chars (AngelDisplay,T,22,39-(T.length div 2),1);
+
+         Delay (2);
+
+         If Evil_Party (Member,Party_Size) then T:='Go back and wreak further havoc!'
+         Else                                   T:='Thou shalt live again!';
+         SMG$Put_Chars (AngelDisplay,T,22,39-(T.length div 2),1);
+
+         Delay (4);
+
+         SMG$Unpaste_Virtual_Display (AngelDisplay,Pasteboard);
+         Ressurrect_Party (Member,Party_Size);
+
+         SMG$Delete_Virtual_Display (AngelDisplay);
+      End;
+End;
 
 (******************************************************************************)
 
@@ -1353,16 +1605,43 @@ End;
 Procedure Enter_Grave_Yard (Var Member: Party_Type; Party_Size: Integer);
 
 Begin
-   { TODO: Enter this code }
+   SMG$Erase_Display (GraveDisplay);
+   Make_Grave_Stones (Member,Party_Size);
+   SMG$Put_Chars (GraveDisplay,'Thy entire party has been slaughtered.',22,20,1);
+
+   SMG$Paste_Virtual_Display (GraveDisplay,Pasteboard,2,2);
+   Unpaste_All;
+   SMG$End_Pasteboard_Update (Pasteboard); { From Maze death }
+   SMG$End_Pasteboard_Update (Pasteboard); { In case of death }
+
+   Delay (3);
+
+   Perchance_Salvation (Member, Party_Size);
+
+   SMG$Begin_Display_Update (GraveDisplay);
+   SMG$Erase_Display (GraveDisplay,21,1);
+   SMG$Put_Chars (GraveDisplay,'Press [Return] to leave the cemetery',22,21);
+   SMG$End_Display_Update (GraveDisplay);
+
+   Make_Choice( [ CHR(13) ] );
+
+   SMG$Unpaste_Virtual_Display (GraveDisplay,Pasteboard);
 End;
 
 (******************************************************************************)
 
 Function Game_Won (Member: Party_Type; Party_Size: Integer): Boolean;
 
+Const
+  Maleficent_Stone_Item_Number = 116;
+
+Var
+  Person,Item: Integer;
+  Found: Boolean;
+
 Begin
-   { TODO: Enter this code }
-  Game_Won:=False;
+  Found:=Party_Has_Item (Member,Party_Size,Maleficent_Stone_Item_Number,Person,Item);
+  Game_Won:=Found and Not (Auto_Save);
 End;
 
 (******************************************************************************)
@@ -1381,14 +1660,45 @@ Begin { Party Movable }
   Party_Movable:=Temp;
 End;  { Party Movable }
 
-
 (******************************************************************************)
 
 Procedure Check_For_Encounter (Var Member: Party_Type; Var Current_Party_Size: Party_Size_Type; Party_Size: Integer;
                                Var New_Spot: Boolean;  Just_Kicked: Boolean; Var Time_Delay: Integer);
 
+Var
+   Monster_Encountered: Integer;
+   Area: Area_Type;
+   Encountered,No_Magic,Alarm_Off,Dummy: Boolean;
+
 Begin
-   { TODO: Enter this code }
+   No_Magic:=(Maze.Special_Table[Maze.Room[PosX,PosY].Contents].Special=AntiMagic);
+
+   Alarm_Off:=False;  Encountered:=False;   Dummy:=False;
+
+   If Just_Kicked and (Maze.Room[PosX,PosY].Kind=Room) then Area:=Room { If we JUST walked into the room, it's a lair encounter }
+   Else                                                     Area:=Corridor;  { Otherwise, it's wandering }
+
+   Monster_Encountered:=Choose_Monster (Maze.Monsters,Area,Encountered);
+
+   If Encountered then
+      Begin
+         Draw_View (Direction,New_Spot,Member,Current_Party_Size);
+
+         Run_Encounter_Aux (Monster_Encountered,Member,Current_Party_Size,Party_Size,Alarm_Off,Area,No_Magic,Time_Delay);
+
+         While Alarm_Off do
+            Begin
+               Monster_Encountered:=Choose_Monster (Maze.Monsters,Area,Dummy);
+              Run_Encounter_Aux (Monster_Encountered,Member,Current_Party_Size,Party_Size,Alarm_Off,Area,No_Magic,Time_Delay);
+            End;
+      End;
+
+   If Encountered then  { If there was an encounter ... }
+      Begin
+         New_Spot:=True;
+         Spells_Box (Rounds_Left);
+         Fix_Compass (Direction,Rounds_Left);
+      End;
 End;
 
 (******************************************************************************)
@@ -1401,27 +1711,13 @@ End;
 
 { TODO: Print_Change }
 
-{ TODO: Enter this code }
-
 { TODO: Enter_Pool }
 
-{ TODO: Check_Message_And_Pool }
+{ TODO: Message_And_Pool }
 
 { TODO: Special Feature }
 
 { TODO: Check_Special }
-
-(******************************************************************************)
-
-Procedure Update_Status (Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type;  Party_Size: Integer;
-                               Var Leave_Maze: Boolean; Rounds_Left: Spell_Duration_List);
-
-Begin
-   Spells_Box (Rounds_Left);
-   Party_Box (Member,Current_Party_Size,Party_Size,Leave_Maze);
-End;
-
-{ TODO: Enter this code }
 
 (******************************************************************************)
 
