@@ -293,8 +293,8 @@ FUNCTION smg$draw_line
              start_column: INTEGER;
              end_row: INTEGER;
              end_column: INTEGER;
-             rendition_set: UNSIGNED;
-             rendition_complement: UNSIGNED )
+             rendition_set: UNSIGNED := %immed 0;
+             rendition_complement: UNSIGNED := %immed 0 )
       : UNSIGNED;
 
         EXTERNAL;

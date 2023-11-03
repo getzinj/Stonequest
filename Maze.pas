@@ -639,7 +639,7 @@ Begin { Initialize }
    Previous_Spot:=Corridor;
    Round_Counter:=1;         Minute_Counter:=1;
 
-   Read_Messages (Messages);
+   Messages:=Read_Messages;
    Init_Stack (Places);
    Rounds_Left:=Zero;
    Initialize_Party (Member,Current_Party_Size,Party_Size);
@@ -688,6 +688,13 @@ End;  { Initialize }
 (******************************************************************************)
 
 Procedure Print_Message (Start: Integer);
+
+Var
+   Lines_Printed: Integer;
+   Curr: Integer;
+   LineP: Integer;
+   R: Unsigned;
+   L: Line;
 
 Begin
    Lines_Printed:=0;
@@ -891,7 +898,7 @@ Begin
         1: If ((Round(Minute_Counter) mod 6)=0) and Made_Roll(15) then
                Avernus_Fireball(Direction,Member,Current_Party_Size,Party_Size,New_Spot);
         2: ;
-        3: If ((Round(Minute_Counter) mod 10)=0) and then
+        3: If ((Round(Minute_Counter) mod 10)=0) then
                Minauros_Poison(Member,Current_Party_Size);
         4: ;
         5: If ((Round(Minute_Counter) mod 6)=0) then
@@ -907,10 +914,10 @@ End;
 (******************************************************************************)
 
 Procedure A_Pit (Var Member: Party_Type; Var Current_Party_Size: Party_Size_Type; Party_Size: Integer;
-                 Damage: Die_Type; New_Spot: Boolean;
+                 Damage: Die_Type; New_Spot: Boolean);
 
 Begin
-  Inflict-Damage (Damage,Direction,Member,Current_Party_Size,Party_Size,New_Spot);
+  Inflict_Damage (Damage,Direction,Member,Current_Party_Size,Party_Size,New_Spot);
   SMG$Put_Line (MessageDisplay,'A pit!');
   Ring_Bell (MessageDisplay);
 End;
@@ -923,15 +930,15 @@ Procedure Random_Rotate (Var Maze: Level; PosX,PosY: Horizontal_Type;  Var direc
 Var
    D: Integer;
 
-Hegin
+Begin
    D:=Roll_Die (4);
    Case D of
-      1: Direction=North;
-      2: Direction=South;
-      3: Direction=East;
-      4: Direction=West;
+      1: Direction:=North;
+      2: Direction:=South;
+      3: Direction:=East;
+      4: Direction:=West;
    End;
-   Draw_View (Direction,New_Spot,Member,Current_Party-Size);
+   Draw_View (Direction,New_Spot,Member,Current_Party_Size);
 End;
 
 (******************************************************************************)
@@ -952,6 +959,15 @@ End;
 
 (******************************************************************************)
 
+Function CharacterCanUseItem(Character: Character_Type; ItemNumber: Integer): Boolean;
+
+Begin
+  return (Character.Class in Item_List[ItemNumber].Usable_By)
+     or (Character.PreviousClass in Item_List[ItemNumber].Usable_By)
+End;
+
+(******************************************************************************)
+
 Procedure Give_Item_if_Room (Var Character: Character_Type; Item_No: Integer);
 
 { This procedure is only to be called if character has room }
@@ -966,20 +982,311 @@ Begin
    With Character.Item[Num] do
       Begin
          Equipted:=False;
-         Ident:False;
-         Cursed: False;
-         Usable:=(Character.Class in Item_List[Item_No].Usable_By) or (Character.PreviousClass in Item_List[Item_No].Usable_By);
+         Ident:=False;
+         Cursed:= False;
+         Usable:=CharacterCanUseItem(Character, Item_No);
          Item_num:=Item_Num;
       End;
 End;
 
 (******************************************************************************)
 
-{ TODO: Enter this code }
+Procedure Give_Item (Item_No: Integer; Var Member: Party_Type;  Current_Party_Size: Party_Size_Type);
+
+Var
+   Person: Integer;
+
+Begin
+   Person:=Character_with_Room (Member,Current_Party_Size);
+
+   SMG$Begin_Display_Update (MessageDisplay);
+   SMG$Erase_Display (MessageDisplay);
+
+   If Person<=Current_Party_Size then
+      Begin
+         Give_Item_if_Room (Member[Person],Item_No);
+
+         SMG$Put_Line (MessageDisplay,Member[Person].Name+' found an item!',0);
+      End
+   Else
+      SMG$Put_Line (MessageDisplay,'An item is found, but it soon vanishes as nobody has room for it!',0,Wrap_Flag:=SMG$M_WRAP_WORD);
+
+   SMG$End_Display_Update (MessageDisplay);
+
+   Delay (2);
+
+   SMG$Erase_Display (MessageDisplay);
+End;
+
+(******************************************************************************)
+
+Function Party_has_Item (Member: Party_Type; Party_Size,SearchItem: Integer; Var Person,Slot: Integer): Boolean;
+
+Var
+   Found: boolean;
+
+Begin
+  Person:=0;  Found:=False;
+  Repeat
+     Begin
+        Person:=Person+1;
+        Slot:=0;
+        If Member[Person].No_of_Items>0 then
+           Repeat
+              Begin
+                Slot:=Slot+1;
+                Found:=(Member[Person].Item[Slot].Item_Num=SearchItem);
+              End;
+           Until Found or (Slot=Member[Person].No_of_Items);
+     End;
+  Until Found or (Person=Party_Size);
+  Party_Has_Item:=Found;
+End;
+
+(******************************************************************************)
+
+Procedure Message_and_Item_Trade (Message: Integer; Traded_With,Traded_For: Integer;  Var Member: Party_Type;
+                                   Current_Party_Size: Party_Size_Type);
+
+Var
+   Person,Slot: Integer;
+   Found: Boolean;
+
+Begin
+   Print_Message_with_Return (Message);
+
+   Found:=Party_has_Item (Member,Current_Party_Size,Traded_With,Person,Slot);
+
+   If Found then
+      Begin
+         With Member[Person].Item[Slot] do
+            Begin
+               Item_Num:=Traded_For;
+               Ident:=False;
+               Cursed:=False;
+               Equipted:=False;
+               Usable:=CharacterCanUseItem(Member[Person], Traded_For);
+            End;
+
+         SMG$Begin_Display_Update (MessageDisplay);
+         SMG$Erase_Display (MessageDisplay);
+
+         SMG$Put_Line (MessageDisplay,Member[Person].Name+' traded for an item!',0);
+         SMG$End_Display_Update (MessageDisplay);
+      End;
+End;
+
+(******************************************************************************)
+
+Procedure Message_and_Item (Message,Item: Integer;  Var Member: Party_Type;  Current_Party_Size: Party_Size_Type);
+
+Begin
+   Print_Message_with_Return (Message);
+   Give_Item (Item,Member,Current_Party_Size);
+End;
+
+(******************************************************************************)
+
+Function Get_Answer: Line;
+
+Var
+   Temp: Line;
+
+Begin
+   SMG$Set_Cursor_ABS (MessageDisplay,2,1);
+   Cursor;
+   SMG$Read_String (Keyboard,Temp,Display_ID:=Messagedisplay,Prompt_String:='Answer?  --->');
+   No_Cursor;
+
+   STR$Upcase (Temp,Temp);
+   If Temp.Length>2 then
+     If SubStr(Temp,1,2)='A ' then
+        Temp:=Substr(Temp,3,Temp.Length-2);
+   If Temp.Length>3 then
+     If SubStr(Temp,1,3)='AN ' then
+        TEMP:=Substr(Temp,4,Temp.Length-3);
+   If Temp.Length>4 then
+     If SubStr(Temp,1,4)='THE ' then
+        TEMP:=Substr(Temp,5,Temp.Length-4);
+   Get_Answer:=Temp;
+End;
+
+(******************************************************************************)
+
+Procedure Ask_Riddle (Question,Answer_line: Integer;  Var New_Spot: Boolean);
+
+Var
+   Answer: Line;
+
+Begin
+   Print_Message (Question);
+   Wait_for_Return;
+
+   Answer:=Get_Answer;
+
+   If STR$Case_Blind_Compare(Answer,Messages[answer_line])=0 then
+      Begin
+         SMG$Put_Chars (MessageDisplay,'Right!',3,1);
+         Delay(1);
+         SMG$Erase_Display (MessageDisplay);
+      End
+   Else
+      Begin
+         SMG$Put_Chars (MessageDisplay,'Wrong!',3,1);
+         Delay(1);
+         Move_Backward (Direction,New_Spot);
+      End;
+End;
+
+(******************************************************************************)
+
+Procedure UnREabLE_MEthOD_naME (Message,Cost: Integer;  Var New_Spot: Boolean; Var Member: Party_Type;  Party_Size: Integer;
+                                Current_Party_Size: Party_Size_Type);
+
+Var
+   Number: Integer;
+
+Begin
+   Print_Message (Message);
+   Wait_For_Return;
+
+   SMG$Begin_Display_Update (MessageDisplay);
+   SMG$Erase_Display (MessageDisplay);
+
+   SMG$Put_Chars (Messagedisplay,'Who will pay?',2,1);
+   SMG$End_Display_Update (MessageDisplay);
+
+   Number:=Pick_Character_Number (Party_Size,Current_Party_Size);
+
+   If Number=0 then
+      Move_Backward (Direction,New_Spot)
+   Else if Member[Number].Gold<Cost then
+      Begin
+         SMG$Put_Chars (MessageDisplay,'Thou canst not pay!',5,41);
+
+         Move_Backward (Direction,New_Spot);
+      End
+   Else
+      Begin
+         SMG$Put_Chars (MessageDisplay,'Thanks!',5,41);
+
+         Member[Number].Gold:=Max(Member[Number].Gold-Cost, 0);
+
+         Delay (1);
+
+         SMG$Erase_Display (MessageDisplay);
+      End;
+End;
+
+(******************************************************************************)
+
+Procedure Teleported_Into_Rock (Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type;  Party_Size: Integer;
+                                   Var Leave_Maze: Boolean);
+
+Var
+   Person: Integer;
+
+Begin
+  For Person:=1 to Party_Size do
+     Member[Person].Status:=Deleted;
+
+  Party_Box (Member,Current_Party_Size,Party_Size,Leave_Maze);
+
+  SMG$Begin_Display_Update (MessageDisplay);
+  SMG$Erase_Display (MessageDisplay);
+
+  SMG$Put_Line (MessageDisplay,'Thou teleported into rock!!!',0,1);
+  SMG$End_Display_Update (MessageDisplay);
+
+  Delay (3);
+End;
+
+(******************************************************************************)
+
+Procedure Need_Item_to_Pass (Item_no,Approved,Denied: Integer;
+                             Var New_Spot: Boolean;
+                                 Member: Party_Type;
+                                 Current_Party_Size,Party_Size: Integer);
+
+Var
+   Person,Item: Integer;
+   Found: Boolean;
+
+Begin
+   Person:=0;  Item:=0;
+   Found:=Party_Has_Item (Member,Party_Size,Item_No,Person,Item);
+   If (Not Found) then
+      Begin
+         Print_Message_With_Return (Denied);
+         Move_Backward (Direction,New_Spot);
+      End
+   Else
+      Print_Message_With_Return (Approved);
+End;
+
+(******************************************************************************)
+
+Procedure Message_and_Teleport_to_Kyrn (message_No: Integer);
+
+Begin
+   Print_Message_with_Return (Message_No);
+   Leave_Maze:=True;
+End;
+
+(******************************************************************************)
+
+Procedure Initiate_Characters (Var Member: Party_Type;  Party_Size: Integer);
+
+Var
+   Person: Integer;
+
+Begin
+   For Person:=1 to Party_Size do
+      Begin
+         Member[Person].No_of_Items:=0;
+         Member[Person].Item:=Zero;
+         Member[Person].Gold:=Round (1/4 * member[Person].Gold);
+         Member[Person].Experience:=Member[Person].Experience + 50000;
+         Member[Person].Scenarios_Won[0]:=True; { TODO: Make this a set }
+         Member[Person].Armor_Class:=Compute_AC (Member[Person],PosZ);
+         Member[Person].Regenerates:=Regenerates (Member[Person],PosZ);
+      End;
+End;
+
+(******************************************************************************)
 
 Procedure Handle_Completed_Quest (Var Member: Party_Type;  Party_Size: Integer);
+
+Const
+   Win_Text = 61;
+
+Var
+  T: Line;
+  Linenum: Integer;
+  R: Unsigned;
+
 Begin
-   { TODO: Enter this code }
+   Linenum:=Win_Text;
+   Initiate_Characters (Member,Party_Size);
+   SMG$Erase_Display (WinDisplay);
+
+   While Messages[LineNum]<>'~' do
+      Begin
+         T:=Messages[Linenum];
+         R:=Rendition_Set (T);
+         SMG$Put_Line (WinDisplay,T,1,R,Wrap_Flag:=SMG$M_WRAP_WORD);
+         Linenum:=LineNum+1;
+      End;
+
+   SMG$Put_Chars (WinDisplay,'Press any key to continue',21,25,1,1);
+   SMG$Paste_Virtual_Display (WinDisplay,Pasteboard,2,2);
+
+   Wait_Key;
+
+   Unpaste_All;
+
+   SMG$Unpaste_Virtual_Display (WinDisplay,Pasteboard);
+   SMG$Erase_Display (WinDisplay);
 End;
 
 (******************************************************************************)
@@ -1001,9 +1308,47 @@ End;  { Fix Compass }
 
 { TODO: Perchance_Salvation }
 
-{ TODO: Make_Grave_Stone }
+(******************************************************************************)
 
-{ TODO: Make_Grave_Stones }
+Procedure Make_Grave_Stone (Member: Party_Type; Character: Integer; X,Y: Integer);
+
+Var
+   Name: Name_Type;
+
+Begin
+   Name:=Member[Character].Name;
+   If Name.Length>12 then
+      Name:=SUBSTR(Name,1,12);
+
+   SMG$Draw_Rectangle (GraveDisplay,Y,X,Y+9,X+12);
+   SMG$Put_Chars(GraveDisplay,'R.I.P.',Y+1,X+3);
+   SMG$Put_Chars (GraveDisplay,Name+'',Y+3,X+6-(Name.Length div 2));
+End;
+
+(******************************************************************************)
+
+Procedure Make_Grave_Stones (Var Member: Party_Type;  Party_Size: Integer);
+
+Var
+   Character: Integer;
+   CorX,CorY: Coordinate_Matrix;
+
+Begin
+  CorX[1]:=10;     CorY[1]:=1;
+  CorX[2]:=32;     CorY[2]:=1;
+  CorX[3]:=54;     CorY[3]:=1;
+  CorX[4]:=10;     CorY[4]:=11;
+  CorX[5]:=32;     CorY[5]:=11;
+  CorX[6]:=54;     CorY[6]:=11;
+
+  For Character:=1 to Party_Size do
+     Begin
+        Member[Character].Status:=Deleted;
+        Make_Grave_Stone (Member, Character, CorX[Character], CorY[Character]);
+     End;
+End;
+
+(******************************************************************************)
 
 Procedure Enter_Grave_Yard (Var Member: Party_Type; Party_Size: Integer);
 
