@@ -4,5 +4,5 @@ $      Link Camp,Casino,Character,CharacterAttacks,Church,Compute,Craps,-
        Kyrn,LibRtl,Maze,Messages,Monster,MonsterAttack,PicEdit,PickPocket,-
        PlaceStack,PrintChar,Scores,Shell_Out,Slots,SmgRtl,Stonequest,-
        AdminUtils,PlayerUtils,Store,StrRtl,Tavern,Training,Treasure,-
-       ViewShared,-
+       ViewShared,PriorityQueue,MazeSpecial,-
        PerspectiveGeometry,Types,View,Windows,Handler /EXE=StoneQuest.exe
