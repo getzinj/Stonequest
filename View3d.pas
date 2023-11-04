@@ -24,7 +24,6 @@ Var
 {********************************************************************************************************************}
 
 
-
 Function isPointInsideQuadrilateral(vertx: Vertex; verty: Vertex; testx: Integer; testy: Integer): boolean;
 
 Var

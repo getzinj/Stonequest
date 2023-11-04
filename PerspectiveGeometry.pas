@@ -15,13 +15,15 @@ Var
    PosX,PosY,PosZ:                                  [Byte,External]0..20;
 
 
+(******************************************************************************)
+
 Function getXToEast(x: integer): integer;
 
 Begin
   If x < 20 then
-     return x + 1
+     getXToEast := x + 1
   Else
-     return 1;
+     getXToEast := 1;
 End;
 
 (******************************************************************************)
@@ -30,9 +32,9 @@ Function GetXToWest(x: integer): integer;
 
 Begin
   If x > 1 then
-     return x - 1
+     GetXToWest := x - 1
   Else
-     return 20;
+     GetXToWest := 20;
 End;
 
 (******************************************************************************)
@@ -40,7 +42,7 @@ End;
 Function getXToNorth(x: integer): integer;
 
 Begin
-  return x;
+  getXToNorth := x;
 End;
 
 (******************************************************************************)
@@ -48,7 +50,7 @@ End;
 Function GetXToSouth(x: integer): integer;
 
 Begin
-  return x;
+  GetXToSouth := x;
 End;
 
 (******************************************************************************)
@@ -56,7 +58,7 @@ End;
 Function getYToEast(y: integer): integer;
 
 Begin
-  return y;
+  getYToEast := y;
 End;
 
 (******************************************************************************)
@@ -64,7 +66,7 @@ End;
 Function GetYToWest(y: integer): integer;
 
 Begin
-  return y;
+  GetYToWest := y;
 End;
 
 (******************************************************************************)
@@ -73,9 +75,9 @@ Function getYToNorth(y: integer): integer;
 
 Begin
   If y > 1 then
-     return y - 1
+     getYToNorth := y - 1
   Else
-     return 20;
+     getYToNorth := 20;
 End;
 
 (******************************************************************************)
@@ -84,9 +86,9 @@ Function GetYToSouth(y: integer): integer;
 
 Begin
   If y < 20 then
-     return y + 1
+     GetYToSouth := y + 1
   Else
-     return 1;
+     GetYToSouth := 1;
 End;
 
 (******************************************************************************)
@@ -99,6 +101,8 @@ Var
 
 Begin
   room := Maze.Room[posX][posY];
+
+  resultSpot:=Zero;
 
   resultSpot.direction := direction;
   resultSpot.kind := room.Kind;
@@ -169,7 +173,7 @@ Begin
          newY:=getYToSouth(spot.rowY);
       End;
 
-  return getLocation(spot.direction, newX, newY);
+  getPositionToLeft := getLocation(spot.direction, newX, newY);
 End;
 
 (******************************************************************************)
@@ -204,7 +208,7 @@ Begin
          newY:=getYToNorth(spot.rowY);
       End;
 
-  return getLocation(spot.direction, newX, newY);
+  getPositionToRight := getLocation(spot.direction, newX, newY);
 End;
 
 (******************************************************************************)
@@ -239,7 +243,7 @@ Begin
          newY:=getYToWest(spot.rowY);
       End;
 
-  return getLocation(spot.direction, newX, newY);
+  getPositionInFront := getLocation(spot.direction, newX, newY);
 End;
 
 (******************************************************************************)
@@ -249,20 +253,23 @@ End;
 [Global]Function getCenterNear(Direction: Direction_Type): NewISpot;
 
 Begin
-  return getLocation(Direction, posX, posY);
+  getCenterNear := getLocation(Direction, posX, posY);
 End;
 
+(******************************************************************************)
 
 [Global]Function getLeftNear(Direction: Direction_Type): NewISpot;
 
 Begin
-  return getPositionToLeft(getCenterNear(Direction));
+  getLeftNear := getPositionToLeft(getCenterNear(Direction));
 End;
+
+(******************************************************************************)
 
 [Global]Function getRightNear(Direction: Direction_Type): NewISpot;
 
   Begin
-    return getPositionToRight(getLocation(Direction, posX, posY));
+    getRightNear := getPositionToRight(getLocation(Direction, posX, posY));
   End;
 
 (******************************************************************************)
@@ -272,7 +279,7 @@ End;
 [Global]Function getCenterMiddle(Direction: Direction_Type): NewISpot;
 
 Begin
-  return getPositionInFront(getCenterNear(Direction));
+  getCenterMiddle := getPositionInFront(getCenterNear(Direction));
 End;
 
 (******************************************************************************)
@@ -280,7 +287,7 @@ End;
 [Global]Function getLeftMiddle(Direction: Direction_Type): NewISpot;
 
 Begin
-  return getPositionToLeft(getCenterMiddle(Direction));
+  getLeftMiddle := getPositionToLeft(getCenterMiddle(Direction));
 End;
 
 (******************************************************************************)
@@ -288,7 +295,7 @@ End;
 [Global]Function getRightMiddle(Direction: Direction_Type): NewISpot;
 
 Begin
-  return getPositionToRight(getCenterMiddle(Direction));
+  getRightMiddle := getPositionToRight(getCenterMiddle(Direction));
 End;
 
 (******************************************************************************)
@@ -298,7 +305,7 @@ End;
 [Global]Function getCenterFar(Direction: Direction_Type): NewISpot;
 
 Begin
-  return getPositionInFront(getCenterMiddle(Direction));
+  getCenterFar := getPositionInFront(getCenterMiddle(Direction));
 End;
 
 (******************************************************************************)
@@ -306,7 +313,7 @@ End;
 [Global]Function getLeftFar(Direction: Direction_Type): NewISpot;
 
 Begin
-  return getPositionToLeft(getCenterFar(Direction));
+  getLeftFar := getPositionToLeft(getCenterFar(Direction));
 End;
 
 (******************************************************************************)
@@ -314,7 +321,7 @@ End;
 [Global]Function getLeftLeftFar(Direction: Direction_Type): NewISpot;
 
 Begin
-  return getPositionToLeft(getLeftFar(Direction));
+  getLeftLeftFar := getPositionToLeft(getLeftFar(Direction));
 End;
 
 (******************************************************************************)
@@ -322,7 +329,7 @@ End;
 [Global]Function getRightFar(Direction: Direction_Type): NewISpot;
 
 Begin
-  return getPositionToRight(getCenterFar(Direction));
+  getRightFar := getPositionToRight(getCenterFar(Direction));
 End;
 
 (******************************************************************************)
@@ -330,6 +337,6 @@ End;
 [Global]Function getRightRightFar(Direction: Direction_Type): NewISpot;
 
 Begin
-  return getPositionToRight(getRightFar(Direction));
+  getRightRightFar := getPositionToRight(getRightFar(Direction));
 End;
 End.
