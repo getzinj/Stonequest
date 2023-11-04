@@ -20,6 +20,7 @@ Var
    Plane_Name:                                      [External]Array [0..9] of Line;
    Item_List:                                       [External]List_of_Items;
    Direction:                                       [External]Direction_Type;
+   Maze:                                            [External]Level;
    Messages:                                        [External]Message_Group;
    Minute_Counter:                                  [External]Real;
    PosX,PosY,PosZ:                                  [Byte,External]0..20;
@@ -39,6 +40,7 @@ Var
 [External]Procedure Cursor;External;
 [External]Procedure Delay (Seconds: Real);External;
 [External]Procedure Draw_View (Direction: Direction_Type;  New_Spot: Boolean; Member: Party_Type; Current_Party_Size: Party_Size_Type);External;
+[External]Procedure Insert_Place (PosX,PosY: Horizontal_Type; PosZ: Vertical_Type; Var Stack: Place_Stack);External;
 [External]Procedure Move_Backward (Direction: Direction_Type;  Var New_Spot: Boolean);External;
 [External]Procedure No_Cursor;External;
 [External]Procedure Party_Box (Var Member: Party_Type; Var Current_Party_Size: Party_Size_Type;  Party_Size: Integer;
@@ -527,7 +529,7 @@ End;
 
 (******************************************************************************)
 
-Procedure UnREabLE_MEthOD_naME (Message,Cost: Integer;  Var New_Spot: Boolean; Var Member: Party_Type;  Party_Size: Integer;
+Procedure Pay_Fee (Message,Cost: Integer;  Var New_Spot: Boolean; Var Member: Party_Type;  Party_Size: Integer;
                                 Current_Party_Size: Party_Size_Type);
 
 Var
@@ -833,24 +835,88 @@ Begin
       Draw_View (Direction,New_Spot,Member,Current_Party_Size);
 End;
 
+(******************************************************************************)
+
+Procedure Special_Encounter (MonsterNo: Integer; Var New_Spot: Boolean; Var Member: Party_Type;
+                             Var Current_Party_Size: Party_Size_Type;  Party_Size: Integer;  Var Time_Delay: Integer);
+
+Begin
+   { TODO: Special Encounter }
+End;
 
 (******************************************************************************)
 
-{ TODO: Special Encounter }
+Procedure Message_And_Encounter (MessageNo,MonsterNo: Integer; Var New_Spot: Boolean; Var Member: Party_Type;
+                                         Var Current_Party_Size: Party_Size_Type;  Party_Size: Integer;  Var Time_Delay: Integer);
 
-{ TODO: Message_and_Encounter }
+Begin
+   { TODO: Message_and_Encounter }
+End;
 
-{ TODO: Encounter_SQ_Creator }
+(******************************************************************************)
 
-{ TODO: Message_and_Picture }
+Procedure Encounter_SQ_Creator (Var Maze: Level; Var PosX,PosY: Horizontal_Type; Var PosZ: Vertical_Type;
+                                Var New_Spot: Boolean; Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type;
+                                Party_Size: Integer; Var Time_Delay: Integer);
 
-{ TODO: Character_Finds_Item }
+Begin
+  { TODO: Encounter_SQ_Creator }
+End;
 
-{ TODO: Encounter_UJB }
+(******************************************************************************)
 
-{ TODO: Message_and_Hidden_Item }
+Procedure Message_and_Picture (MessageNo,PictureNo: Integer; New_Spot: Boolean; Member: Party_Type;
+                               Current_Party_Size: Party_Size_Type);
 
-{ TODO: A_Chute }
+Begin
+   Show_Image (PictureNo,ViewDisplay);
+   Print_Message (MessageNo);
+   Wait_for_Return;
+   Draw_View (Direction,New_Spot,Member,Current_Party_Size);
+End;
+
+(******************************************************************************)
+
+Procedure Character_Finds_Item (Var Character: Character_Type; Item_No: Integer);
+
+Begin
+   { TODO: Character_Finds_Item }
+End;
+
+(******************************************************************************)
+
+{ $$+
+
+Procedure Encounter_UJB (Var Member: Party_Type;  Current_Party_Size: Integer);
+
+TODO: Encounter_UJB
+
+-$$}
+
+(******************************************************************************)
+
+Procedure Message_and_Hidden_Item (    Message_No,Item_No: Integer;
+                                           Var Maze: Level;
+                                           Var PosX,PosY: Horizontal_Type;
+                                           Var New_Spot: Boolean;
+                                           Var Member: Party_Type;
+                                           Var Current_Party_Size: Party_Size_Type;
+                                               Party_Size: Integer;
+                                           Var Time_Delay: Integer);
+
+Begin
+  { TODO: Message_and_Hidden_Item }
+End;
+
+(******************************************************************************)
+
+Procedure A_Chute (Special: Special_Type;  Var New_Spot: Boolean; Var Maze: Level;  Var PosX,PosY: Horizontal_Type;
+                   Var PosZ: Vertical_Type; Var Previous_Spot: Area_Type;  Member: Party_Type;
+                   Current_Party_Size: Integer);
+
+Begin
+   { TODO: A_Chute }
+End;
 
 (******************************************************************************)
 
@@ -867,8 +933,6 @@ Begin
   Found:=Party_Has_Item (Member,Party_Size,Maleficent_Stone_Item_Number,Person,Item);
   Game_Won:=Found and Not (Auto_Save);
 End;
-
-
 
 (******************************************************************************)
 (********************************* Special Areas ******************************)
@@ -891,11 +955,102 @@ End;
 
 { TODO: Enter_Pool }
 
+Procedure Message_and_Pool (MessageNo,PoolNo: Integer; Var Maze: Level; Var PosX,PosY: Horizontal_Type;
+                            Direction: Direction_Type; Var Member: Party_Type; Var Current_Party_Size: Party_Size_Type;
+                            Party_Size: Integer; Var New_Spot: Boolean);
+
+Begin
 { TODO: Message_And_Pool }
+End;
 
-{ TODO: Special Feature }
+(******************************************************************************)
 
-{ TODO: Check_Special }
+
+Procedure Special_Feature (Var Maze: Level; Var PosX,PosY: Horizontal_Type;
+                           Var PosZ: Vertical_Type; Var Direction: Direction_Type;
+                           Var Member: Party_Type; Var Current_Party_Size: Party_Size_Type; Party_Size: Integer;
+                               Special: Special_Type;  Var Rounds_Left: Spell_Duration_List;  Var New_Spot: Boolean;
+                           Var Time_Delay: Integer);
+
+Var
+   P1,P2,P3: Integer;
+
+Begin
+   Draw_View (Direction,New_Spot,Member,Current_Party_Size);
+   P1:=Special.Pointer1;  P2:=Special.Pointer2;  P3:=Special.Pointer3;
+
+   Case Special.Feature of
+       NothingSpecial: ;
+                  Msg: Print_Message (P1);
+       Msg_Item_Given: Message_and_Item (P1,P2,Member,Current_Party_Size);
+             Msg_Pool: Message_and_Pool (P1,P2,Maze,PosX,PosY,Direction,Member,Current_Party_Size,Party_Size,New_Spot);
+      Msg_Hidden_Item: Message_and_Hidden_Item (P1,P2,Maze,PosX,PosY,New_Spot,Member,Current_Party_Size,Party_Size,Time_Delay);
+        Msg_Need_Item: Need_Item_to_Pass (P1,P2,P3,New_Spot,Member,Current_Party_Size,Party_Size);
+         Msg_Lower_AC: Rounds_Left[DiPr]:=MaxInt;
+         Msg_Raise_AC: Rounds_Left[DiPr]:=0;
+      Msg_Goto_Castle: Message_and_Teleport_to_Kyrn (P1);
+        Msg_Encounter: Message_and_Encounter (P1,P2,New_Spot, Member,Current_party_Size,Party_Size,Time_Delay);
+               Riddle: Ask_Riddle (P1,P2,New_Spot);
+                  Fee: Pay_Fee (P1,P2,New_Spot,Member,Party_Size,Current_Party_Size);
+       Msg_Trade_Item: Message_and_Item_Trade (P1,P2,P3,Member,Current_Party_Size);
+          Msg_Picture: Message_and_Picture (P1,P2,New_Spot,Member,Current_Party_Size);
+              Unknown: Case P1 of
+                           1: Encounter_SQ_Creator (Maze,PosX,PosY,PosZ,New_Spot,Member,Current_Party_Size,Party_Size,Time_Delay);
+                         { 2: Encounter_UJB (Member,Current_Party_Size); }
+                           Otherwise ;
+                       End;
+   End;
+End;
+
+(******************************************************************************)
+
+Procedure Check_Special (Special: Special_Type;  Var New_Spot: Boolean; Var Member: Party_Type;
+                         Var Current_Party_Size: Party_Size_Type; Party_Size: Integer;
+                         Var Previous_Spot: Area_Type;  Var Time_Delay: Integer);
+
+Var
+   Temp: Die_Type;
+   P1,P2,P3: Integer;
+
+Begin
+   If PosZ>10 then
+      Hell_Effects (Direction,Member,Current_Party_Size,Party_Size,New_Spot,PosZ-10);
+
+   P1:=Special.Pointer1;  P2:=Special.Pointer2;  P3:=Special.Pointer3;
+
+   Case Special.Special of
+             Nothing: Draw_View (Direction,New_Spot,Member,Current_Party_Size);
+              Stairs: Stair_Case (Maze,PosX,PosY,PosZ,Special,New_Spot,Previous_Spot,Member,Current_Party_Size);
+              Cliff:  Cliff_to_Hell (Maze,PosX,PosY,PosZ,Special,New_Spot,Previous_Spot,Member,Current_Party_size,Party_Size);
+                Pit:  If Rounds_Left[Levi]<1 then
+                         Begin
+                            Temp.X:=P1;  Temp.Y:=P2;  Temp.Z:=P3;
+                            A_Pit (Member,Current_Party_Size,Party_Size,Temp,New_Spot);
+                         End;
+               Chute: A_Chute (Special,New_Spot,Maze,PosX,PosY,PosZ,Previous_Spot,Member,Current_Party_Size);
+              Rotate: Random_Rotate (Maze,PosX,PosY,Direction,New_Spot,Member,Current_Party_Size);
+            Darkness: Magic_Darkness (Maze);
+            Teleport: Begin
+                         PosX:=P1; PosY:=P2;
+                         Draw_View (Direction,New_Spot,Member,Current_Party_Size);
+                         New_Spot:=True;
+                         Remove_Nodes (Places);
+                      End;
+              Damage: Begin
+                         Temp.X:=P1;  Temp.Y:=P2;  Temp.Z:=P3;
+                         Inflict_Damage (Temp,Direction,Member,Current_Party_Size,Party_Size,New_Spot);
+                      End;
+            Elevator: An_Elevator (P1,P2,Maze,PosX,PosY,PosZ,New_Spot,Previous_Spot,Member,Current_Party_Size);
+                Rock: Teleported_into_Rock (Member,Current_Party_Size,Party_Size,Leave_Maze);
+           Antimagic: Rounds_Left:=Zero;
+           SPFeature: Special_Feature (Maze,PosX,PosY,PosZ,Direction,Member,Current_Party_Size,Party_Size,Special,Rounds_Left,New_Spot,Time_Delay);
+        An_Encounter: Special_Encounter (P1,New_Spot,Member,Current_Party_Size,Party_Size,Time_Delay);
+   End;
+   If Special.Special<>Nothing then
+      Remove_Nodes (Places)
+   Else
+      Insert_Place (PosX,PosY,PosZ,Places);
+End;
 
 (******************************************************************************)
 
@@ -903,9 +1058,20 @@ End;
                                            Party_Size: Integer;  Var Leave_Maze: Boolean;  Var Previous_Spot: Area_Type;
                                        Var Time_Delay: Integer);
 
+Var
+   Special: Special_Type;
+
 Begin
-   { TODO: Enter this code }
+   Special:=Maze.Special_Table[Maze.Room[PosX,PosY].Contents];
+   While New_Spot and Not(Leave_Maze) do
+      Begin
+         New_Spot:=False;
+         If (PosZ>0) and Not (Leave_Maze) then
+            Check_Special (Special,New_Spot,Member,Current_Party_Size,Party_Size,Previous_Spot,Time_Delay);
+
+         If PosZ>0 then
+            Special:=Maze.Special_Table[Maze.Room[PosX,PosY].Contents];
+      End;
+   New_Spot:=False;
 End;
-
-
 End.
