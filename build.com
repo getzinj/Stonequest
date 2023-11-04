@@ -4,6 +4,8 @@ $      write sys$output "Compiling SmgRtl.pas"
 $      pas SmgRtl
 $      write sys$output "Compiling StrRtl.pas"
 $      pas StrRtl
+$      write sys$output "Compiling Ranges.pas"
+$      pas Ranges
 $      write sys$output "Compiling Types.pas"
 $      pas Types
 $      write sys$output "Compiling PriorityQueue.pas"
@@ -117,7 +119,7 @@ $      Link Camp,Casino,Character,CharacterAttacks,Church,Compute,Craps,-
        Kyrn,LibRtl,Maze,Messages,Monster,MonsterAttack,PicEdit,PickPocket,-
        PlaceStack,PrintChar,Scores,Shell_Out,Slots,SmgRtl,Stonequest,-
        AdminUtils,PlayerUtils,Store,StrRtl,Tavern,Training,Treasure,-
-       ViewShared,PriorityQueue,MazeSpecial,-
+       ViewShared,PriorityQueue,MazeSpecial,Ranges,-
        PerspectiveGeometry,Types,View,Windows,Handler /EXE=StoneQuest.exe
 $!
 $      write sys$output "Purging old EXE files..."

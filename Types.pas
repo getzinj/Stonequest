@@ -1,4 +1,4 @@
-[Environment]Module Types;
+[Environment,Inherit ('Ranges')]Module Types;
 Const
 
 (* These values are returned by the predefined STATUS function. *)
@@ -86,7 +86,8 @@ Type
 
    { Possible treasure types }
 
-   T_Type         = 1..150;
+
+   T_Type         = MIN_TREASURE_NUMBER..MAX_TREASURE_NUMBER;
 
    Four_Letters   = Varying [4] of char;  { guess }
    Char_Set       = Set of Char;  { Set of characters }
@@ -170,6 +171,7 @@ Type
   { A set of integers from 0 to 250 }
 
   Int_Set        = Packed Array [0..999] of Boolean;
+
 
   Item_Record    = Record { Item Record }
                       Item_Number: [Byte]0..250;        { Its # }
@@ -394,7 +396,7 @@ Type
 
   { Group of messages. }
 
-  Message_group    = Array [1..999] of line;
+  Message_group    = Array [MIN_MESSAGE_NUMBER..MAX_MESSAGE_NUMBER] of line;
 
   { A 27 x 9 text picture. }
 
@@ -408,14 +410,14 @@ Type
                           Eye_Type: Char;
                       End;
 
-  Pic_List          = Array [0..150]  of Picture;
-  Roster_Type       = Array [1..20]  of Character_Type;
-  Party_Type        = Array [1..6]   of Character_Type;
+  Pic_List          = Array [MIN_PICTURE_NUMBER..MAX_PICTURE_NUMBER]  of Picture;
+  Roster_Type       = Array [MIN_ROSTER_NUMBER..MAX_ROSTER_NUMBER]  of Character_Type;
+  Party_Type        = Array [MIN_PARTY_NUMBER..MAX_PARTY_NUMBER]  of Character_Type;
   Character_list    = Array [1..6]   of Character_Type;
-  List_of_monsters  = Array [1..450] of Monster_record;
-  List_of_items     = Array [0..449] of Item_record;
-  List_of_Amounts   = Array [0..449] of Integer;
-  List_of_Treasures = Array [1..150] of Treasure_Table;
+  List_of_monsters  = Array [MIN_MONSTER_NUMBER..MAX_MONSTER_NUMBER] of Monster_record;
+  List_of_items     = Array [MIN_ITEM_NUMBER..MAX_ITEM_NUMBER] of Item_record;
+  List_of_Amounts   = Array [MIN_ITEM_NUMBER..MAX_ITEM_NUMBER] of Integer;
+  List_of_Treasures = Array [MIN_TREASURE_NUMBER..MAX_TREASURE_NUMBER] of Treasure_Table;
 
   Picture_File_Type = Packed File of Picture;
   Number_File       = Packed File of Integer;
@@ -426,13 +428,13 @@ Type
   LevelFile         = File of Level;
 
   Spell_Duration_List  = Array [Spell_Name] of Unsigned;
-  Party_Size_Type = 0..6;
+  Party_Size_Type = 0..MAX_PARTY_NUMBER;
   Save_Record     = Record
                        PosX,PosY:  [Byte]1..20; { Party's location }
                        PosZ:       [Byte]1..19;
                        Direction:  [Byte]Direction_Type;
                        Spells_Casted:  Spell_Duration_List;  { Spells Casted }
-                       Party_Size: [Byte]1..6;
+                       Party_Size: [Byte]1..MAX_PARTY_NUMBER;
                        Current_Size: [Byte]Party_Size_Type;
                        Characters: Character_List;
                        Current_Level:  Level;
@@ -475,7 +477,7 @@ Type
                        Identified: Flag;
                     End;
   Encounter_Group = Array [1..4] of Monster_Group;
-  Party_Flag      = Array [1..6] of Flag;
+  Party_Flag      = Array [1..MAX_PARTY_NUMBER] of Flag;
   Attack_String   = Varying [10] of Char;
 
   ISpot = Record
