@@ -26,31 +26,31 @@ Var
    Places:                                          [External]Place_Stack;
 
 (******************************************************************************)
-[External]Function Rendition_Set (Var T: Line): Unsigned;External;
-[External]Function Make_Choice (Choices: Char_Set; Time_Out: Integer:=-1; Time_Out_Char: Char:=' '):Char;External;
-[External]Procedure Remove_Nodes (Var Stack: Place_Stack);External;
-[External]Function Made_Roll (Needed: Integer): [Volatile]Boolean;external;
-[External]Procedure Show_Image (Number: Pic_Type; Var Display: Unsigned);External;
-[External]Function Get_Level (Level_Number: Integer; Maze: Level; PosZ: Vertical_Type:=0): [Volatile]Level;External;
-[External]Procedure Wait_Key (Time_Out: Integer:=-1);External;
-[External]Function Random_Number (Die: Die_Type): [Volatile]Integer;External;
-[External]Procedure Cursor;External;
-[External]Procedure No_Cursor;External;
-[External]Procedure Unpaste_All;External;
-[External]Procedure Party_Box (Var Member: Party_Type; Var Current_Party_Size: Party_Size_Type;  Party_Size: Integer;
-                             Var Leave_Maze: Boolean);External;
 [External]Function Compute_AC (Character: Character_Type; PosZ: Integer:=0): Integer;external;
-[External]Function Roll_Die (Die_Type: Integer): [Volatile]Integer;External;
-[External]Function Regenerates (Character: Character_Type; PosZ: Integer:=0): Integer;external;
-[External]Procedure Change_Status (Var Character: Character_Type; Status: Status_Type; Var Changed: Boolean);External;
-[External]Procedure Delay (Seconds: Real);External;
-[External]Procedure Ring_Bell (Display_Id: Unsigned; Number_of_Times: Integer:=1);External;
+[External]Function Get_Level (Level_Number: Integer; Maze: Level; PosZ: Vertical_Type:=0): [Volatile]Level;External;
 [External]Function Made_Roll (Needed: Integer): [Volatile]Boolean;external;
+[External]Function Made_Roll (Needed: Integer): [Volatile]Boolean;external;
+[External]Function Make_Choice (Choices: Char_Set; Time_Out: Integer:=-1; Time_Out_Char: Char:=' '):Char;External;
+[External]Function Random_Number (Die: Die_Type): [Volatile]Integer;External;
+[External]Function Regenerates (Character: Character_Type; PosZ: Integer:=0): Integer;external;
+[External]Function Rendition_Set (Var T: Line): Unsigned;External;
+[External]Function Roll_Die (Die_Type: Integer): [Volatile]Integer;External;
+[External]Procedure Change_Status (Var Character: Character_Type; Status: Status_Type; Var Changed: Boolean);External;
+[External]Procedure Cursor;External;
+[External]Procedure Delay (Seconds: Real);External;
 [External]Procedure Draw_View (Direction: Direction_Type;  New_Spot: Boolean; Member: Party_Type; Current_Party_Size: Party_Size_Type);External;
 [External]Procedure Move_Backward (Direction: Direction_Type;  Var New_Spot: Boolean);External;
+[External]Procedure No_Cursor;External;
+[External]Procedure Party_Box (Var Member: Party_Type; Var Current_Party_Size: Party_Size_Type;  Party_Size: Integer;
+                             Var Leave_Maze: Boolean);External;
 [External]Function Pick_Character_Number (Party_Size: Integer; Current_Party_Size: Integer:=0;  Time_Out: Integer:=-1;
                                           Time_Out_Char: Char:='0'):[Volatile]Integer;External;
+[External]Procedure Remove_Nodes (Var Stack: Place_Stack);External;
+[External]Procedure Ring_Bell (Display_Id: Unsigned; Number_of_Times: Integer:=1);External;
+[External]Procedure Show_Image (Number: Pic_Type; Var Display: Unsigned);External;
 [External]Procedure Spells_Box (Rounds_Left: Spell_Duration_List);External;
+[External]Procedure Unpaste_All;External;
+[External]Procedure Wait_Key (Time_Out: Integer:=-1);External;
 (******************************************************************************)
 
 [Global]Function Show_Special (Member: [Unsafe]Party_Type:=0; Current_Party_Size: Integer:=0): Boolean;
@@ -71,8 +71,6 @@ Begin { Show Special }
       End;
    Show_Special:=Temp;
 End;  { Show Special }
-
-
 
 (******************************************************************************)
 
@@ -685,8 +683,8 @@ Procedure Stair_Case (Var Maze: Level; Var PosX,PosY:  Horizontal_Type;  Var Pos
                       Current_Party_Size: Party_Size_Type);
 
 Const
-  Down_Staircase_Number = 38;
-  Up_Staircase_Number = 37;
+  Down_Staircase_Number = 37;
+  Up_Staircase_Number = 38;
 
 Var
   E: Varying[4] of Char;

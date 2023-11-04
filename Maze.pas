@@ -97,28 +97,27 @@ Value
    DirectionName[East]:=  ' East ';    DirectionName[West]:= ' West ';
 
 (******************************************************************************)
-[External]Function Get_Num (Display: Unsigned): Integer;External;
-[External]Procedure Show_Image (Number: Pic_Type; Var Display: Unsigned);External;
-[External]Function Random_Number (Die: Die_Type): [Volatile]Integer;External;
-[External]Function Make_Choice (Choices: Char_Set; Time_Out: Integer:=-1;
-    Time_Out_Char: Char:=' '):Char;External;
-[External]Function String(Num: Integer; Len: Integer:=0):Line;external;
-[External]Function Compute_AC (Character: Character_Type; PosZ: Integer:=0): Integer;external;
-[External]Function Roll_Die (Die_Type: Integer): [Volatile]Integer;External;
-[External]Function Regenerates (Character: Character_Type; PosZ: Integer:=0): Integer;external;
-[External]Function Get_Level (Level_Number: Integer; Maze: Level; PosZ: Vertical_Type:=0): [Volatile]Level;External;
-[External]Procedure Delay (Seconds: Real);External;
-[External]Procedure Ring_Bell (Display_Id: Unsigned; Number_of_Times: Integer:=1);External;
-[External]Function Made_Roll (Needed: Integer): [Volatile]Boolean;external;
 [External]Function Alive (Character: Character_Type): Boolean;external;
-[External]Procedure Init_Stack (Var Stack: Place_Stack);External;
-[External]Procedure Remove_Nodes (Var Stack: Place_Stack);External;
-[External]Procedure Insert_Place (PosX,PosY: Horizontal_Type; PosZ: Vertical_Type; Var Stack: Place_Stack);External;
+[External]Function Compute_AC (Character: Character_Type; PosZ: Integer:=0): Integer;external;
+[External]Function Game_Won (Member: Party_Type; Party_Size: Integer): Boolean;External;
+[External]Function Get_Level (Level_Number: Integer; Maze: Level; PosZ: Vertical_Type:=0): [Volatile]Level;External;
+[External]Function Get_Num (Display: Unsigned): Integer;External;
+[External]Function Made_Roll (Needed: Integer): [Volatile]Boolean;external;
+[External]Function Random_Number (Die: Die_Type): [Volatile]Integer;External;
+[External]Function Regenerates (Character: Character_Type; PosZ: Integer:=0): Integer;external;
+[External]Function Roll_Die (Die_Type: Integer): [Volatile]Integer;External;
+[External]Function String(Num: Integer; Len: Integer:=0):Line;external;
+[External]Procedure Delay (Seconds: Real);External;
+[External]Procedure Handle_Completed_Quest (Var Member: Party_Type;  Party_Size: Integer);External;
 [External]Procedure Handle_Room_Special (Var New_Spot: Boolean; Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type;
                                            Party_Size: Integer;  Var Leave_Maze: Boolean;  Var Previous_Spot: Area_Type;
                                        Var Time_Delay: Integer);External;
-[External]Function Game_Won (Member: Party_Type; Party_Size: Integer): Boolean;External;
-[External]Procedure Handle_Completed_Quest (Var Member: Party_Type;  Party_Size: Integer);External;
+[External]Procedure Init_Stack (Var Stack: Place_Stack);External;
+[External]Procedure Insert_Place (PosX,PosY: Horizontal_Type; PosZ: Vertical_Type; Var Stack: Place_Stack);External;
+[External]Function Make_Choice (Choices: Char_Set; Time_Out: Integer:=-1; Time_Out_Char: Char:=' '):Char;External;
+[External]Procedure Remove_Nodes (Var Stack: Place_Stack);External;
+[External]Procedure Ring_Bell (Display_Id: Unsigned; Number_of_Times: Integer:=1);External;
+[External]Procedure Show_Image (Number: Pic_Type; Var Display: Unsigned);External;
 (******************************************************************************)
 
 Function Has_Light: [Volatile]Boolean;
@@ -1163,7 +1162,7 @@ End;
 
 (******************************************************************************)
 
-Procedure Spend_Time_In_Maze (Var Member: Party_Type; Var Current_Party_Size: Party_Size_Type; Party_Size: Integer;
+[Global]Procedure Spend_Time_In_Maze (Var Member: Party_Type; Var Current_Party_Size: Party_Size_Type; Party_Size: Integer;
                                       Var Time_Delay: Integer;  Var Previous_Spot: Area_Type;  Var Round_Counter: Integer;
                                       Var Alarm_Off: Boolean);
 

@@ -2613,7 +2613,7 @@ End;
 
 (******************************************************************************)
 
-Procedure Init_Encounter (Number: Integer; Var Encounter: Encounter_Group;  Member: Party_Type;
+[Global]Procedure Init_Encounter (Number: Integer; Var Encounter: Encounter_Group;  Member: Party_Type;
                                   Current_Party_Size: Party_Size_Type);
 
 Var
