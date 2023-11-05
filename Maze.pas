@@ -562,7 +562,7 @@ End;  { Draw Screen }
                                    NoMagic: Boolean:=False; Var Time_Delay: Integer);external;
 (******************************************************************************)
 
-Procedure Run_Encounter_Aux (Monster_Number: Integer;  Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type;
+[Global]Procedure Run_Encounter_Aux (Monster_Number: Integer;  Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type;
                              Party_Size: Integer;  Var Alarm_Off: Boolean; Location: Area_Type:=Corridor;
                                    NoMagic: Boolean:=False; Var Time_Delay: Integer);
 
@@ -659,7 +659,7 @@ End;  { Initialize }
 
 (******************************************************************************)
 
-Function Choose_Monster (Table: Encounter_Table; Area: Area_Type; Var Encountered: Boolean): Integer;
+[Global]Function Choose_Monster (Table: Encounter_Table; Area: Area_Type; Var Encountered: Boolean): Integer;
 
 { This function returns a monster that might be encountered from the given table, and also checks to see if it was
   indeed encountered. }
@@ -687,7 +687,7 @@ End;
 
 (******************************************************************************)
 
-Procedure Fix_Compass (Direction: Direction_Type;  Rounds_Left: Spell_Duration_List);
+[Global]Procedure Fix_Compass (Direction: Direction_Type;  Rounds_Left: Spell_Duration_List);
 
 Begin { Fix Compass }
   If Rounds_Left[Comp]>0 then SMG$Label_Border (ViewDisplay,DirectionName[Direction],SMG$K_TOP)
@@ -696,7 +696,7 @@ End;  { Fix Compass }
 
 (******************************************************************************)
 
-Procedure Update_Status (Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type;  Party_Size: Integer;
+[Global]Procedure Update_Status (Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type;  Party_Size: Integer;
                                Var Leave_Maze: Boolean; Rounds_Left: Spell_Duration_List);
 
 Begin

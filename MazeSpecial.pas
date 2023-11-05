@@ -53,6 +53,14 @@ Var
 [External]Procedure Spells_Box (Rounds_Left: Spell_Duration_List);External;
 [External]Procedure Unpaste_All;External;
 [External]Procedure Wait_Key (Time_Out: Integer:=-1);External;
+[External]Procedure Run_Encounter_Aux (Monster_Number: Integer;  Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type;
+                             Party_Size: Integer;  Var Alarm_Off: Boolean; Location: Area_Type:=Corridor;
+                                   NoMagic: Boolean:=False; Var Time_Delay: Integer);External;
+[External]Function Choose_Monster (Table: Encounter_Table; Area: Area_Type; Var Encountered: Boolean): Integer;External;
+[External]Procedure Update_Status (Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type;  Party_Size: Integer;
+                               Var Leave_Maze: Boolean; Rounds_Left: Spell_Duration_List);External;
+[External]Procedure Fix_Compass (Direction: Direction_Type;  Rounds_Left: Spell_Duration_List);External;
+[External]Function String(Num: Integer; Len: Integer:=0):Line;external;
 (******************************************************************************)
 
 [Global]Function Show_Special (Member: [Unsafe]Party_Type:=0; Current_Party_Size: Integer:=0): Boolean;
@@ -890,8 +898,38 @@ Procedure Encounter_SQ_Creator (Var Maze: Level; Var PosX,PosY: Horizontal_Type;
                                 Var New_Spot: Boolean; Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type;
                                 Party_Size: Integer; Var Time_Delay: Integer);
 
+Const
+   Creator_Picture_Number = 66;
+   Creators_Question = 204;
+   Encounter_Number = 243;
+
+Var
+   Answer: Char;
+
 Begin
-  { TODO: Encounter_SQ_Creator }
+   Show_Image (Creator_Picture_Number,ViewDisplay);
+
+   Print_Message (Creators_Question);
+
+   Wait_For_Return;
+
+   SMG$Begin_Display_Update (MessageDisplay);
+   SMG$Erase_Display (MessageDisplay);
+
+   SMG$Put_Line (MessageDisplay,'Answer? (Y/N)');
+
+   Answer:=Make_Choice (['Y','N']);
+
+   If Answer='N' then
+      Special_Encounter (Encounter_Number,New_Spot,Member,Current_Party_Size,Party_Size,Time_Delay)
+   Else
+      Begin
+         SMG$Put_Line (MessageDisplay,'Good!');
+         Delay (2);
+      End;
+
+   SMG$Erase_Display (MessageDisplay);
+   Draw_View (Direction,New_Spot,Member,Current_Party_Size);
 End;
 
 (******************************************************************************)
@@ -937,9 +975,25 @@ End;
 
 Procedure Encounter_UJB (Var Member: Party_Type;  Current_Party_Size: Integer);
 
-TODO: Encounter_UJB
+Const
+  UJB_Image = 74;
+  UJB_Message = 259;
 
--$$}
+Var
+   Person: Integer;
+
+Begin
+  Show_Image (UJB_Image,ViewDisplay);
+  Print_Message (UJB_Message);
+
+  If Current_Party_Size>0 then
+     For Person:=1 to Current_Party_Size do
+        If Member[Person].Status = Healthy then
+           Begin
+              Member[Person].Status:=OnProbation;
+              Member[Person].Abilities[6]:=Max(Member[Person].Abilities[6]-2,3);
+           End;
+End;  -$$}
 
 (******************************************************************************)
 
@@ -952,8 +1006,26 @@ Procedure Message_and_Hidden_Item (    Message_No,Item_No: Integer;
                                                Party_Size: Integer;
                                            Var Time_Delay: Integer);
 
+Var
+   Person: Integer;
+
 Begin
-  { TODO: Message_and_Hidden_Item }
+   Print_Message (Message_No);
+
+   Wait_For_Return;
+
+   SMG$Erase_Display (MessageDisplay);
+   SMG$Put_Chars (MessageDisplay,'Who will search it?',2,1);
+
+   Person:=Pick_Character_Number (Party_Size,Current_Party_Size);
+
+   If Person>0 then
+      If Item_No < 0 then
+        Special_Encounter (ABS(Item_No),New_Spot,Member,Current_Party_Size,Party_Size,Time_Delay)
+      Else If Member[Person].No_of_Items<8 then
+         Character_Finds_Item (Member[Person],Item_No)
+   Else
+      SMG$Erase_Display (MessageDisplay);
 End;
 
 (******************************************************************************)
@@ -962,8 +1034,49 @@ Procedure A_Chute (Special: Special_Type;  Var New_Spot: Boolean; Var Maze: Leve
                    Var PosZ: Vertical_Type; Var Previous_Spot: Area_Type;  Member: Party_Type;
                    Current_Party_Size: Integer);
 
+Const
+   Chute_Picture_Number = 35;
+
+Var
+   Go_Down: Boolean;
+
+[External]Function Yes_or_No (Time_Out: Integer:=-1; Time_out_Char: Char:=' '): [Volatile]Char;External;
+
 Begin
-   { TODO: A_Chute }
+   Go_Down:=True;
+   Show_Image (Chute_Picture_Number,ViewDisplay);
+
+   SMG$Begin_Display_Update (MessageDisplay);
+   SMG$Erase_Display (MessageDisplay);
+   SMG$Put_Line (MessageDisplay,'A chute!');
+
+   If Rounds_Left[Levi]>0 then
+      Begin
+         SMG$Put_Line (MessageDisplay,'Dost thou wish to go down it? (Y/N)');
+         SMG$End_Display_Update (MessageDisplay);
+
+         Go_Down:=(Yes_or_No='Y');
+      End
+   Else
+      SMG$End_Display_Update (MessageDisplay);
+
+   SMG$Erase_Display(MessageDisplay);
+
+   If Go_Down then
+      Begin
+         Delay(2);
+
+         New_Spot:=True;
+         Previous_Spot:=Maze.Room[PosX,PosY].Kind;
+
+         Maze:=Get_Level (Special.Pointer3,Maze,PosZ);
+
+         PosX:=Special.Pointer1;   PosY:=Special.Pointer2;  PosZ:=Special.Pointer3;
+
+         Remove_Nodes (Places);
+      End;
+
+   Draw_View (Direction,New_Spot,Member,Current_Party_Size);
 End;
 
 (******************************************************************************)
@@ -1029,6 +1142,7 @@ End;
 
 Procedure Enter_Pool (PoolNum: Integer; Var Character: Character_Type);
 { $4 }
+Begin
    Case poolNum of
       1..7: Begin
               Random_Score_Change (Character.Abilities[PoolNum]);
@@ -1036,7 +1150,7 @@ Procedure Enter_Pool (PoolNum: Integer; Var Character: Character_Type);
             End;
       Otherwise ;
    End;
-Begin
+End;
 
 (******************************************************************************)
 
