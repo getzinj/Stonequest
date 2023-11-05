@@ -2,25 +2,32 @@
 
 Type
    Vertex = Packed Array [1..4] of Integer;
+  NewISpot = Record
+            direction: Direction_Type;
+            kind: Area_Type;
+            front,left,right: Exit_Type;
+            contents: [Byte]0..15; {index of Special_Table }
+            rowX,rowY: [Byte]1..20;
+          End;
 
 Var
   ViewDisplay: [External]Unsigned;
 
 
 {********************************************************************************************************************}
-[External]Function getNearCenter(Direction: Direction_Type): ISpot;External;
-[External]Function getMiddleCenter(Direction: Direction_Type): ISpot;External;
-[External]Function getCenterFar(Direction: Direction_Type): ISpot;External;
-[External]Function getLeftLeftFar(Direction: Direction_Type): ISpot;External;
-[External]Function getLeftFar(Direction: Direction_Type): ISpot;External;
-[External]Function getRightFar(Direction: Direction_Type): ISpot;External;
-[External]Function getRightRightFar(Direction: Direction_Type): ISpot;External;
-[External]Function getCenterMiddle(Direction: Direction_Type): ISpot;External;
-[External]Function getLeftMiddle(Direction: Direction_Type): ISpot;External;
-[External]Function getRightMiddle(Direction: Direction_Type): ISpot;External;
-[External]Function getCenterNear(Direction: Direction_Type): ISpot;External;
-[External]Function getLeftNear(Direction: Direction_Type): ISpot;External;
-[External]Function getRightNear(Direction: Direction_Type): ISpot;External;
+[External]Function getNearCenter(Direction: Direction_Type): NewISpot;External;
+[External]Function getMiddleCenter(Direction: Direction_Type): NewISpot;External;
+[External]Function getCenterFar(Direction: Direction_Type): NewISpot;External;
+[External]Function getLeftLeftFar(Direction: Direction_Type): NewISpot;External;
+[External]Function getLeftFar(Direction: Direction_Type): NewISpot;External;
+[External]Function getRightFar(Direction: Direction_Type): NewISpot;External;
+[External]Function getRightRightFar(Direction: Direction_Type): NewISpot;External;
+[External]Function getCenterMiddle(Direction: Direction_Type): NewISpot;External;
+[External]Function getLeftMiddle(Direction: Direction_Type): NewISpot;External;
+[External]Function getRightMiddle(Direction: Direction_Type): NewISpot;External;
+[External]Function getCenterNear(Direction: Direction_Type): NewISpot;External;
+[External]Function getLeftNear(Direction: Direction_Type): NewISpot;External;
+[External]Function getRightNear(Direction: Direction_Type): NewISpot;External;
 {********************************************************************************************************************}
 
 
@@ -276,7 +283,6 @@ Begin
     SMG$Draw_Line(ViewDisplay, 1, 22, 1, 23);
 End;
 
-
 {********************************************************************************************************************}
 
 Procedure wallFarLeftLeftSide;
@@ -334,7 +340,7 @@ End;
 
 {********************************************************************************************************************}
 
-Procedure far(leftLeftRoom: ISpot; leftRoom: ISpot; centerRoom: ISpot; rightRoom: ISpot; rightRightRoom: ISpot);
+Procedure far(leftLeftRoom: NewISpot; leftRoom: NewISpot; centerRoom: NewISpot; rightRoom: NewISpot; rightRightRoom: NewISpot);
 
 Begin
     if (looksLikeWall(leftLeftRoom.front)) then
@@ -347,7 +353,6 @@ Begin
       wallFarFrontRight;
     if (looksLikeWall(rightRightRoom.front)) then
       wallFarFrontRightRight;
-
 
     if (looksLikeWall(leftRoom.left)) then
       wallFarLeftLeftSide;
@@ -362,7 +367,7 @@ End;
 {********************************************************************************************************************}
 
 
-Procedure middle(leftRoom: ISpot; centerRoom: ISpot; rightRoom: ISpot);
+Procedure middle(leftRoom: NewISpot; centerRoom: NewISpot; rightRoom: NewISpot);
 
 Begin
   if (looksLikeWall(leftRoom.front)) then
@@ -391,7 +396,7 @@ End;
 
 {********************************************************************************************************************}
 
-Procedure near(leftRoom: ISpot; centerRoom: ISpot; rightRoom: ISpot);
+Procedure near(leftRoom: NewISpot; centerRoom: NewISpot; rightRoom: NewISpot);
 
 Begin
   if (looksLikeWall(leftRoom.front)) then
@@ -406,7 +411,6 @@ Begin
     Begin
       wallNearFrontCenter;
     End;
-
   if (looksLikeWall(centerRoom.left)) then
     Begin
       wallNearLeftSide;
@@ -421,8 +425,12 @@ End;
 
 [Global]Procedure printView3D (Direction: Direction_Type; Member: Party_Type; Current_Party_Size: Party_Size_Type);
 
+var
+  leftNear,centerNear,rightNear: NewISpot;
+
 Begin
   SMG$Begin_Display_Update(ViewDisplay);
+
   far(
       getLeftLeftFar(Direction),
       getLeftFar(Direction),
@@ -435,11 +443,17 @@ Begin
     getCenterMiddle(Direction),
     getRightMiddle(Direction)
   );
+
+  leftNear:=getLeftNear(Direction);
+  centerNear:=getCenterNear(Direction);
+  rightNear:=getRightNear(Direction);
+
   near(
-    getLeftNear(Direction),
-    getCenterNear(Direction),
-    getRightNear(Direction)
+    leftNear,
+    centerNear,
+    rightNear
   );
+
   SMG$End_Display_Update(ViewDisplay);
 End;
 End.

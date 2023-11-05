@@ -260,8 +260,13 @@ End;
 
 [Global]Function getLeftNear(Direction: Direction_Type): NewISpot;
 
+var
+  returnValue,centernear: NewISpot;
+
 Begin
-  getLeftNear := getPositionToLeft(getCenterNear(Direction));
+centernear:= getCenterNear(Direction);
+  returnValue := getPositionToLeft(centernear);
+  getLeftNear:=returnValue;
 End;
 
 (******************************************************************************)
