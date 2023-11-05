@@ -840,8 +840,33 @@ End;
 Procedure Special_Encounter (MonsterNo: Integer; Var New_Spot: Boolean; Var Member: Party_Type;
                              Var Current_Party_Size: Party_Size_Type;  Party_Size: Integer;  Var Time_Delay: Integer);
 
+Var
+   No_Magic,Dummy,Alarm_Off: Boolean;
+   Area: Area_Type;
+
 Begin
-   { TODO: Special Encounter }
+   Draw_View (Direction,New_Spot,Member,Current_Party_Size);
+   No_Magic:=(Maze.Special_Table[Maze.Room[PosX,PosY].Contents].Special=AntiMagic);
+   Area:=Room;
+
+   Repeat
+      Begin
+         Alarm_Off:=False;
+         Run_Encounter_Aux (MonsterNo,Member,Current_Party_Size,Party_Size,Alarm_Off,Area,No_Magic,Time_Delay);
+         If Alarm_Off then
+            Begin
+               MonsterNo:=Choose_Monster (Maze.Monsters,Area,Dummy);
+               Area:=Corridor;
+            End;
+      End;
+   Until Not Alarm_Off;
+
+   Maze.Room[PosX,PosY].Contents:=0;
+
+   New_Spot:=True;
+
+   Update_Status (Member,Current_Party_Size,Party_Size,Leave_Maze,Rounds_Left);
+   Fix_Compass (Direction,Rounds_Left);
 End;
 
 (******************************************************************************)
@@ -850,7 +875,13 @@ Procedure Message_And_Encounter (MessageNo,MonsterNo: Integer; Var New_Spot: Boo
                                          Var Current_Party_Size: Party_Size_Type;  Party_Size: Integer;  Var Time_Delay: Integer);
 
 Begin
-   { TODO: Message_and_Encounter }
+  Draw_View (Direction,New_Spot,Member,Current_Party_Size);
+  If MessageNo>-1 then
+     Begin
+        Print_Message (MessageNo);
+        Wait_for_Return;
+     End;
+  Special_Encounter (MonsterNo,New_Spot,Member,Current_Party_Size,Party_Size,Time_Delay);
 End;
 
 (******************************************************************************)
@@ -879,8 +910,25 @@ End;
 
 Procedure Character_Finds_Item (Var Character: Character_Type; Item_No: Integer);
 
+Var
+   Num: Integer;
+
 Begin
-   { TODO: Character_Finds_Item }
+   Character.No_of_Items:=Character.No_of_Items+1;
+   Num:=Character.No_of_Items;
+   With Character.Item[Num] do
+      Begin
+         Equipted:=False;
+         Ident:=False;
+         Cursed:=False;
+         Usable:=CharacterCanUseItem(Character,Item_No);
+         Item_Num:=Item_No;
+      End;
+
+   SMG$Begin_Display_Update (MessageDisplay);
+   SMG$Erase_Display (MessageDisplay);
+   SMG$Put_Line (MessageDisplay,Character.Name+' found an item!',0);
+   SMG$End_Display_Update (MessageDisplay);
 End;
 
 (******************************************************************************)
@@ -949,22 +997,84 @@ End;
 
 (******************************************************************************)
 
-{ TODO: Random_Score_Change }
+Procedure Random_Score_Change (Var Score: Ability_Score);
 
-{ TODO: Print_Change }
+Var
+  TempScore: Integer;
 
-{ TODO: Enter_Pool }
+Begin
+  TempScore:=Score;
+  If Made_Roll(49) and (Score>3) then
+     TempScore:=Min(TempScore+Roll_Die(4),25)
+  Else
+     TempScore:=Max(TempScore-Roll_Die(4),3);
+
+  Score:=TempScore;
+End;
+
+(******************************************************************************)
+
+Procedure Print_Change (Character: Character_Type; ScoreNum: Integer);
+
+Var
+   AbilName: [External]Array [1..7] of Packed Array [1..12] of char;
+
+Begin
+  SMG$Put_Chars (MessageDisplay,Character.Name+'''s '+AbilName[ScoreNum]);
+  SMG$Put_Line (MessageDisplay,' is now a '+String(Character.Abilities[ScoreNum])+'!');
+  Delay(1);
+End;
+
+(******************************************************************************)
+
+Procedure Enter_Pool (PoolNum: Integer; Var Character: Character_Type);
+{ $4 }
+   Case poolNum of
+      1..7: Begin
+              Random_Score_Change (Character.Abilities[PoolNum]);
+              Print_Change (Character,PoolNum);
+            End;
+      Otherwise ;
+   End;
+Begin
+
+(******************************************************************************)
 
 Procedure Message_and_Pool (MessageNo,PoolNo: Integer; Var Maze: Level; Var PosX,PosY: Horizontal_Type;
                             Direction: Direction_Type; Var Member: Party_Type; Var Current_Party_Size: Party_Size_Type;
                             Party_Size: Integer; Var New_Spot: Boolean);
 
+Const
+   Pool_Image_Number = 30;
+
+Var
+   Number: Integer;
+
 Begin
-{ TODO: Message_And_Pool }
+   Print_Message_With_Return (MessageNo);
+   SMG$Erase_Display (MessageDisplay);
+
+   Show_Image (Pool_Image_Number,ViewDisplay);
+   Repeat
+      Begin
+         SMG$Erase_Display (MessageDisplay);
+         SMG$Put_Chars (MessageDisplay,'A pool!  Who will enter? ([RETURN] exists)',2,1);
+
+         Number:=Pick_Character_Number (Party_Size);
+
+         SMG$Erase_Display (MessageDisplay);
+
+         If Number=0 then
+            Move_Backward (Direction,New_Spot)
+         Else
+            Enter_Pool (PoolNo,Member[Number]);
+      End;
+   Until (Number=0);
+
+   Draw_View (Direction,New_Spot,Member,Current_Party_Size);
 End;
 
 (******************************************************************************)
-
 
 Procedure Special_Feature (Var Maze: Level; Var PosX,PosY: Horizontal_Type;
                            Var PosZ: Vertical_Type; Var Direction: Direction_Type;
