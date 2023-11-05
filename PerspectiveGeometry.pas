@@ -260,22 +260,17 @@ End;
 
 [Global]Function getLeftNear(Direction: Direction_Type): NewISpot;
 
-var
-  returnValue,centernear: NewISpot;
-
 Begin
-centernear:= getCenterNear(Direction);
-  returnValue := getPositionToLeft(centernear);
-  getLeftNear:=returnValue;
+  getLeftNear:=getPositionToLeft(getCenterNear(Direction));
 End;
 
 (******************************************************************************)
 
 [Global]Function getRightNear(Direction: Direction_Type): NewISpot;
 
-  Begin
-    getRightNear := getPositionToRight(getLocation(Direction, posX, posY));
-  End;
+Begin
+  getRightNear := getPositionToRight(getLocation(Direction, posX, posY));
+End;
 
 (******************************************************************************)
 (******************** MIDDLE ***********************)
