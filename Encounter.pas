@@ -542,8 +542,8 @@ Begin
        'The '
        +Name
        +' advance!');
-   Ring_Bell (MessageDisplay, 2);
    SMG$End_Display_Update (MessageDisplay);
+   Ring_Bell (MessageDisplay, 2);
    Delay (2*Delay_Constant);
 End;
 
@@ -1337,7 +1337,8 @@ Begin
    While Not ( Empty(Attacks) or Leave_Maze ) do
       Begin
          Next:=DeleteMin (Attacks);
-         If Next.Group<>0 then Handle_Attack (Next,Monster_Group,Member,Current_Party_Size,Party_Size,Can_Attack);
+         If Next.Group<>0 then
+             Handle_Attack (Next,Monster_Group,Member,Current_Party_Size,Party_Size,Can_Attack);
          If Party_Dead (Member,Current_Party_Size) then MakeNull (Attacks);
       End;
 
@@ -1750,6 +1751,7 @@ Begin
    SMG$Erase_Display (OptionsDisplay);
    SMG$Put_Chars (OptionsDisplay,
        'Cast what spell? (''?'' lists)',2,1);
+   SMG$End_Display_Update (OptionsDisplay);
    Select_Combat_Spell (Spell_Chosen, Character);
 
    Stats.Action:=CastSpell;

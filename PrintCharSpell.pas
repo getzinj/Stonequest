@@ -501,7 +501,21 @@ Begin
             East: SMG$Put_Chars (SpellDisplay,'east');
             West: SMG$Put_Chars (SpellDisplay,'west');
          End;
-         SMG$Put_Line (SpellDisplay,'.  Thou art '+String(PosX-1)+' squares East, '+String(20-PosY)+' squares North, and '+String(PosZ)+' levels down.');
+         T:='.  Thou art ' + String(PosX - 1) + ' square';
+         If (PosX -1 > 1) then
+           T:=T+'s';
+
+         T:=T+' East, '+ String(20 - PosY) + ' square';
+         If (20 - PosY > 1) then
+           T:=T+'s';
+
+         T:=T+' North, and ' + String(PosZ) + ' level';
+         If (PosZ > 1) then
+            T:=T+'s';
+
+         T:=T+' down.';
+
+         SMG$Put_Line (SpellDisplay,T, Wrap_Flag:=SMG$M_WRAP_WORD);
       End
    Else
       Begin
