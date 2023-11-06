@@ -4,7 +4,7 @@ Type
    Long_Line = Varying [390] of Char;
 
 Var
-   Attacker           : Attacker_Type;
+   Attacker           : [Global]Attacker_Type;
    Delay_Constant     : [External]Real;
    Time_Stop_Monsters : [External]Boolean;
    Silenced           : [External]Party_Flag;
@@ -21,23 +21,17 @@ Value
    CharAttack[6]:='thrusts';   CharAttack[7]:='smashes';
 
 
-[External]Function  Alive (Character: Character_Type): Boolean;external;
 [External]Function  Compute_AC (Character: Character_Type; PosZ: Integer:=0): Integer;external;
 [External]Function  Critical_hit (Attacker: Character_Type; Defender_Level: Integer): [Volatile]Boolean;External;
 [External]Function  Index_of_Living (Group: Monster_Group): [Volatile]Integer;External;
 [External]Function  Made_Roll (Needed: Integer): [Volatile]Boolean;external;
 [External]Function  Monster_Name (Monster: Monster_Record; Number: Integer; Identified: Boolean): Monster_Name_Type;External;
-[External]Function  Monster_Save (Monster: Monster_Record;  Attack: Attack_Type): [Volatile]Boolean;External;
 [External]Function  Random_Number (Die: Die_Type): [Volatile]Integer;External;
 [External]Function  Regenerates (Character: Character_Type; PosZ: Integer:=0): Integer;external;
 [External]Function  Roll_Die (Die_Type: Integer): [Volatile]Integer;External;
-[External]Function  Spell_Damage (Spell: Spell_Name;  Caster_Level: Integer:=0): Die_Type;External;
-[External]Function  Spell_Duration (Spell: Spell_Name; Caster_Level: Integer):Integer;External;
 [External]Function  String(Num: Integer; Len: Integer:=0):Line;external;
 [External]Function  To_hit_Roll (Character: Character_Type; AC: Integer; Monster: Monster_Record): Integer;External;
 [External]Procedure Delay (Seconds: Real);External;
-[External]Procedure Drain_Levels_from_Character (Var Character: Character_Type; Levels: Integer:=1);External;
-[External]Procedure Find_Spell_Group (Spell: Spell_Name;  Character: Character_Type;  Var Class,Level: Integer);External;
 [External]Procedure Plane_Difference (Var Plus: Integer; PosZ: Integer);External;
 [External]Procedure Ring_Bell (Display_Id: Unsigned; Number_of_Times: Integer:=1);External;
 [External]Procedure Character_Casts_Spell (Var Group: Encounter_Group;  Var Member: Party_Type; Var Current_Party_Size: Party_Size_Type);External;
@@ -343,7 +337,7 @@ End;
 
 (**********************************************************************************************************************)
 
-Procedure Check_Death (Var Group: Encounter_Group; Mon_Group,i: Integer; Var T: Long_Line);
+[Global]Procedure Check_Death (Var Group: Encounter_Group; Mon_Group,i: Integer; Var T: Long_Line);
 
 Begin
    SMG$Put_Line (MessageDisplay,T,Wrap_Flag:=SMG$M_WRAP_WORD);
@@ -356,7 +350,7 @@ End;
 
 (**********************************************************************************************************************)
 
-Function Takes_Damage_Message (Damage: Integer): Line;
+[Global]Function Takes_Damage_Message (Damage: Integer): Line;
 
 Var
    T: Line;
