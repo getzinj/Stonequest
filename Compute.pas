@@ -254,7 +254,6 @@ Begin { Max Spell Level }
     End;
     If Max_Level>9 then Max_Level:=9;
     Max_Spell_Level:=Max_Level;
-    Max_Spell_Level:=0;
 End;  { Max Spell Level }
 
 (******************************************************************************)
