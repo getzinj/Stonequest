@@ -533,7 +533,7 @@ Begin { Print Choices }
          Print_Options (T,
             '#)inspect a member, ');
          Print_Options (T,
-            'S)ave party,, ');
+            'S)ave party, ');
          Choices:=Choices+['R','S'];
          Choices:=Choices+['1'..CHR(Party_Size+ZeroOrd)];
       End;

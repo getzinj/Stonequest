@@ -114,7 +114,7 @@ Begin
             Female: T:='Was she a dear friend?';
             Otherwise T:='Was it a dear friend?';
          End;
-      7: T:='Momma told me I''d have days like this...';
+      7: T:='Mama told me I''d have days like this...';
       Otherwise T:='';
    End;
 
@@ -187,8 +187,8 @@ Var
 
 Begin
   Die:=Roll_Die (100);
-  If (Die<=Chance_of_Success) and (Character.Status in [Dead,Ashes]) and
-     (Character.Age_Status<>Croak) and (Character.Max_HP>0) then
+  If (Die <= Chance_of_Success) and (Character.Status in [Dead,Ashes]) and
+     (Character.Age_Status <> Croak) and (Character.Max_HP > 0) then
        Resurrection_Succeeded (Character)
   Else
        Resurrection_Failed (Character);
@@ -375,7 +375,7 @@ Var
 
 Begin
   SMG$Erase_Display (RosterDisplay);
-  SMG$Put_Line (RosterDisplay,'   Name           Class         Level        Status');
+  SMG$Put_Line (RosterDisplay,'   Name                 Class           Level       Status');
   For Slot:=1 to 20 do
      If (Not (Roster[Slot].Status in [Deleted,Healthy])) and (Roster[Slot].Lock<>True) then
         Begin
@@ -429,7 +429,7 @@ Begin
   SMG$Erase_Display (BottomDisplay);
   SMG$Set_Cursor_ABS (BottomDisplay,2,1);
   SMG$Put_Line (BottomDisplay,'Welcome to the Church of Devoted Healers! I''m '+Cleric_Name[Chosen_Cleric]+'.');
-  SMG$Put_Line (BottomDisplay,'Whom shall I help?');
+  SMG$Put_Line (BottomDisplay,'Whom shall I help? (? lists characters)');
   SMG$End_Display_Update (BottomDisplay);
 End;
 
