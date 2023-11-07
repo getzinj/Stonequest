@@ -1,4 +1,12 @@
-[Inherit ('Types','SMGRTL','PriorityQueue')]Module Monster_Attack;
+[Inherit ('SYS$LIBRARY:STARLET','Types','SMGRTL','PriorityQueue')]Module Monster_Attack;
+
+{ TODO: Enter this code }
+
+[Global]Procedure Drain_Levels_From_Character (Var Character: Character_Type; Levels: Integer:=1);
+
+Begin
+   { TODO: Enter this code }
+End;
 
 { TODO: Enter this code }
 
