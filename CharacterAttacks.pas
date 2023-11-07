@@ -322,7 +322,7 @@ End;
 
 (**********************************************************************************************************************)
 
-Function Max_Group (Group: Encounter_Group): Integer;
+[Global]Function Max_Group (Group: Encounter_Group): Integer;
 
 Var
    Temp: Integer;
