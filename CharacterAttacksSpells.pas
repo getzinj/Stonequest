@@ -223,52 +223,329 @@ Begin
          End;
 End;
 
-{ TODO: Handle_Party_Spell }
+(**********************************************************************************************************************)
 
-{ TODO: Handle_Caster_Spell }
+Procedure Handle_Party_Spell (Var Member: Party_Type;
+                              Current_Party_Size: Integer);
 
-{ TODO: Handle_All_Monsters_Spell }
-
-{ TODO: Handle_Fire_Ball }
-
-{ TODO: Handle_ID_Spell }
-
-{ TODO: Handle_Heal_Spell }
-
-{ TODO: Handle_Death_Spells }
-
-{ TODO: Handle_Interrupt_Spells }
-
-{ TODO: Handle_Light_Spell }
-
-{ TODO: Handle_Levitate_Spell }
-
-{ TODO: Handle_DetS_Spell }
-
-{ TODO: Handle_Time_Stop_Spell }
-
-{ TODO: Handle_Non_Terminal }
-
-{ TODO: Deux_Ex_Machina }
-
-{ TODO: Compass }
-
-{ TODO: DeSp }
-
-{ TODO: Animate_Dead_Spell }
-
-Procedure Handle_Combat_Spell (Var Group: Encounter_Group;  Var Member: Party_Type;  Var Current_Party_Size: Party_Size_Type);
+Var
+  Temp,Prot,Loop: Integer;
 
 Begin
-   { TODO: Implement this. }
+   { TODO: Make sure target is alive before affecting him or her. }
+   If Attacker.WhatSpell<>PaHe then
+      Begin
+         Prot:=0;
+         Case Attacker.WhatSpell of
+            DiPr: Begin
+                    Prot:=2;
+                    Rounds_Left[DiPr]:=Rounds_Left[DiPr]+Spell_Duration (DiPr,Attacker.Caster_Level);
+                  End;
+            BiSh: Prot:=1;
+            GrSh: Prot:=2;
+            HgSh: Begin
+                    Prot:=4;
+                    Rounds_Left[HgSh]:=Rounds_Left[HgSh]+Spell_Duration (HgSh,Attacker.Caster_Level);
+                  End;
+         End;
+         For Loop:=1 to Current_Party_Size do
+            Member[Loop].Armor_Class := Member[Loop].Armor_Class - Prot;
+      End
+   Else
+      For Loop:=1 to Current_Party_Size do
+          Begin
+             Temp:=(Member[Loop].Max_HP)-(Member[Loop].Curr_HP);
+             Temp:=Trunc (Temp / 2);
+             Member[Loop].Curr_HP := Member[Loop].Curr_HP + Temp;
+             If Alive(Member[Loop]) and (Member[Loop].Status<>Zombie) then
+                Member[Loop].Status:=Healthy;
+          End;
+End;
+
+(**********************************************************************************************************************)
+
+Procedure Handle_Caster_Spell (Var Member: Party_Type);
+
+Var
+  Caster_Position: Integer;
+  Character: Character_Type;
+
+Begin
+   Caster_Position := Attacker.Attacker_Position;
+   Character := Member[Caster_Position];
+
+   Case Attacker.WhatSpell of
+       Prot:  Character.Armor_Class:=Character.Armor_Class - 2;
+       Shld:  Character.Armor_Class:=Character.Armor_Class - 1;
+       Besk:  Begin
+                Character.Armor_Class := Character.Armor_Class - 4;
+                Character.Attack.Berserk := True;
+                Character.Curr_HP := Character.Curr_HP * 2;
+              End;
+   End;
+   Member[Caster_Position] := Character;
+End;
+
+(**********************************************************************************************************************)
+
+Procedure Handle_All_Monsters_Spell (Var Group: Encounter_Group; Var Member: Party_Type);
+
+Var
+  Mod_Resist: Integer;
+  Form: Attack_Type;
+  Mon_Group,Damage,i: Integer;
+  Dam: Die_Type;
+  Monster: Monster_Record;
+  T: Long_Line;
+
+Begin
+  For Mon_Group:=1 to 4 do
+     If Group[Mon_Group].Curr_Group_Size > 0 then
+        Begin
+           Monster:=Group[Mon_Group].Monster;
+           For i:=1 to Group[Mon_Group].Curr_Group_Size do
+              If Group[Mon_Group].Curr_HP[i]>0 then
+                 Begin
+                    T:=Monster_Name (Monster,1,Group[Mon_Group].Identified);
+
+                    Dam.X := 0;  Dam.Y := 0;  Dam.Z := 0;
+
+                    Case Attacker.WhatSpell of
+                        HoWr: Begin
+                                Form:=Magic;
+                                Dam:=Spell_Damage (HoWr);
+                              End;
+                        DiWr: Begin
+                                Form:=Magic;
+                                Dam:=Spell_Damage (DiWr);
+                              End;
+                        Holo: Begin
+                                Form:=Magic;
+                                Dam:=Spell_Damage (Holo);
+                              End;
+                    End;
+
+                    Damage:=Damage + Random_Number (Dam);
+
+                    Mod_Resist:=Magic_Resistance (Group[Mon_Group].Monster,Attacker.Caster_Level);
+
+                    If Made_Roll (Mod_Resist) then
+                       Damage:=0;
+
+                    If Form in Group[Mon_Group].Monster.Resists then
+                       Damage:=Round (Damage / 2);
+
+                    Group[Mon_Group].Curr_HP[i]:=Group[Mon_Group].Curr_HP[i] - Damage;
+
+                   T := T + Takes_Damage_Message (Damage);
+
+                   Check_Death (Group,Mon_Group,i,T);
+
+                   Delay (Delay_Constant);
+
+                   SMG$Erase_Display (MessageDisplay, 2, 1);
+                 End;
+        End;
+End;
+
+(**********************************************************************************************************************)
+
+Procedure Handle_Fire_Ball (Var Group: Encounter_Group; Member: Party_Type);
+
+Begin
+   { TODO: Handle_Fire_Ball }
+End;
+
+(**********************************************************************************************************************)
+
+Procedure Handle_ID_Spell (Var Group: Encounter_Group);
+
+Begin
+   { TODO: Handle_ID_Spell }
+End;
+
+(**********************************************************************************************************************)
+
+Procedure Handle_Heal_Spell (Var Member: Party_Type);
+
+Begin
+   { TODO: Handle_Heal_Spell }
+End;
+
+(**********************************************************************************************************************)
+
+Procedure Handle_Death_Spell (Var Group: Encounter_Group);
+
+Begin
+   { TODO: Handle_Death_Spell }
+End;
+
+(**********************************************************************************************************************)
+
+Procedure Handle_Interrupt_Spell;
+
+Begin
+   { TODO: Handle_Interrupt_Spells }
+End;
+
+(**********************************************************************************************************************)
+
+Procedure Handle_Light_Spell (Level: Integer);
+
+Begin
+   { TODO: Handle_Light_Spell }
+End;
+
+(**********************************************************************************************************************)
+
+Procedure Handle_Levitate_Spell (Level: Integer);
+
+Begin
+   { TODO: Handle_Levitate_Spell }
+End;
+
+(**********************************************************************************************************************)
+
+Procedure Handle_DetS_Spell (Level: Integer);
+
+Begin
+   { TODO: Handle_DetS_Spell }
+End;
+
+(**********************************************************************************************************************)
+
+Procedure Handle_Time_Stop_Spell;
+
+Begin
+   { TODO: Handle_Time_Stop_Spell }
+End;
+
+(**********************************************************************************************************************)
+
+Procedure Handle_Non_Terminal(Var Group: Monster_Group);
+
+Begin
+   { TODO: Handle_Non_Terminal }
+End;
+
+(**********************************************************************************************************************)
+
+Procedure Deus_Ex_Machina (Var Monsters: Encounter_Group; Var Member: Party_Type;  Current_Party_Size: Integer);
+
+Begin
+   { TODO: Deux_Ex_Machina }
+End;
+
+(**********************************************************************************************************************)
+
+Procedure Compass (Level: Integer);
+
+Begin
+   { TODO: Compass }
+End;
+
+(**********************************************************************************************************************)
+
+Procedure Handle_DeSp (Var Monster: Encounter_Group);
+
+Begin
+   { TODO: DeSp }
+End;
+
+(**********************************************************************************************************************)
+
+Procedure Handle_Animate_Dead_Spell (Var Member: Party_Type);
+
+Begin
+   { TODO: Animate_Dead_Spell }
+End;
+
+(**********************************************************************************************************************)
+
+Procedure Handle_Combat_Spell (Var Group: Encounter_Group;  Var Member: Party_Type;
+                                         Var Current_Party_Size: Party_Size_Type);
+
+Begin
+   Case Attacker.WhatSpell of
+      LiBt,MaMs,CsLt,CsSe,CsVs,CsCr,Harm,Kill,Slay,Dest:    Handle_Group_Spell_1 (Group,Member);
+      Wrth,GrWr,CoCd:                                       Handle_Group_Spell_2 (Group,Member);
+      DiPr,BiSh,GrSh,HgSh,PaHe:                             Handle_Party_Spell (Member, Current_Party_Size);
+      Prot,Shld,Besk:                                       Handle_Caster_Spell (Member);
+      Comp:                                                 Compass (Attacker.Caster_Level);
+      Levi:                                                 Handle_Levitate_Spell (Attacker.Caster_Level);
+      Lght,CoLi:                                            Handle_Light_Spell (Attacker.Caster_Level);
+      WoRe:                                                 Leave_Maze:=True;
+      Deus:                                                 Deus_Ex_Machina (Group,Member,Current_Party_Size);
+      Sile,Slep,Fear:                                       Handle_Non_Terminal (Group[Attacker.Target_Group]);
+      CrLt,CrSe,CrVs,CrCr,Heal,CrPs,CrPa,ReFe:              Handle_Heal_Spell (Member);
+      HoWr,DiWr,Holo:                                       Handle_All_Monsters_Spell (Group,Member);
+      TiSt:                                                 Handle_Time_Stop_Spell;
+      DeSp:                                                 Handle_DESP (Group);
+      FiBl,MgFi:                                            Handle_Fire_Ball (Group,Member);
+      LtId,BgId:                                            Handle_ID_Spell (Group);
+      DiDe,RaDe,Dspl,Bani:                                  Handle_Death_Spell (Group);
+      Raze,Ress,DuBl,Tele:                                  Handle_Interrupt_Spell;
+      AnDe:                                                 Handle_Animate_Dead_Spell (Member);
+      DetS:                                                 Handle_DetS_Spell (Attacker.Caster_Level);
+   End;
 End;
 
 (**********************************************************************************************************************)
 
 [Global]Procedure Character_Casts_Spell (Var Group: Encounter_Group;  Var Member: Party_Type;
-                                         Var Current_Party_Size: Party_Size_Type);
+                                 Var Current_Party_Size: Party_Size_Type);
+
+Var
+  Character: Character_Type;
+  Class,Level: Integer;
+  Silenced_Out: Boolean;
+  T: Varying [390] of Char;
+  Long_Spell: [External]Array [Spell_Name] of Varying [25] of Char;
 
 Begin
-   { TODO: Implement this. }
+   Character:=Member[Attacker.Attacker_Position];
+   If Attacker.Action<>UseItem then
+      T:=Character.Name + ' casts ' + Long_Spell[Attacker.WhatSpell]
+   Else
+      T:=Character.Name + CHR(39) +'s item casts a spell ';
+
+   If Attacker.Action=CastSpell then
+      Begin
+         Find_Spell_Group (Attacker.WhatSpell,Character,Class,Level);
+         Character.SpellPoints [Class,Level]:=Max(Character.SpellPoints[Class, Level] - 1, 0);
+      End
+   Else If Made_Roll (Item_List[Character.Item[Attacker.Old_Item].Item_Num].Percentage_Breaks) then
+      With Character.Item[Attacker.Old_Item] do
+         Begin
+            Item_Num:=Item_List[Character.Item[Attacker.Old_Item].Item_Num].Turns_Into;
+            Ident:=False;
+            Equipted:=False;
+            Usable:=False;
+            Cursed:=False;
+         End;
+
+   Member[Attacker.Attacker_Position]:=Character;
+
+   Silenced_Out:=Silenced[Attacker.Attacker_Position];
+
+   If NoMagic then
+      Begin
+         T:=T+'which fizzle out!';
+         SMG$Put_Line (MessageDisplay,T,Wrap_Flag:=SMG$M_WRAP_WORD);
+
+         Delay (Delay_Constant);
+      End
+   Else If Silenced_Out then
+      Begin
+         T:=T+'which fails to be become audible!';
+         SMG$Put_Line (MessageDisplay,T,Wrap_Flag:=SMG$M_WRAP_WORD);
+
+         Delay (Delay_Constant);
+      End
+   Else
+      Begin
+         SMG$Put_Line (MessageDisplay,T,Wrap_Flag:=SMG$M_WRAP_WORD);
+         Handle_Combat_Spell (Group,Member,Current_Party_Size);
+      End;
 End;
 End.
