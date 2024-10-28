@@ -1,0 +1,280 @@
+GNU GENERAL PUBLIC LICENSE
+Version 3, 29 June 2007
+
+Copyright (C) 2024 Jeffrey Getzin.
+Everyone is permitted to copy and distribute verbatim copies of this license
+document, but changing it is not allowed.
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+this program. If not, see <https://www.gnu.org/licenses/>.
+
+### ADDITIONAL TERMS
+
+In addition to the terms of the GNU General Public License version 3 (GPL v3),
+the following additional terms apply to any and all derived works, modified
+versions, or redistributed versions of this software:
+
+#### 1. Attribution and Prominence Requirements for Derived Works
+
+   - **Author Attribution**: Every version of this software, including
+     derivative works or redistributed versions, must prominently credit
+     Jeffrey Getzin as the primary creator of the game. This attribution must
+     appear with equal or greater prominence than it does in the original
+     software and must use the specific phrasing “Game created by Jeffrey
+     Getzin” or similar language that makes clear Jeffrey Getzin’s role as the
+     original creator.
+
+   - **Inspirational Credit to *Wizardry***: This game is inspired by
+     *Wizardry*, a game developed by Sir-Tech Software, originally authored by
+     Robert Woodhead and Andrew C. Greenberg. The credit “Inspired by
+     *Wizardry* by Sir-Tech Software, developed by Robert Woodhead and
+     Andrew C. Greenberg” (or equivalent language) must be displayed prominently
+     in any derived work in a location of equal or greater prominence than it
+     appears in the original software. This acknowledgment should be located on
+     the main menu, opening credits, or an equally visible location in the
+     derived software.
+
+#### 2. Dedication to Jenny Mayer
+
+   - **Perpetual Dedication in Source Code**: The original software includes a
+     dedication to Jenny Mayer, the late grandmother of Jeffrey Getzin. This
+     dedication appears in the original source code as follows:
+
+     "This game is dedicated to the memory of my late grandmother, Jenny Mayer
+     on this day, 10/13/1988."
+
+     Any and all derivative works must reproduce this dedication verbatim. This
+     exact dedication text must be retained in the source code of any derived or
+     redistributed version of the software.
+
+   - **Alternative Prominent Placement**: In addition to the source code, this
+     dedication may also be included in a prominent `README` file or another
+     documentation file that is highly visible to end users. However, the exact
+     dedication text must remain in the source code as specified.
+
+#### 3. Equal Prominence for All Original Credits
+
+   - **Placement of Other Credits**: All other original credits within this
+     software, including contributors, creators, and entities credited in main
+     menus, splash screens, credit screens, sub-pages, source code comments, or
+     documentation, must be retained in derivative works. Each credited name
+     must appear in a location of equal prominence in the derived work as it
+     appears in the original software.
+
+   - **Consistency of Titles**: Each credited name must appear with the same or
+     equivalent title or role (e.g., "Written by," "Graphics by," etc.) as in
+     the original work.
+
+#### 4. Requirements for Use of Dungeons & Dragons Intellectual Property
+
+   - **Compliance with Wizards of the Coast Licensing Terms**: If this software
+     or any derivative work incorporates intellectual property from *Dungeons &
+     Dragons* as published by Wizards of the Coast (e.g., creatures, spells,
+     rules, mechanics), the derivative work must fully comply with the
+     applicable licensing terms specified by Wizards of the Coast for use of
+     their intellectual property. This may include adherence to the Open Game
+     License (OGL) or any other relevant licensing terms, disclaimers, or
+     requirements provided by Wizards of the Coast.
+
+   - **License Notice for Wizards of the Coast Content**: Any derivative work
+     using *Dungeons & Dragons* content must include a notice stating compliance
+     with Wizards of the Coast's licensing terms, along with any required
+     copyright, trademark, and/or licensing disclaimers specified by Wizards of
+     the Coast in the OGL or similar licensing terms. This notice should be
+     placed in a prominent location, such as within the game's documentation,
+     credits, or license text.
+
+#### 5. Modification of Credits
+
+   - **No Removal or Alteration**: Derivative authors may not alter or remove
+     any of the original credits, including the author’s attribution,
+     inspirational credit to *Wizardry* by Sir-Tech Software, or the dedication
+     to Jenny Mayer. Additional contributors may be credited in derivative
+     works, but these new credits must not diminish the prominence or position
+     of the original credits.
+
+   - **Author and Inspirational Credit Prominence**: In derivative works, the
+     credits to Jeffrey Getzin as the author and *Wizardry* by Sir-Tech Software
+     as inspiration must remain among the most prominent credits, and should not
+     be repositioned or minimized in any way that would reduce their visibility
+     or recognition.
+
+#### 6. Compliance
+
+   - **License Enforcement**: Failure to comply with the requirements of this
+     section will constitute a violation of the license terms under GPL v3, and
+     all rights granted by this license will automatically terminate as
+     specified in Section 8 of GPL v3 if the terms are not met within 30 days of
+     receiving notice.
+
+By adhering to these additional terms, you acknowledge and agree to uphold the
+legacy and contributions of all individuals, entities, and dedications credited
+in the original software.
+
+END OF ADDITIONAL TERMS
+
+# GNU LESSER GENERAL PUBLIC LICENSE
+
+Version 3, 29 June 2007
+
+Copyright (C) 2007 Free Software Foundation, Inc.
+<https://fsf.org/>
+
+Everyone is permitted to copy and distribute verbatim copies of this
+license document, but changing it is not allowed.
+
+This version of the GNU Lesser General Public License incorporates the
+terms and conditions of version 3 of the GNU General Public License,
+supplemented by the additional permissions listed below.
+
+## 0. Additional Definitions.
+
+As used herein, "this License" refers to version 3 of the GNU Lesser
+General Public License, and the "GNU GPL" refers to version 3 of the
+GNU General Public License.
+
+"The Library" refers to a covered work governed by this License, other
+than an Application or a Combined Work as defined below.
+
+An "Application" is any work that makes use of an interface provided
+by the Library, but which is not otherwise based on the Library.
+Defining a subclass of a class defined by the Library is deemed a mode
+of using an interface provided by the Library.
+
+A "Combined Work" is a work produced by combining or linking an
+Application with the Library. The particular version of the Library
+with which the Combined Work was made is also called the "Linked
+Version".
+
+The "Minimal Corresponding Source" for a Combined Work means the
+Corresponding Source for the Combined Work, excluding any source code
+for portions of the Combined Work that, considered in isolation, are
+based on the Application, and not on the Linked Version.
+
+The "Corresponding Application Code" for a Combined Work means the
+object code and/or source code for the Application, including any data
+and utility programs needed for reproducing the Combined Work from the
+Application, but excluding the System Libraries of the Combined Work.
+
+## 1. Exception to Section 3 of the GNU GPL.
+
+You may convey a covered work under sections 3 and 4 of this License
+without being bound by section 3 of the GNU GPL.
+
+## 2. Conveying Modified Versions.
+
+If you modify a copy of the Library, and, in your modifications, a
+facility refers to a function or data to be supplied by an Application
+that uses the facility (other than as an argument passed when the
+facility is invoked), then you may convey a copy of the modified
+version:
+
+-   a) under this License, provided that you make a good faith effort
+    to ensure that, in the event an Application does not supply the
+    function or data, the facility still operates, and performs
+    whatever part of its purpose remains meaningful, or
+-   b) under the GNU GPL, with none of the additional permissions of
+    this License applicable to that copy.
+
+## 3. Object Code Incorporating Material from Library Header Files.
+
+The object code form of an Application may incorporate material from a
+header file that is part of the Library. You may convey such object
+code under terms of your choice, provided that, if the incorporated
+material is not limited to numerical parameters, data structure
+layouts and accessors, or small macros, inline functions and templates
+(ten or fewer lines in length), you do both of the following:
+
+-   a) Give prominent notice with each copy of the object code that
+    the Library is used in it and that the Library and its use are
+    covered by this License.
+-   b) Accompany the object code with a copy of the GNU GPL and this
+    license document.
+
+## 4. Combined Works.
+
+You may convey a Combined Work under terms of your choice that, taken
+together, effectively do not restrict modification of the portions of
+the Library contained in the Combined Work and reverse engineering for
+debugging such modifications, if you also do each of the following:
+
+-   a) Give prominent notice with each copy of the Combined Work that
+    the Library is used in it and that the Library and its use are
+    covered by this License.
+-   b) Accompany the Combined Work with a copy of the GNU GPL and this
+    license document.
+-   c) For a Combined Work that displays copyright notices during
+    execution, include the copyright notice for the Library among
+    these notices, as well as a reference directing the user to the
+    copies of the GNU GPL and this license document.
+-   d) Do one of the following:
+    -   0) Convey the Minimal Corresponding Source under the terms of
+        this License, and the Corresponding Application Code in a form
+        suitable for, and under terms that permit, the user to
+        recombine or relink the Application with a modified version of
+        the Linked Version to produce a modified Combined Work, in the
+        manner specified by section 6 of the GNU GPL for conveying
+        Corresponding Source.
+    -   1) Use a suitable shared library mechanism for linking with
+        the Library. A suitable mechanism is one that (a) uses at run
+        time a copy of the Library already present on the user's
+        computer system, and (b) will operate properly with a modified
+        version of the Library that is interface-compatible with the
+        Linked Version.
+-   e) Provide Installation Information, but only if you would
+    otherwise be required to provide such information under section 6
+    of the GNU GPL, and only to the extent that such information is
+    necessary to install and execute a modified version of the
+    Combined Work produced by recombining or relinking the Application
+    with a modified version of the Linked Version. (If you use option
+    4d0, the Installation Information must accompany the Minimal
+    Corresponding Source and Corresponding Application Code. If you
+    use option 4d1, you must provide the Installation Information in
+    the manner specified by section 6 of the GNU GPL for conveying
+    Corresponding Source.)
+
+## 5. Combined Libraries.
+
+You may place library facilities that are a work based on the Library
+side by side in a single library together with other library
+facilities that are not Applications and are not covered by this
+License, and convey such a combined library under terms of your
+choice, if you do both of the following:
+
+-   a) Accompany the combined library with a copy of the same work
+    based on the Library, uncombined with any other library
+    facilities, conveyed under the terms of this License.
+-   b) Give prominent notice with the combined library that part of it
+    is a work based on the Library, and explaining where to find the
+    accompanying uncombined form of the same work.
+
+## 6. Revised Versions of the GNU Lesser General Public License.
+
+The Free Software Foundation may publish revised and/or new versions
+of the GNU Lesser General Public License from time to time. Such new
+versions will be similar in spirit to the present version, but may
+differ in detail to address new problems or concerns.
+
+Each version is given a distinguishing version number. If the Library
+as you received it specifies that a certain numbered version of the
+GNU Lesser General Public License "or any later version" applies to
+it, you have the option of following the terms and conditions either
+of that published version or of any later version published by the
+Free Software Foundation. If the Library as you received it does not
+specify a version number of the GNU Lesser General Public License, you
+may choose any version of the GNU Lesser General Public License ever
+published by the Free Software Foundation.
+
+If the Library as you received it specifies that a proxy can decide
+whether future versions of the GNU Lesser General Public License shall
+apply, that proxy's public statement of acceptance of any version is
+permanent authorization for you to choose that version for the
+Library.
